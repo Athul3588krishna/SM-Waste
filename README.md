@@ -64,13 +64,13 @@ Follow these steps to run the application locally:
 
 ---
 
-### Step 2: Seed Sample Data
+### Step 2: Seed Hardcoded Admin & Worker Accounts
 
-To instantly populate the maps, dashboards, and charts with dummy accounts and coordinates around Kochi, Kerala, run the seed script:
+To register the official Admin, sanitation workers, and set up sample reports around Kochi, Kerala, run the seed script:
 ```bash
 npm run seed
 ```
-*(This script clears the database, seeds admin, worker, and citizen accounts, generates sample before/after images, and schedules mock reports).*
+*(This script clears the database, seeds the administrative and worker accounts, and generates sample before/after images).*
 
 ---
 
@@ -93,15 +93,15 @@ npm run dev
 
 ---
 
-## 🔑 Demo Test Credentials
+## 🔑 Login & testing credentials
 
-To demonstrate the application flows easily, the Login screen contains a **Role Selector landing panel** that pre-fills the form with these testing credentials:
+The login page contains a single secure email/password form. When you log in, the system dynamically checks your database account to load the correct workspace:
 
-| Portal | Email | Password | Access Details |
+| Role | Email | Password | Access Details |
 | :--- | :--- | :--- | :--- |
-| **Citizen Portal** | `citizen@waste.com` | `citizen123` | Report waste, view timelines, check points. |
-| **Admin Dashboard** | `admin@waste.com` | `admin123` | Manage complaints, assign tasks, view charts. |
-| **Worker Dashboard** | `worker1@waste.com` | `worker123` | View assigned cleanup targets, upload finished images. |
+| **Admin (Hardcoded)** | `admin@waste.com` | `admin123` | Manage complaints, assign tasks, view charts. |
+| **Worker (Pre-created)** | `worker1@waste.com` | `worker123` | View assigned cleanup targets, upload finished images. |
+| **Citizen (Public Signup)**| *(Create via register screen)* | *(Choose password)* | Report waste, view timelines, check points. |
 
 ---
 

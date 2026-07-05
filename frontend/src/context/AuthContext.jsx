@@ -39,18 +39,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Google OAuth Login handler
-  const googleLogin = async (name, email) => {
-    try {
-      const { data } = await API.post('/auth/google', { name, email });
-      localStorage.setItem('token', data.token);
-      setUser(data);
-      return data;
-    } catch (error) {
-      throw error.response?.data?.message || 'Google Login failed';
-    }
-  };
-
   // Register handler
   const register = async (name, email, password) => {
     try {
@@ -75,7 +63,6 @@ export const AuthProvider = ({ children }) => {
         user,
         loading,
         login,
-        googleLogin,
         register,
         logout,
         setUser,
@@ -85,4 +72,5 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
 
