@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import API from '../utils/api';
+import { AuthContext } from '../context/AuthContext';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
-import { Hammer, MapPin, CheckSquare, Upload, AlertCircle, Eye, Calendar, Clock, Clipboard } from 'lucide-react';
+import { Hammer, MapPin, CheckSquare, Upload, AlertCircle, Calendar, Clock, Clipboard, Sparkles, Megaphone, DollarSign } from 'lucide-react';
 
 const customIcon = new L.Icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -13,38 +14,73 @@ const customIcon = new L.Icon({
 });
 
 const WorkerDashboard = () => {
+  const { user, setUser } = useContext(AuthContext);
   const [complaints, setComplaints] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTask, setSelectedTask] = useState(null);
 
-  // Complete Modal states
+  // Complete cleanup modal
   const [showModal, setShowModal] = useState(false);
   const [photo, setPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const fetchWorkerTasks = async () => {
+  const fetchWorkerData = async () => {
     try {
       setLoading(true);
-      const { data } = await API.get('/worker/complaints');
-      setComplaints(data);
-      if (data.length > 0) {
-        // Default select first assigned task if exists, else first task
-        const active = data.find((t) => t.status === 'assigned') || data[0];
+      // Refresh worker details to fetch latest bonuses and online state
+      const userRes = await API.get('/auth/me');
+      setUser(userRes.data);
+
+      const tasksRes = await API.get('/worker/complaints');
+      setComplaints(tasksRes.data);
+      if (tasksRes.data.length > 0) {
+        // Select first active task if exists, else first task
+        const active = tasksRes.data.find((t) => ['assigned', 'in_progress'].includes(t.status)) || tasksRes.data[0];
         setSelectedTask(active);
       }
+
+      const announcementsRes = await API.get('/notifications/announcements');
+      setAnnouncements(announcementsRes.data);
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching worker dashboard:', err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchWorkerTasks();
+    fetchWorkerData();
   }, []);
 
+  // Toggle availability (Online/Offline)
+  const handleAvailabilityToggle = async () => {
+    const newStatus = !user.isOnline;
+    try {
+      await API.put('/worker/availability', { isOnline: newStatus });
+      setUser(prev => ({ ...prev, isOnline: newStatus }));
+      alert(`You are now ${newStatus ? 'ONLINE' : 'OFFLINE'}`);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update status');
+    }
+  };
+
+  // Accept task assignment
+  const handleAcceptTask = async (taskId) => {
+    try {
+      const { data } = await API.put(`/worker/complaints/${taskId}/accept`);
+      alert('Task accepted! It is now In Progress.');
+      fetchWorkerData();
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || 'Failed to accept task');
+    }
+  };
+
+  // File picker upload
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -54,7 +90,8 @@ const WorkerDashboard = () => {
     }
   };
 
-  const handleCompleteTask = async (e) => {
+  // Submit Cleanup photo
+  const handleCompleteTaskSubmit = async (e) => {
     e.preventDefault();
     if (!photo) {
       setError('Please upload an after-cleaning photo.');
@@ -68,28 +105,46 @@ const WorkerDashboard = () => {
     formData.append('photo', photo);
 
     try {
-      await API.put(`/worker/complaints/${selectedTask._id}/complete`, formData, {
+      await API.put(`/worker/complaints/${selectedTask._id}/clean`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      alert('Congratulations! Task completed and points awarded to the Citizen!');
+      alert('Task marked as Cleaned! Awaiting municipal Admin verification.');
       setShowModal(false);
       setPhoto(null);
       setPhotoPreview(null);
-      fetchWorkerTasks();
+      fetchWorkerData();
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || 'Failed to complete task.');
+      setError(err.response?.data?.message || 'Failed to submit cleanup.');
     } finally {
       setSubmitting(false);
     }
   };
 
+  const getBadgeClass = (status) => {
+    switch (status) {
+      case 'assigned': return 'status-assigned';
+      case 'in_progress': return 'status-assigned';
+      case 'cleaned': return 'status-verified'; // Awaiting verification
+      case 'completed': return 'status-completed';
+      default: return '';
+    }
+  };
+
+  const isTaskOverdue = (task) => {
+    if (!task.deadlineAt || ['completed', 'cleaned'].includes(task.status)) return false;
+    return new Date(task.deadlineAt) < new Date();
+  };
+
+  // Tally total bonuses
+  const totalBonuses = user?.bonusHistory?.reduce((sum, item) => sum + item.amount, 0) || 0;
+
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
-        <p style={{ color: 'var(--text-secondary)' }}>Loading assignments...</p>
+        <p style={{ color: 'var(--text-secondary)' }}>Loading Worker Workspace...</p>
       </div>
     );
   }
@@ -97,76 +152,141 @@ const WorkerDashboard = () => {
   return (
     <div style={{ padding: '30px 24px', maxWidth: '1200px', margin: '0 auto' }}>
       
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
-        <div style={{ background: 'var(--color-primary)', padding: '8px', borderRadius: '8px' }}>
-          <Hammer size={20} color="#000" />
+      {/* Header Profile summary */}
+      <div className="glass-panel" style={{ marginBottom: '30px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
+          <div>
+            <span style={{ fontSize: '13px', color: 'var(--color-primary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Worker Operations Portal
+            </span>
+            <h1 style={{ fontSize: '30px', color: 'var(--text-primary)', marginTop: '4px' }}>
+              Welcome back, {user?.name}
+            </h1>
+            {user?.team && (
+              <p style={{ color: 'var(--color-secondary)', fontSize: '14px', marginTop: '2px', fontWeight: '500' }}>
+                👥 Cleaning Team: <strong>{user.team?.name}</strong>
+              </p>
+            )}
+          </div>
+
+          {/* Availability switch toggler */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+              Availability status:
+            </span>
+            <button
+              onClick={handleAvailabilityToggle}
+              className="btn"
+              style={{
+                background: user.isOnline ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                border: `1px solid ${user.isOnline ? 'var(--color-primary)' : 'var(--border-glass)'}`,
+                color: user.isOnline ? 'var(--color-primary)' : 'var(--text-secondary)',
+                boxShadow: user.isOnline ? 'var(--shadow-neon)' : 'none',
+                padding: '8px 16px',
+                fontSize: '13px',
+                borderRadius: '8px',
+                fontWeight: '700'
+              }}
+            >
+              ● {user.isOnline ? 'ONLINE (ACTIVE)' : 'OFFLINE'}
+            </button>
+          </div>
         </div>
-        <div>
-          <h1 style={{ fontSize: '24px', color: 'var(--text-primary)' }}>Worker Assignment Sheet</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>View your cleanup tasks, map coordinates, and upload completed photos.</p>
+
+        {/* Bonus overview banner */}
+        <div className="flex-between" style={{
+          padding: '16px 20px',
+          background: 'rgba(16, 185, 129, 0.03)',
+          border: '1px solid rgba(16, 185, 129, 0.15)',
+          borderRadius: '12px',
+          flexWrap: 'wrap',
+          gap: '12px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <DollarSign size={20} color="var(--color-primary)" />
+            <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Cumulative Performance Bonuses earned (Dummy):</span>
+          </div>
+          <span style={{ fontSize: '20px', fontWeight: '800', color: 'var(--color-primary)' }}>
+            ${totalBonuses}
+          </span>
         </div>
       </div>
 
-      {complaints.length === 0 ? (
-        <div className="glass-panel" style={{ textAlign: 'center', padding: '80px 20px' }}>
-          <Clipboard size={48} color="var(--text-muted)" style={{ marginBottom: '16px' }} />
-          <h3 style={{ fontSize: '20px', color: 'var(--text-primary)' }}>No Tasks Assigned</h3>
-          <p style={{ color: 'var(--text-secondary)', marginTop: '8px' }}>You currently have no active or completed sanitation tasks.</p>
-        </div>
-      ) : (
-        <div className="grid-1-3" style={{ gap: '30px' }}>
+      {/* Main Workspace grid */}
+      <div className="grid-3" style={{ gap: '30px' }}>
+        
+        {/* Column 1: Tasks list */}
+        <div className="glass-panel" style={{ alignSelf: 'start', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <h3 style={{ fontSize: '16px', color: 'var(--text-primary)', borderBottom: '1px solid var(--border-glass)', paddingBottom: '8px' }}>
+            Assigned Cleanup registry ({complaints.length})
+          </h3>
           
-          {/* Left panel: Task List */}
-          <div className="glass-panel" style={{ padding: '20px', alignSelf: 'start', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <h3 style={{ fontSize: '18px', color: 'var(--text-primary)', borderBottom: '1px solid var(--border-glass)', paddingBottom: '10px' }}>
-              Tasks Registry ({complaints.length})
-            </h3>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '500px', overflowY: 'auto' }}>
-              {complaints.map((task) => (
-                <div
-                  key={task._id}
-                  onClick={() => setSelectedTask(task)}
-                  style={{
-                    padding: '14px',
-                    background: selectedTask?._id === task._id ? 'rgba(16, 185, 129, 0.08)' : 'rgba(255,255,255,0.01)',
-                    border: selectedTask?._id === task._id ? '1px solid var(--color-primary)' : '1px solid var(--border-glass)',
-                    borderRadius: '10px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <div className="flex-between">
-                    <h4 style={{ fontSize: '15px', color: 'var(--text-primary)', fontWeight: '600' }}>
-                      {task.title.slice(0, 24)}{task.title.length > 24 ? '...' : ''}
-                    </h4>
-                    <span className={`badge-status ${task.status === 'completed' ? 'status-completed' : 'status-assigned'}`} style={{ fontSize: '10px', padding: '2px 8px' }}>
-                      {task.status}
-                    </span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto' }}>
+            {complaints.length === 0 ? (
+              <span style={{ fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>No cleanup tasks assigned.</span>
+            ) : (
+              complaints.map((task) => {
+                const isOver = isTaskOverdue(task);
+                return (
+                  <div
+                    key={task._id}
+                    onClick={() => setSelectedTask(task)}
+                    style={{
+                      padding: '12px',
+                      background: selectedTask?._id === task._id ? 'rgba(16, 185, 129, 0.08)' : 'rgba(255,255,255,0.01)',
+                      border: selectedTask?._id === task._id ? '1px solid var(--color-primary)' : '1px solid var(--border-glass)',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <div className="flex-between">
+                      <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                        {task.title.slice(0, 20)}...
+                      </span>
+                      <span className={`badge-status ${getBadgeClass(task.status)}`} style={{ fontSize: '9px', padding: '1px 6px' }}>
+                        {task.status.replace('_', ' ')}
+                      </span>
+                    </div>
+                    {isOver && (
+                      <div style={{ fontSize: '9px', background: 'rgba(255,74,90,0.15)', color: 'var(--color-danger)', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', marginTop: '6px', fontWeight: 'bold' }}>
+                        ⚠️ OVERDUE DEADLINE
+                      </div>
+                    )}
                   </div>
-                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <MapPin size={10} /> {task.location.address.slice(0, 30)}...
-                  </p>
-                </div>
-              ))}
-            </div>
+                );
+              })
+            )}
           </div>
+        </div>
 
-          {/* Right panel: Selected Task Details */}
-          {selectedTask && (
-            <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {/* Column 2: Selected Task Details */}
+        {selectedTask ? (
+          <div className="glass-panel" style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div className="flex-between" style={{ flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <span className={`badge-status ${getBadgeClass(selectedTask.status)}`}>
+                  {selectedTask.status.replace('_', ' ')}
+                </span>
+                <h2 style={{ fontSize: '20px', color: 'var(--text-primary)', marginTop: '8px' }}>
+                  {selectedTask.title}
+                </h2>
+              </div>
               
-              <div className="flex-between" style={{ flexWrap: 'wrap', gap: '12px' }}>
-                <div>
-                  <span className={`badge-status ${selectedTask.status === 'completed' ? 'status-completed' : 'status-assigned'}`}>
-                    {selectedTask.status}
-                  </span>
-                  <h2 style={{ fontSize: '22px', color: 'var(--text-primary)', marginTop: '8px' }}>
-                    {selectedTask.title}
-                  </h2>
-                </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                {/* Accept Task assignment button */}
                 {selectedTask.status === 'assigned' && (
+                  <button
+                    onClick={() => handleAcceptTask(selectedTask._id)}
+                    className="btn btn-primary"
+                    style={{ padding: '8px 16px', fontSize: '13px' }}
+                  >
+                    Accept Cleaning Task
+                  </button>
+                )}
+
+                {/* Mark cleaned photo upload dialog */}
+                {selectedTask.status === 'in_progress' && (
                   <button
                     onClick={() => {
                       setError('');
@@ -175,203 +295,203 @@ const WorkerDashboard = () => {
                       setShowModal(true);
                     }}
                     className="btn btn-primary"
-                    style={{ padding: '10px 18px' }}
+                    style={{ padding: '8px 16px', fontSize: '13px' }}
                   >
-                    <CheckSquare size={16} /> Mark Cleaned
+                    <CheckSquare size={14} /> Submit Cleanup
                   </button>
                 )}
               </div>
-
-              {/* Details card */}
-              <div style={{
-                padding: '16px',
-                background: 'rgba(255,255,255,0.01)',
-                border: '1px solid var(--border-glass)',
-                borderRadius: '10px',
-                display: 'grid',
-                gridTemplateColumns: '1fr',
-                gap: '16px'
-              }} className="grid-2">
-                <div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Description</div>
-                  <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '4px' }}>{selectedTask.description}</p>
-                  
-                  <div style={{ display: 'flex', gap: '16px', marginTop: '16px' }}>
-                    <div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Waste Category</div>
-                      <span style={{ fontSize: '13px', background: 'rgba(255,255,255,0.04)', padding: '2px 8px', borderRadius: '4px', display: 'inline-block', marginTop: '4px' }}>
-                        {selectedTask.wasteType}
-                      </span>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Severity Level</div>
-                      <span style={{
-                        fontSize: '13px',
-                        fontWeight: '700',
-                        color: selectedTask.severity === 'High' ? 'var(--color-danger)' : selectedTask.severity === 'Medium' ? 'var(--color-warning)' : 'var(--color-primary)',
-                        display: 'inline-block',
-                        marginTop: '4px'
-                      }}>
-                        {selectedTask.severity}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <MapPin size={14} color="var(--color-secondary)" />
-                    <span><strong>Address:</strong> {selectedTask.location.address}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Calendar size={14} color="var(--color-secondary)" />
-                    <span><strong>Assigned:</strong> {new Date(selectedTask.assignedAt).toLocaleDateString()}</span>
-                  </div>
-                  {selectedTask.status === 'completed' && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Clock size={14} color="var(--color-primary)" />
-                      <span><strong>Cleaned On:</strong> {new Date(selectedTask.completedAt).toLocaleString()}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Images comparison slider */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <h4 style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Cleaning Verification Images</h4>
-                
-                <div className="comparison-slider">
-                  <div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>BEFORE CLEANING</div>
-                    <img
-                      src={selectedTask.photoBefore.startsWith('http') ? selectedTask.photoBefore : `http://localhost:5000${selectedTask.photoBefore}`}
-                      alt="Before cleanup"
-                      className="comparison-image"
-                    />
-                  </div>
-                  {selectedTask.status === 'completed' && (
-                    <div>
-                      <div style={{ fontSize: '11px', color: 'var(--color-primary)', marginBottom: '4px' }}>AFTER CLEANING</div>
-                      <img
-                        src={selectedTask.photoAfter.startsWith('http') ? selectedTask.photoAfter : `http://localhost:5000${selectedTask.photoAfter}`}
-                        alt="After cleanup"
-                        className="comparison-image"
-                        style={{ borderColor: 'var(--color-primary)' }}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Map Locator */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', height: '220px' }}>
-                <h4 style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Navigation Map</h4>
-                <div className="map-container" style={{ flex: 1 }}>
-                  <MapContainer center={[selectedTask.location.latitude, selectedTask.location.longitude]} zoom={14} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
-                    <TileLayer
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    <Marker position={[selectedTask.location.latitude, selectedTask.location.longitude]} icon={customIcon}>
-                      <Popup>{selectedTask.title}</Popup>
-                    </Marker>
-                  </MapContainer>
-                </div>
-              </div>
-
             </div>
-          )}
 
+            {/* Task Info Grid */}
+            <div style={{
+              padding: '16px',
+              background: 'rgba(255,255,255,0.01)',
+              border: '1px solid var(--border-glass)',
+              borderRadius: '10px',
+              display: 'grid',
+              gridTemplateColumns: '1fr',
+              gap: '16px'
+            }} className="grid-2">
+              <div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Description</div>
+                <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '4px' }}>{selectedTask.description}</p>
+                
+                <div style={{ display: 'flex', gap: '16px', marginTop: '16px' }}>
+                  <div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Category</div>
+                    <span style={{ fontSize: '12px', background: 'rgba(255,255,255,0.04)', padding: '2px 8px', borderRadius: '4px', display: 'inline-block', marginTop: '4px' }}>
+                      {selectedTask.wasteType}
+                    </span>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Severity</div>
+                    <span style={{
+                      fontSize: '12px',
+                      fontWeight: '700',
+                      color: selectedTask.severity === 'High' ? 'var(--color-danger)' : selectedTask.severity === 'Medium' ? 'var(--color-warning)' : 'var(--color-primary)',
+                      display: 'inline-block',
+                      marginTop: '4px'
+                    }}>
+                      {selectedTask.severity}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <MapPin size={14} color="var(--color-secondary)" />
+                  <span><strong>Address:</strong> {selectedTask.location.address}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Calendar size={14} color="var(--color-secondary)" />
+                  <span><strong>Assigned:</strong> {new Date(selectedTask.assignedAt).toLocaleDateString()}</span>
+                </div>
+                {selectedTask.deadlineAt && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: isTaskOverdue(selectedTask) ? 'var(--color-danger)' : 'var(--text-secondary)' }}>
+                    <Calendar size={14} color={isTaskOverdue(selectedTask) ? 'var(--color-danger)' : 'var(--color-secondary)'} />
+                    <span><strong>Deadline:</strong> {new Date(selectedTask.deadlineAt).toLocaleDateString()} {new Date(selectedTask.deadlineAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Before/After verification */}
+            <div className="comparison-slider">
+              <div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>BEFORE CLEANUP</div>
+                <img
+                  src={selectedTask.photoBefore.startsWith('http') ? selectedTask.photoBefore : `http://localhost:5000${selectedTask.photoBefore}`}
+                  alt="Before cleanup"
+                  className="comparison-image"
+                />
+              </div>
+              {selectedTask.photoAfter && (
+                <div>
+                  <div style={{ fontSize: '11px', color: 'var(--color-primary)', marginBottom: '4px' }}>AFTER CLEANUP</div>
+                  <img
+                    src={selectedTask.photoAfter.startsWith('http') ? selectedTask.photoAfter : `http://localhost:5000${selectedTask.photoAfter}`}
+                    alt="After cleanup"
+                    className="comparison-image"
+                    style={{ borderColor: 'var(--color-primary)' }}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Selected Task Location Map */}
+            <div style={{ height: '200px' }}>
+              <div className="map-container" style={{ height: '100%' }}>
+                <MapContainer center={[selectedTask.location.latitude, selectedTask.location.longitude]} zoom={14} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+                  <Marker position={[selectedTask.location.latitude, selectedTask.location.longitude]} icon={customIcon}>
+                    <Popup>{selectedTask.title}</Popup>
+                  </Marker>
+                </MapContainer>
+              </div>
+            </div>
+
+          </div>
+        ) : (
+          <div className="glass-panel" style={{ gridColumn: 'span 2', textAlign: 'center', padding: '60px' }}>
+            <Clipboard size={40} color="var(--text-muted)" style={{ marginBottom: '16px' }} />
+            <span style={{ color: 'var(--text-secondary)' }}>Select a task from the list to view cleanup details.</span>
+          </div>
+        )}
+
+      </div>
+
+      {/* Row 2: Bulletins & Bonus Ledgers */}
+      <div className="grid-2" style={{ gap: '30px', marginTop: '30px' }}>
+        {/* Worker Announcements Feed */}
+        <div className="glass-panel">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+            <Megaphone size={18} color="var(--color-secondary)" />
+            <h3 style={{ fontSize: '16px', color: 'var(--text-primary)' }}>Municipal Workers Bulletins</h3>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '300px', overflowY: 'auto' }}>
+            {announcements.length === 0 ? (
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>No active bulletins.</span>
+            ) : (
+              announcements.map((a) => (
+                <div key={a._id} style={{ padding: '12px', background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border-glass)', borderRadius: '8px' }}>
+                  <h4 style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: '600' }}>{a.title}</h4>
+                  <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: '1.4' }}>{a.content}</p>
+                </div>
+              ))
+            )}
+          </div>
         </div>
-      )}
 
-      {/* Complete Task Upload Modal */}
+        {/* Dummy Bonus ledger history */}
+        <div className="glass-panel">
+          <h3 style={{ fontSize: '16px', color: 'var(--text-primary)', marginBottom: '20px' }}>Dummy Bonus Payout History</h3>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '300px', overflowY: 'auto' }}>
+            {!user.bonusHistory || user.bonusHistory.length === 0 ? (
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>No bonus payouts recorded yet.</span>
+            ) : (
+              user.bonusHistory.map((b, idx) => (
+                <div key={idx} className="flex-between" style={{ padding: '12px', background: 'rgba(16, 185, 129, 0.02)', border: '1px solid rgba(16, 185, 129, 0.1)', borderRadius: '8px' }}>
+                  <div>
+                    <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Cleanup Bonus Awarded</span>
+                    <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                      Date: {new Date(b.date).toLocaleDateString()}
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '16px', fontWeight: '800', color: 'var(--color-primary)' }}>+${b.amount}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* MODAL: SUBMIT CLEANUP */}
       {showModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          background: 'rgba(0,0,0,0.7)',
-          backdropFilter: 'blur(8px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 200,
-          padding: '20px'
-        }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '420px', position: 'relative' }}>
-            <h3 style={{ fontSize: '20px', color: 'var(--text-primary)', marginBottom: '16px' }}>Complete Cleaning job</h3>
-            
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '20px' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '380px' }}>
+            <h3 style={{ fontSize: '18px', color: 'var(--text-primary)', marginBottom: '16px' }}>Submit Cleanup Verification</h3>
+
             {error && (
-              <div style={{
-                background: 'rgba(255, 74, 90, 0.1)',
-                border: '1px solid rgba(255, 74, 90, 0.2)',
-                borderRadius: '8px',
-                padding: '12px',
-                color: 'var(--color-danger)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                marginBottom: '16px'
-              }}>
-                <AlertCircle size={16} />
-                <span style={{ fontSize: '13px' }}>{error}</span>
+              <div style={{ background: 'rgba(255,74,90,0.1)', border: '1px solid rgba(255,74,90,0.2)', padding: '10px', color: 'var(--color-danger)', fontSize: '13px', borderRadius: '6px', marginBottom: '14px' }}>
+                <AlertCircle size={14} style={{ marginRight: '6px', display: 'inline' }} /> {error}
               </div>
             )}
 
-            <form onSubmit={handleCompleteTask}>
-              <div className="form-group" style={{ marginBottom: '20px' }}>
-                <label className="form-label">Upload Clean street Photo</label>
+            <form onSubmit={handleCompleteTaskSubmit}>
+              <div className="form-group">
+                <label className="form-label">Upload street after-cleaning photo</label>
                 <input
                   type="file"
-                  id="after-photo"
+                  id="cleanup-file"
                   accept="image/*"
                   style={{ display: 'none' }}
                   onChange={handleFileChange}
                   required
                 />
-                
                 {!photoPreview ? (
-                  <label htmlFor="after-photo" className="scanner-container" style={{ padding: '40px 20px' }}>
-                    <Upload size={32} color="var(--color-primary)" style={{ marginBottom: '8px' }} />
-                    <span style={{ fontSize: '13px', fontWeight: '600' }}>Click to Upload Photo</span>
+                  <label htmlFor="cleanup-file" className="scanner-container" style={{ padding: '30px 10px' }}>
+                    <Upload size={24} color="var(--color-primary)" style={{ marginBottom: '6px' }} />
+                    <span style={{ fontSize: '12px', fontWeight: '600' }}>Choose Photo</span>
                   </label>
                 ) : (
-                  <div style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden' }}>
-                    <img src={photoPreview} alt="cleanup verification" style={{ width: '100%', maxHeight: '200px', objectFit: 'cover' }} />
-                    <label htmlFor="after-photo" className="btn btn-secondary" style={{
-                      position: 'absolute',
-                      top: '12px',
-                      right: '12px',
-                      padding: '4px 8px',
-                      fontSize: '11px',
-                      borderRadius: '4px'
-                    }}>
-                      Change
-                    </label>
+                  <div style={{ position: 'relative', borderRadius: '6px', overflow: 'hidden' }}>
+                    <img src={photoPreview} alt="verification" style={{ width: '100%', maxHeight: '180px', objectFit: 'cover' }} />
+                    <label htmlFor="cleanup-file" className="btn btn-secondary" style={{ position: 'absolute', top: '8px', right: '8px', padding: '4px 8px', fontSize: '10px' }}>Change</label>
                   </div>
                 )}
               </div>
 
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="btn btn-secondary"
-                  disabled={submitting}
-                  style={{ padding: '8px 16px', fontSize: '14px' }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={submitting}
-                  style={{ padding: '8px 16px', fontSize: '14px' }}
-                >
-                  {submitting ? 'Submitting...' : 'Submit Verification'}
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
+                <button type="button" onClick={() => setShowModal(false)} className="btn btn-secondary" disabled={submitting}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={submitting}>
+                  {submitting ? 'Uploading...' : 'Submit Cleanup'}
                 </button>
               </div>
             </form>

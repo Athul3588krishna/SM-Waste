@@ -31,12 +31,39 @@ const userSchema = new mongoose.Schema(
     },
     points: {
       type: Number,
-      default: 0,
+      default: 0, // Citizen Eco-points
     },
     badge: {
       type: String,
-      default: 'Novice Reporter',
+      default: 'Novice Reporter', // Citizen badge
     },
+    // Worker specific attributes
+    isOnline: {
+      type: Boolean,
+      default: false,
+    },
+    team: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Team',
+      default: null,
+    },
+    bonusHistory: [
+      {
+        amount: {
+          type: Number,
+          required: true,
+        },
+        complaint: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Complaint',
+          required: true,
+        },
+        date: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   {
     timestamps: true,

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import API from '../utils/api';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
-import { ArrowLeft, Clock, ShieldCheck, Hammer, CheckCircle2, AlertTriangle, MapPin, Calendar, Sparkles } from 'lucide-react';
+import { ArrowLeft, Clock, ShieldCheck, Hammer, CheckCircle2, AlertTriangle, MapPin, Calendar } from 'lucide-react';
 
 const customIcon = new L.Icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -39,6 +39,8 @@ const ComplaintDetail = () => {
       case 'pending': return 'status-pending';
       case 'verified': return 'status-verified';
       case 'assigned': return 'status-assigned';
+      case 'in_progress': return 'status-assigned';
+      case 'cleaned': return 'status-verified';
       case 'completed': return 'status-completed';
       case 'rejected': return 'status-rejected';
       default: return '';
@@ -76,7 +78,7 @@ const ComplaintDetail = () => {
     },
     {
       title: 'Verified',
-      desc: complaint.status === 'rejected' ? 'Rejected by Admin' : 'Verified by local admin panel.',
+      desc: complaint.status === 'rejected' ? 'Rejected by Admin' : 'Verified by municipality admin.',
       date: complaint.status !== 'pending' ? complaint.updatedAt : null,
       active: complaint.status !== 'pending',
       completed: complaint.status !== 'pending' && complaint.status !== 'rejected',
@@ -84,16 +86,28 @@ const ComplaintDetail = () => {
       icon: <ShieldCheck size={12} />
     },
     {
-      title: 'Assigned',
-      desc: complaint.worker ? `Assigned to worker ${complaint.worker.name}.` : 'Pending assignment.',
+      title: 'Assigned & Accepted',
+      desc: complaint.assignedToType === 'team' && complaint.team 
+        ? `Assigned to team "${complaint.team.name}". ${complaint.worker ? `Accepted by worker ${complaint.worker.name}.` : 'Awaiting worker acceptance.'}`
+        : complaint.worker 
+          ? `Assigned to worker "${complaint.worker.name}". ${complaint.status !== 'assigned' ? 'Accepted by worker.' : 'Awaiting worker acceptance.'}`
+          : 'Awaiting worker or team assignment.',
       date: complaint.assignedAt,
-      active: ['assigned', 'completed'].includes(complaint.status),
-      completed: ['assigned', 'completed'].includes(complaint.status),
+      active: ['assigned', 'in_progress', 'cleaned', 'completed'].includes(complaint.status),
+      completed: ['in_progress', 'cleaned', 'completed'].includes(complaint.status),
       icon: <Hammer size={12} />
     },
     {
+      title: 'Cleaned Up',
+      desc: ['cleaned', 'completed'].includes(complaint.status) ? 'Worker completed cleanup. Awaiting admin verification.' : 'Cleanup in progress.',
+      date: complaint.cleanedAt,
+      active: ['in_progress', 'cleaned', 'completed'].includes(complaint.status),
+      completed: ['cleaned', 'completed'].includes(complaint.status),
+      icon: <CheckCircle2 size={12} />
+    },
+    {
       title: 'Resolved',
-      desc: complaint.status === 'completed' ? 'Cleaned successfully with after photo.' : 'Pending cleanup.',
+      desc: complaint.status === 'completed' ? `Cleanup verified. ${complaint.bonusAmount > 0 ? `Bonus payment of $${complaint.bonusAmount} paid to worker.` : ''}` : 'Awaiting final verification.',
       date: complaint.completedAt,
       active: complaint.status === 'completed',
       completed: complaint.status === 'completed',
@@ -118,7 +132,7 @@ const ComplaintDetail = () => {
         </button>
         <div>
           <span className={`badge-status ${getBadgeClass(complaint.status)}`}>
-            {complaint.status}
+            {complaint.status.replace('_', ' ')}
           </span>
           <h1 style={{ fontSize: '24px', color: 'var(--text-primary)', marginTop: '6px' }}>{complaint.title}</h1>
         </div>
@@ -131,7 +145,7 @@ const ComplaintDetail = () => {
           
           {/* Progress Timeline */}
           <div className="glass-panel" style={{ padding: '24px' }}>
-            <h3 style={{ fontSize: '18px', color: 'var(--text-primary)', marginBottom: '20px' }}>Progress Tracking</h3>
+            <h3 style={{ fontSize: '18px', color: 'var(--text-primary)', marginBottom: '20px' }}>Resolution lifecycle tracker</h3>
             
             <div className="timeline">
               {steps.map((step, idx) => {
@@ -180,7 +194,7 @@ const ComplaintDetail = () => {
 
           {/* Photos Grid */}
           <div className="glass-panel" style={{ padding: '24px' }}>
-            <h3 style={{ fontSize: '18px', color: 'var(--text-primary)', marginBottom: '16px' }}>Visual Verification</h3>
+            <h3 style={{ fontSize: '18px', color: 'var(--text-primary)', marginBottom: '16px' }}>Cleaning Verification comparative slider</h3>
             
             <div className="comparison-slider">
               <div>
@@ -193,7 +207,7 @@ const ComplaintDetail = () => {
                 />
               </div>
 
-              {complaint.status === 'completed' && complaint.photoAfter && (
+              {['cleaned', 'completed'].includes(complaint.status) && complaint.photoAfter && (
                 <div>
                   <div style={{ fontSize: '11px', color: 'var(--color-primary)', marginBottom: '6px', fontWeight: 'bold' }}>AFTER CLEANUP (RESOLVED)</div>
                   <img
@@ -250,6 +264,13 @@ const ComplaintDetail = () => {
                 <div style={{ fontSize: '14px', color: 'var(--text-primary)', marginTop: '2px' }}>{complaint.citizen?.name}</div>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Rank: {complaint.citizen?.badge}</div>
               </div>
+
+              {complaint.team && (
+                <div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Assigned Team</div>
+                  <div style={{ fontSize: '14px', color: 'var(--text-primary)', marginTop: '2px' }}>👥 {complaint.team?.name}</div>
+                </div>
+              )}
 
               {complaint.worker && (
                 <div>

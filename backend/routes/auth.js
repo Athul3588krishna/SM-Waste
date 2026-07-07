@@ -78,55 +78,51 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// @desc    Google Sign-In / Sign-Up Integration (Simulated OAuth)
-// @route   POST /api/auth/google
-// @access  Public
-router.post('/google', async (req, res) => {
-  const { name, email } = req.body;
-
-  try {
-    // Check if user already exists
-    let user = await User.findOne({ email });
-
-    if (!user) {
-      // Create user if not exists (Sign-Up via Google)
-      // Generate a random password for Google registered users
-      const randomPassword = Math.random().toString(36).substring(2, 10);
-      user = await User.create({
-        name,
-        email,
-        password: randomPassword,
-        role: 'citizen', // Google sign in users are always citizens by default
-        points: 0,
-        badge: 'Novice Reporter',
-      });
-    }
-
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      points: user.points,
-      badge: user.badge,
-      token: generateToken(user._id),
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
 // @desc    Get current user profile
 // @route   GET /api/auth/me
 // @access  Private
 router.get('/me', protect, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user._id).populate('team', 'name');
     if (user) {
       res.json(user);
     } else {
       res.status(404).json({ message: 'User not found' });
     }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Update user profile
+// @route   PUT /api/auth/profile
+// @access  Private
+router.put('/profile', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('+password');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.name = req.body.name || user.name;
+    user.email = req.body.email || user.email;
+
+    if (req.body.password) {
+      user.password = req.body.password;
+    }
+
+    const updatedUser = await user.save();
+
+    res.json({
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      points: updatedUser.points,
+      badge: updatedUser.badge,
+      token: generateToken(updatedUser._id),
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

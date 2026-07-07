@@ -9,6 +9,8 @@ import AdminDashboard from './pages/AdminDashboard';
 import WorkerDashboard from './pages/WorkerDashboard';
 import ReportWaste from './pages/ReportWaste';
 import ComplaintDetail from './pages/ComplaintDetail';
+import Profile from './pages/Profile';
+import Home from './pages/Home';
 
 // Protected Route wrapper component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -27,7 +29,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return children;
@@ -56,12 +58,13 @@ const App = () => {
           <div style={{ flex: 1 }}>
             <Routes>
               {/* Public Routes */}
+              <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
 
-              {/* Protected Workspace Root */}
+              {/* Protected Workspace Dashboard */}
               <Route
-                path="/"
+                path="/dashboard"
                 element={
                   <ProtectedRoute>
                     <HomeDispatcher />
@@ -75,6 +78,16 @@ const App = () => {
                 element={
                   <ProtectedRoute allowedRoles={['citizen']}>
                     <ReportWaste />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Shared Profile Settings page */}
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
                   </ProtectedRoute>
                 }
               />
@@ -98,5 +111,6 @@ const App = () => {
     </AuthProvider>
   );
 };
+
 
 export default App;

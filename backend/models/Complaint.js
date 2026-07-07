@@ -7,9 +7,19 @@ const complaintSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    assignedToType: {
+      type: String,
+      enum: ['individual', 'team', null],
+      default: null,
+    },
     worker: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
+      default: null,
+    },
+    team: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Team',
       default: null,
     },
     title: {
@@ -55,10 +65,22 @@ const complaintSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'verified', 'assigned', 'completed', 'rejected'],
+      enum: ['pending', 'verified', 'assigned', 'in_progress', 'cleaned', 'completed', 'rejected'],
       default: 'pending',
     },
+    deadlineAt: {
+      type: Date,
+      default: null,
+    },
+    bonusAmount: {
+      type: Number,
+      default: 0,
+    },
     assignedAt: {
+      type: Date,
+      default: null,
+    },
+    cleanedAt: {
       type: Date,
       default: null,
     },

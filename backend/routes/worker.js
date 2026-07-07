@@ -9,79 +9,118 @@ const { upload, uploadImage } = require('../middleware/upload');
 router.use(protect);
 router.use(authorize('worker'));
 
-// Helper to determine badge level based on points
-const getBadge = (points) => {
-  if (points < 100) return 'Novice Reporter';
-  if (points < 300) return 'Eco Cadet';
-  if (points < 600) return 'Eco Sentinel';
-  return 'Eco Warrior';
-};
-
-// @desc    Get all complaints assigned to the logged-in worker
+// @desc    Get all complaints assigned to the worker (either individually or to their team)
 // @route   GET /api/worker/complaints
-// @access  Private (Worker only)
 router.get('/complaints', async (req, res) => {
   try {
-    const complaints = await Complaint.find({ worker: req.user._id })
+    // A worker can see complaints assigned to them individually OR to their team
+    const query = {
+      $or: [
+        { worker: req.user._id },
+      ],
+    };
+
+    if (req.user.team) {
+      query.$or.push({ team: req.user.team });
+    }
+
+    const complaints = await Complaint.find(query)
       .sort({ updatedAt: -1 })
-      .populate('citizen', 'name email badge');
+      .populate('citizen', 'name email badge')
+      .populate('team', 'name');
+
     res.json(complaints);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// @desc    Mark complaint as completed (Cleaned)
-// @route   PUT /api/worker/complaints/:id/complete
-// @access  Private (Worker only)
-router.put('/complaints/:id/complete', upload.single('photo'), uploadImage, async (req, res) => {
+// @desc    Switch worker availability (Online / Offline)
+// @route   PUT /api/worker/availability
+router.put('/availability', async (req, res) => {
+  const { isOnline } = req.body;
+
+  if (typeof isOnline !== 'boolean') {
+    return res.status(400).json({ message: 'isOnline value must be boolean' });
+  }
+
+  try {
+    const worker = await User.findById(req.user._id);
+    if (!worker) {
+      return res.status(404).json({ message: 'Worker not found' });
+    }
+
+    worker.isOnline = isOnline;
+    await worker.save();
+
+    res.json({ message: `Availability status updated to ${isOnline ? 'Online' : 'Offline'}`, isOnline });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Accept assigned task (Assigned -> In Progress)
+// @route   PUT /api/worker/complaints/:id/accept
+router.put('/complaints/:id/accept', async (req, res) => {
   try {
     const complaint = await Complaint.findById(req.params.id);
-
     if (!complaint) {
       return res.status(404).json({ message: 'Complaint not found' });
     }
 
-    // Verify it is assigned to this worker
-    if (complaint.worker.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'You are not authorized to complete this task' });
+    // Verify it is assigned to this worker or their team
+    const isAssignedToUser = complaint.worker && complaint.worker.toString() === req.user._id.toString();
+    const isAssignedToTeam = complaint.team && req.user.team && complaint.team.toString() === req.user.team.toString();
+
+    if (!isAssignedToUser && !isAssignedToTeam) {
+      return res.status(403).json({ message: 'You are not authorized to accept this task' });
     }
 
     if (complaint.status !== 'assigned') {
       return res.status(400).json({ message: 'Task is not in assigned state' });
     }
 
+    complaint.status = 'in_progress';
+    // If it was assigned to a team, record which specific worker accepted/is doing it
+    complaint.worker = req.user._id;
+    await complaint.save();
+
+    res.json({ message: 'Task accepted successfully', complaint });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Worker uploads clean up photo (In Progress -> Cleaned)
+// @route   PUT /api/worker/complaints/:id/clean
+router.put('/complaints/:id/clean', upload.single('photo'), uploadImage, async (req, res) => {
+  try {
+    const complaint = await Complaint.findById(req.params.id);
+    if (!complaint) {
+      return res.status(404).json({ message: 'Complaint not found' });
+    }
+
+    // Verify worker association
+    if (complaint.worker.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'You are not authorized to clean this task' });
+    }
+
+    if (complaint.status !== 'in_progress') {
+      return res.status(400).json({ message: 'Task must be In Progress to submit cleanup' });
+    }
+
     if (!req.file) {
       return res.status(400).json({ message: 'Please upload an after-cleaning photo' });
     }
 
-    // Update Complaint status
     complaint.photoAfter = req.file.uploadedUrl;
-    complaint.status = 'completed';
-    complaint.completedAt = Date.now();
+    complaint.status = 'cleaned'; // Wait for Admin Verification
+    complaint.cleanedAt = Date.now();
     await complaint.save();
 
-    // Reward the reporting Citizen
-    const citizen = await User.findById(complaint.citizen);
-    if (citizen) {
-      citizen.points += 50; // Earn 50 points per resolved complaint
-      citizen.badge = getBadge(citizen.points);
-      await citizen.save();
-    }
-
-    // Reward the Worker
-    const worker = await User.findById(req.user._id);
-    if (worker) {
-      worker.points += 10; // Earn 10 points per completed cleaning task
-      await worker.save();
-    }
-
-    res.json({
-      message: 'Task completed successfully',
-      complaint,
-    });
+    res.json({ message: 'Task marked as cleaned. Awaiting administrator verification.', complaint });
   } catch (error) {
-    console.error('Error completing task:', error);
+    console.error('Error uploading cleanup:', error);
     res.status(500).json({ message: error.message });
   }
 });

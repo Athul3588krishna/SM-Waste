@@ -25,6 +25,8 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/complaints', require('./routes/complaints'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/worker', require('./routes/worker'));
+app.use('/api/notifications', require('./routes/notifications'));
+
 
 // Root endpoint
 app.get('/', (req, res) => {
