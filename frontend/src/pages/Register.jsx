@@ -1,5 +1,6 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import API from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
 import { UserPlus, AlertCircle } from 'lucide-react';
 
@@ -10,8 +11,15 @@ const Register = () => {
   const [error, setError] = useState('');
   const [loadingSubmit, setLoadingSubmit] = useState(false);
 
-  const { register } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,10 +27,11 @@ const Register = () => {
     setLoadingSubmit(true);
 
     try {
-      await register(name, email, password);
-      navigate('/');
+      await API.post('/auth/register', { name, email, password });
+      alert('Thank you for registering. Please log in using your credentials.');
+      navigate('/login?role=citizen');
     } catch (err) {
-      setError(err);
+      setError(err.response?.data?.message || 'Registration failed');
     } finally {
       setLoadingSubmit(false);
     }

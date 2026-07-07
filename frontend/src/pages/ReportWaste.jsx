@@ -68,43 +68,37 @@ const ReportWaste = () => {
   };
 
   // Simulate AI waste scanner
-  const handlePhotoChange = (e) => {
+  // AI waste scanner using backend analyze endpoint (real Gemini / filename fallback)
+  const handlePhotoChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     setPhoto(file);
     setPhotoPreview(URL.createObjectURL(file));
     setError('');
-    
-    // Start scanner simulation
     setScanning(true);
     setScanComplete(false);
 
-    setTimeout(() => {
-      // Analyze file name for keywords
-      const name = file.name.toLowerCase();
-      let detectedType = 'Mixed';
-      let detectedSeverity = 'Medium';
+    const formData = new FormData();
+    formData.append('photo', file);
 
-      if (name.includes('bottle') || name.includes('plastic') || name.includes('bag') || name.includes('pet')) {
-        detectedType = 'Plastic';
-        detectedSeverity = 'Medium';
-      } else if (name.includes('food') || name.includes('waste') || name.includes('rotting') || name.includes('organic') || name.includes('veg')) {
-        detectedType = 'Organic';
-        detectedSeverity = 'High';
-      } else if (name.includes('battery') || name.includes('wire') || name.includes('phone') || name.includes('electronic') || name.includes('cable')) {
-        detectedType = 'E-waste';
-        detectedSeverity = 'Medium';
-      } else if (name.includes('paint') || name.includes('chemical') || name.includes('toxic') || name.includes('oil')) {
-        detectedType = 'Hazardous';
-        detectedSeverity = 'High';
-      }
-
-      setWasteType(detectedType);
-      setSeverity(detectedSeverity);
+    try {
+      const { data } = await API.post('/complaints/analyze', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      setWasteType(data.wasteType);
+      setSeverity(data.severity);
+    } catch (err) {
+      console.error('AI Scan failed, falling back to local defaults:', err);
+      // fallback defaults
+      setWasteType('Mixed');
+      setSeverity('Medium');
+    } finally {
       setScanning(false);
       setScanComplete(true);
-    }, 1800);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -133,7 +127,7 @@ const ReportWaste = () => {
           'Content-Type': 'multipart/form-data',
         },
       });
-      navigate('/');
+      navigate('/dashboard');
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.message || 'Failed to submit report. Please try again.');
@@ -272,6 +266,7 @@ const ReportWaste = () => {
                       <option value="E-waste">E-waste</option>
                       <option value="Hazardous">Hazardous</option>
                       <option value="Mixed">Mixed</option>
+                      <option value="Medical">Medical</option>
                     </select>
                   </div>
 

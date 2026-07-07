@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { Trash2, Hammer, Shield, AlertCircle, ArrowLeft } from 'lucide-react';
@@ -9,9 +9,16 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   
-  const { login } = useContext(AuthContext);
+  const { user, login } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   // Extract role from query parameters (?role=citizen, worker, admin)
   const queryParams = new URLSearchParams(location.search);

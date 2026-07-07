@@ -165,6 +165,33 @@ const AdminDashboard = () => {
     }
   };
 
+  // Auto-generate customized worker credentials (email and password) based on name
+  const handleAutoGenerateCredentials = () => {
+    if (!workerName.trim()) {
+      alert('Please enter a Worker Name first to generate credentials.');
+      return;
+    }
+    const cleanName = workerName
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '.')
+      .replace(/[^a-z0-9.]/g, '');
+    
+    // Add random suffix to prevent duplicates
+    const randomSuffix = Math.floor(100 + Math.random() * 900);
+    const generatedEmail = `${cleanName}${randomSuffix}@ecoclean.com`;
+    
+    // Generate secure password excluding ambiguous characters (like 1, l, 0, O)
+    const chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let generatedPassword = '';
+    for (let i = 0; i < 8; i++) {
+      generatedPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    
+    setWorkerEmail(generatedEmail);
+    setWorkerPassword(generatedPassword);
+  };
+
   // Delete worker account
   const handleDeleteWorker = async (id) => {
     if (!window.confirm('Are you sure you want to delete this worker account?')) return;
@@ -909,7 +936,7 @@ const AdminDashboard = () => {
             </h3>
 
             <form onSubmit={handleWorkerSubmit}>
-              <div className="form-group">
+              <div className="form-group" style={{ marginBottom: '8px' }}>
                 <label className="form-label">Worker Name</label>
                 <input
                   type="text"
@@ -920,6 +947,59 @@ const AdminDashboard = () => {
                   required
                 />
               </div>
+
+              {!editingWorkerId && (
+                <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+                  <button
+                    type="button"
+                    onClick={handleAutoGenerateCredentials}
+                    style={{
+                      background: 'rgba(0, 210, 255, 0.1)',
+                      border: '1px solid rgba(0, 210, 255, 0.3)',
+                      color: 'var(--color-secondary)',
+                      padding: '6px 12px',
+                      borderRadius: '6px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = 'rgba(0, 210, 255, 0.2)';
+                      e.target.style.borderColor = 'var(--color-secondary)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = 'rgba(0, 210, 255, 0.1)';
+                      e.target.style.borderColor = 'rgba(0, 210, 255, 0.3)';
+                    }}
+                  >
+                    ⚡ Auto-Generate Login info
+                  </button>
+                </div>
+              )}
+
+              {/* Show Copyable Credentials Box when generated */}
+              {!editingWorkerId && workerPassword && (
+                <div style={{
+                  background: 'rgba(0, 210, 255, 0.05)',
+                  border: '1px solid rgba(0, 210, 255, 0.2)',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                  marginBottom: '16px',
+                  fontFamily: 'monospace',
+                  color: 'var(--text-primary)'
+                }}>
+                  <div style={{ color: 'var(--color-secondary)', marginBottom: '6px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                    Generated Credentials (Copy & share with worker):
+                  </div>
+                  <div><strong>Email:</strong> {workerEmail}</div>
+                  <div><strong>Password:</strong> {workerPassword}</div>
+                </div>
+              )}
 
               <div className="form-group">
                 <label className="form-label">Email Address (Username)</label>

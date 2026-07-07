@@ -47,7 +47,7 @@ const complaintSchema = new mongoose.Schema(
     },
     wasteType: {
       type: String,
-      enum: ['Organic', 'Plastic', 'E-waste', 'Hazardous', 'Mixed'],
+      enum: ['Organic', 'Plastic', 'E-waste', 'Hazardous', 'Mixed', 'Medical'],
       default: 'Mixed',
     },
     severity: {

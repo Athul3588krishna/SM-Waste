@@ -30,6 +30,13 @@ const Home = () => {
     return () => window.removeEventListener('hashchange', checkHash);
   }, []);
 
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
+
   const handleSearchChange = (e) => {
     const val = e.target.value;
     setSearchQuery(val);
