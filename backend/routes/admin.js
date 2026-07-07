@@ -447,8 +447,35 @@ router.put('/complaints/:id/verify-cleanup', async (req, res) => {
       await citizen.save();
     }
 
-    // Award bonus to worker who marked cleanup
-    if (complaint.worker) {
+    // Award bonus/points to worker(s)
+    if (complaint.assignedToType === 'team' && complaint.team) {
+      const Team = require('../models/Team');
+      const team = await Team.findById(complaint.team);
+      if (team && team.members && team.members.length > 0) {
+        const splitBonus = Number((bonus / team.members.length).toFixed(2));
+        for (const memberId of team.members) {
+          const memberUser = await User.findById(memberId);
+          if (memberUser) {
+            memberUser.points += 10;
+            if (splitBonus > 0) {
+              memberUser.bonusHistory.push({
+                amount: splitBonus,
+                complaint: complaint._id,
+                date: Date.now(),
+              });
+            }
+            await memberUser.save();
+
+            // Notification to member
+            await Notification.create({
+              user: memberUser._id,
+              title: 'Team Task Verified',
+              message: `Your team cleaning for "${complaint.title}" was verified! Split bonus of $${splitBonus} awarded.`,
+            });
+          }
+        }
+      }
+    } else if (complaint.worker) {
       const worker = await User.findById(complaint.worker);
       if (worker) {
         worker.points += 10; // 10 points

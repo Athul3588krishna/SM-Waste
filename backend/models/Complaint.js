@@ -55,6 +55,10 @@ const complaintSchema = new mongoose.Schema(
       enum: ['Low', 'Medium', 'High'],
       default: 'Medium',
     },
+    aiAnalysis: {
+      type: String,
+      default: null,
+    },
     photoBefore: {
       type: String,
       required: [true, 'Please upload a photo of the waste dump'],

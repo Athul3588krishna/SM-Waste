@@ -31,6 +31,18 @@ const AdminDashboard = () => {
   const [verifyingComplaint, setVerifyingComplaint] = useState(null);
   const [bonusAmount, setBonusAmount] = useState('50');
 
+  // Payment Gateway Modal State
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentStep, setPaymentStep] = useState('card'); // 'card' | 'processing' | 'otp' | 'success'
+  const [cardHolder, setCardHolder] = useState('EcoClean Admin');
+  const [cardNumber, setCardNumber] = useState('4111 2222 3333 4444');
+  const [cardExpiry, setCardExpiry] = useState('12/29');
+  const [cardCvv, setCardCvv] = useState('123');
+  const [otpCode, setOtpCode] = useState('');
+  const [generatedOtp, setGeneratedOtp] = useState('');
+  const [transactionId, setTransactionId] = useState('');
+  const [paymentError, setPaymentError] = useState('');
+
   // Worker Modal State
   const [showWorkerModal, setShowWorkerModal] = useState(false);
   const [workerName, setWorkerName] = useState('');
@@ -115,20 +127,36 @@ const AdminDashboard = () => {
     }
   };
 
-  // Submit Cleanup Verification
-  const handleVerifyCleanup = async (e) => {
+  // Submit Cleanup Verification (Pre-trigger payment modal)
+  const handleVerifyCleanup = (e) => {
     e.preventDefault();
+    if (!verifyingComplaint) return;
+    
+    // Generate mock transaction details
+    const randomTxId = 'TXN-' + Math.floor(10000000 + Math.random() * 90000000);
+    const mockOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    setTransactionId(randomTxId);
+    setGeneratedOtp(mockOtp);
+    setOtpCode('');
+    setPaymentError('');
+    setPaymentStep('card');
+    setShowPaymentModal(true);
+  };
+
+  // Perform actual API verification after transaction succeeds
+  const executeCleanupVerification = async () => {
     try {
       await API.put(`/admin/complaints/${verifyingComplaint._id}/verify-cleanup`, {
-        bonusAmount,
+        bonusAmount: Number(bonusAmount),
       });
-      alert('Cleanup verified! Eco-points and bonuses have been awarded.');
       setVerifyingComplaint(null);
       setBonusAmount('50');
+      setShowPaymentModal(false);
       fetchAdminData();
     } catch (error) {
       console.error(error);
-      alert(error.response?.data?.message || 'Verification failed');
+      alert(error.response?.data?.message || 'Verification database update failed');
     }
   };
 
@@ -293,7 +321,7 @@ const AdminDashboard = () => {
       </svg>
     `;
 
-    return new L.DivIcon({
+    return L.divIcon({
       html: svgIcon,
       className: 'custom-leaflet-marker',
       iconSize: [30, 30],
@@ -304,8 +332,8 @@ const AdminDashboard = () => {
 
   // Filtering reports list
   const filteredComplaints = complaints.filter((comp) => {
-    const matchesSearch = comp.title.toLowerCase().includes(search.toLowerCase()) || 
-                          comp.location.address.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = (comp.title?.toLowerCase() || '').includes(search.toLowerCase()) || 
+                          (comp.location?.address?.toLowerCase() || '').includes(search.toLowerCase());
     const matchesStatus = statusFilter === 'all' || comp.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -316,7 +344,12 @@ const AdminDashboard = () => {
     const rows = filteredComplaints.map((c) => {
       const assigneeName = c.assignedToType === 'individual' ? c.worker?.name : c.assignedToType === 'team' ? c.team?.name : 'Unassigned';
       const deadline = c.deadlineAt ? new Date(c.deadlineAt).toLocaleDateString() : 'N/A';
-      return `"${c.title.replace(/"/g, '""')}","${c.location.address.replace(/"/g, '""')}",${c.location.latitude},${c.location.longitude},"${c.citizen?.name || 'Unknown'}","${c.wasteType}","${c.severity}","${c.assignedToType || 'Unassigned'}","${assigneeName || 'N/A'}","${c.status}","${deadline}",${c.bonusAmount}`;
+      const address = c.location?.address || 'N/A';
+      const lat = c.location?.latitude || 0;
+      const lng = c.location?.longitude || 0;
+      const title = c.title || 'Untitled';
+      const citizenName = c.citizen?.name || 'Unknown';
+      return `"${title.replace(/"/g, '""')}","${address.replace(/"/g, '""')}",${lat},${lng},"${citizenName}","${c.wasteType || 'Mixed'}","${c.severity || 'Medium'}","${c.assignedToType || 'Unassigned'}","${assigneeName || 'N/A'}","${c.status}","${deadline}",${c.bonusAmount}`;
     });
     
     const blob = new Blob([headers + rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
@@ -334,6 +367,19 @@ const AdminDashboard = () => {
   const isOverdue = (comp) => {
     if (!comp.deadlineAt || ['completed', 'rejected', 'cleaned'].includes(comp.status)) return false;
     return new Date(comp.deadlineAt) < new Date();
+  };
+
+  const getBadgeClass = (status) => {
+    switch (status) {
+      case 'pending': return 'status-pending';
+      case 'verified': return 'status-verified';
+      case 'assigned': return 'status-assigned';
+      case 'in_progress': return 'status-assigned';
+      case 'cleaned': return 'status-verified';
+      case 'completed': return 'status-completed';
+      case 'rejected': return 'status-rejected';
+      default: return '';
+    }
   };
 
   const PIE_COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
@@ -440,22 +486,24 @@ const AdminDashboard = () => {
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                {complaints.map((comp) => (
-                  <Marker key={comp._id} position={[comp.location.latitude, comp.location.longitude]} icon={getMarkerIcon(comp.status)}>
-                    <Popup>
-                      <div style={{ minWidth: '150px' }}>
-                        <h4 style={{ margin: '0 0 4px 0', fontSize: '13px', fontWeight: '700' }}>{comp.title}</h4>
-                        <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: '#9ca3af' }}>{comp.location.address}</p>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 'bold' }}>{comp.status.replace('_', ' ')}</span>
-                          <Link to={`/complaint/${comp._id}`} style={{ fontSize: '10px', color: 'var(--color-secondary)', textDecoration: 'none', fontWeight: 'bold' }}>
-                            View Detail
-                          </Link>
+                {complaints
+                  .filter((comp) => comp?.location?.latitude && comp?.location?.longitude)
+                  .map((comp) => (
+                    <Marker key={comp._id} position={[comp.location.latitude, comp.location.longitude]} icon={getMarkerIcon(comp.status)}>
+                      <Popup>
+                        <div style={{ minWidth: '150px' }}>
+                          <h4 style={{ margin: '0 0 4px 0', fontSize: '13px', fontWeight: '700' }}>{comp.title || 'Untitled'}</h4>
+                          <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: '#9ca3af' }}>{comp.location?.address || 'N/A'}</p>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 'bold' }}>{(comp.status || '').replace('_', ' ')}</span>
+                            <Link to={`/complaint/${comp._id}`} style={{ fontSize: '10px', color: 'var(--color-secondary)', textDecoration: 'none', fontWeight: 'bold' }}>
+                              View Detail
+                            </Link>
+                          </div>
                         </div>
-                      </div>
-                    </Popup>
-                  </Marker>
-                ))}
+                      </Popup>
+                    </Marker>
+                  ))}
               </MapContainer>
             </div>
           </div>
@@ -528,11 +576,13 @@ const AdminDashboard = () => {
                           <td style={{ padding: '14px 16px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                               <div style={{ width: '40px', height: '40px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border-glass)', background: '#090d16' }}>
-                                <img src={comp.photoBefore.startsWith('http') ? comp.photoBefore : `http://localhost:5000${comp.photoBefore}`} alt="waste" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                <img src={comp.photoBefore ? (comp.photoBefore.startsWith('http') ? comp.photoBefore : `http://localhost:5000${comp.photoBefore}`) : ''} alt="waste" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                               </div>
                               <div>
-                                <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>{comp.title}</div>
-                                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{comp.location.address.slice(0, 35)}...</div>
+                                <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>{comp.title || 'Untitled'}</div>
+                                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                  {comp.location?.address ? comp.location.address.slice(0, 35) + '...' : 'N/A'}
+                                </div>
                               </div>
                             </div>
                           </td>
@@ -739,14 +789,14 @@ const AdminDashboard = () => {
                         <td style={{ padding: '10px', color: 'var(--text-primary)', fontWeight: '500' }}>{t.name}</td>
                         <td style={{ padding: '10px', color: 'var(--text-secondary)' }}>{t.members?.length || 0} members</td>
                         <td style={{ padding: '10px', color: 'var(--text-muted)', fontSize: '12px' }}>
-                          {t.members?.map(m => m.name).join(', ')}
+                          {t.members?.map(m => m?.name).filter(Boolean).join(', ') || 'No members'}
                         </td>
                         <td style={{ padding: '10px', textAlign: 'right' }}>
                           <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
                             <button onClick={() => {
                               setEditingTeamId(t._id);
                               setTeamName(t.name);
-                              setSelectedMembers(t.members.map(m => m._id));
+                              setSelectedMembers(t.members?.map(m => m?._id).filter(Boolean) || []);
                               setShowTeamModal(true);
                             }} className="btn btn-secondary" style={{ padding: '6px' }} title="Edit Team">
                               <Edit size={12} />
@@ -923,6 +973,294 @@ const AdminDashboard = () => {
                 <button type="submit" className="btn btn-primary">Confirm & Verify Resolution</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: MOCK PAYMENT GATEWAY */}
+      {showPaymentModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(5, 8, 14, 0.85)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: '20px' }}>
+          
+          {/* Simulated SMS OTP Notification Banner */}
+          {paymentStep === 'otp' && (
+            <div style={{
+              position: 'fixed',
+              top: '20px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: '#1c2333',
+              border: '2px solid var(--color-primary)',
+              borderRadius: '12px',
+              padding: '12px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              boxShadow: '0 8px 32px rgba(16, 185, 129, 0.25)',
+              zIndex: 310,
+              maxWidth: '90%',
+              width: '420px',
+              animation: 'float 3s infinite ease-in-out'
+            }}>
+              <div style={{ background: 'var(--color-primary)', borderRadius: '50%', padding: '6px', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Megaphone size={16} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '10px', color: 'var(--color-primary)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Simulated Message Banner</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-primary)', marginTop: '2px' }}>
+                  SecurePay: Your one-time authorization code is <strong style={{ color: 'var(--color-primary)', fontSize: '14px' }}>{generatedOtp}</strong>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '420px', padding: '30px', position: 'relative', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
+            
+            {/* Header */}
+            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+              <div style={{
+                width: '50px',
+                height: '50px',
+                borderRadius: '50%',
+                background: paymentStep === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+                color: paymentStep === 'success' ? 'var(--color-primary)' : 'var(--color-secondary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 12px auto'
+              }}>
+                {paymentStep === 'success' ? <CheckSquare size={24} /> : <Shield size={24} />}
+              </div>
+              <h3 style={{ fontSize: '18px', color: 'var(--text-primary)', fontWeight: '700' }}>
+                {paymentStep === 'success' ? 'Transaction Approved' : 'Secure Payout Gateway'}
+              </h3>
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                {paymentStep === 'success' ? 'Funds successfully processed' : 'Municipal Smart Waste Payout Protocol'}
+              </p>
+            </div>
+
+            {/* STEP 1: CARD DETAILS FORM */}
+            {paymentStep === 'card' && (
+              <div>
+                {/* Virtual Card Preview */}
+                <div style={{
+                  background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '16px',
+                  padding: '20px',
+                  color: '#fff',
+                  marginBottom: '20px',
+                  boxShadow: '0 8px 16px rgba(0,0,0,0.3)',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.05)', filter: 'blur(30px)' }}></div>
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 'bold', letterSpacing: '1px', opacity: 0.6 }}>CITY COUNCIL CO-FUND</span>
+                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-secondary)' }}>VISA</span>
+                  </div>
+
+                  <div style={{ width: '36px', height: '26px', background: 'linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%)', borderRadius: '6px', marginBottom: '16px', position: 'relative' }}>
+                    <div style={{ position: 'absolute', top: 0, left: '10px', bottom: 0, width: '1px', background: 'rgba(0,0,0,0.1)' }}></div>
+                    <div style={{ position: 'absolute', left: 0, right: 0, top: '8px', height: '1px', background: 'rgba(0,0,0,0.1)' }}></div>
+                  </div>
+
+                  <div style={{ fontSize: '18px', letterSpacing: '2.5px', marginBottom: '16px', fontFamily: 'monospace' }}>
+                    {cardNumber || '•••• •••• •••• ••••'}
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                    <div>
+                      <div style={{ fontSize: '8px', opacity: 0.5, textTransform: 'uppercase', marginBottom: '2px' }}>Card Holder</div>
+                      <div style={{ fontSize: '12px', fontWeight: '600', letterSpacing: '0.5px' }}>{cardHolder || 'ADMIN'}</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '16px' }}>
+                      <div>
+                        <div style={{ fontSize: '8px', opacity: 0.5, textTransform: 'uppercase', marginBottom: '2px' }}>Expires</div>
+                        <div style={{ fontSize: '12px', fontWeight: '600' }}>{cardExpiry || 'MM/YY'}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '8px', opacity: 0.5, textTransform: 'uppercase', marginBottom: '2px' }}>CVV</div>
+                        <div style={{ fontSize: '12px', fontWeight: '600' }}>{cardCvv || '•••'}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Amount display */}
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-glass)', borderRadius: '10px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Bonus Payout Payout:</span>
+                  <span style={{ fontSize: '18px', fontWeight: '800', color: 'var(--color-secondary)' }}>${bonusAmount}.00 USD</span>
+                </div>
+
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  setPaymentStep('processing');
+                  setTimeout(() => {
+                    setPaymentStep('otp');
+                  }, 2000);
+                }}>
+                  <div className="form-group" style={{ marginBottom: '12px' }}>
+                    <label className="form-label">Card Holder Name</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={cardHolder}
+                      onChange={(e) => setCardHolder(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: '12px' }}>
+                    <label className="form-label">Card Number</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={cardNumber}
+                      onChange={(e) => setCardNumber(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+                    <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+                      <label className="form-label">Expiry Date</label>
+                      <input
+                        type="text"
+                        placeholder="MM/YY"
+                        className="form-input"
+                        value={cardExpiry}
+                        onChange={(e) => setCardExpiry(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+                      <label className="form-label">CVV Code</label>
+                      <input
+                        type="password"
+                        placeholder="123"
+                        maxLength="3"
+                        className="form-input"
+                        value={cardCvv}
+                        onChange={(e) => setCardCvv(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                    <button type="button" onClick={() => setShowPaymentModal(false)} className="btn btn-secondary">Cancel</button>
+                    <button type="submit" className="btn btn-primary">Authorize Payout</button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* STEP 2: PROCESSING SCREEN */}
+            {paymentStep === 'processing' && (
+              <div style={{ textAlign: 'center', padding: '30px 0' }}>
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  border: '3px solid rgba(59, 130, 246, 0.1)',
+                  borderTopColor: 'var(--color-secondary)',
+                  borderRadius: '50%',
+                  margin: '0 auto 20px auto',
+                  animation: 'spin 1s infinite linear'
+                }}></div>
+                <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)' }}>Processing Payment...</div>
+                <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }}>
+                  Please do not refresh the page or click back. Securing connection with local escrow clearing house.
+                </p>
+              </div>
+            )}
+
+            {/* STEP 3: OTP VERIFICATION */}
+            {paymentStep === 'otp' && (
+              <div>
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-glass)', borderRadius: '10px', padding: '12px 16px', marginBottom: '20px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Transaction Payout</div>
+                  <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)', marginTop: '4px' }}>${bonusAmount}.00 USD</div>
+                  <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>TxID: {transactionId}</div>
+                </div>
+
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  if (otpCode.trim() === generatedOtp) {
+                    setPaymentStep('success');
+                  } else {
+                    setPaymentError('Invalid authentication code. Please check the notification banner.');
+                  }
+                }}>
+                  <div className="form-group" style={{ marginBottom: '16px' }}>
+                    <label className="form-label" style={{ textAlign: 'center', display: 'block', fontSize: '13px' }}>
+                      Enter 6-Digit Verification Code (OTP)
+                    </label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="••••••"
+                      maxLength="6"
+                      style={{ textAlign: 'center', letterSpacing: '4px', fontSize: '18px', fontWeight: 'bold' }}
+                      value={otpCode}
+                      onChange={(e) => {
+                        setOtpCode(e.target.value);
+                        setPaymentError('');
+                      }}
+                      required
+                    />
+                    {paymentError && (
+                      <div style={{ color: 'var(--color-danger)', fontSize: '11px', marginTop: '6px', textAlign: 'center', fontWeight: '600' }}>
+                        ❌ {paymentError}
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                    <button type="button" onClick={() => setPaymentStep('card')} className="btn btn-secondary">Back</button>
+                    <button type="submit" className="btn btn-primary">Verify & Confirm Payout</button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* STEP 4: TRANSACTION SUCCESS */}
+            {paymentStep === 'success' && (
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ background: 'rgba(16, 185, 129, 0.05)', border: '1px dashed rgba(16, 185, 129, 0.3)', borderRadius: '12px', padding: '16px', marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                    <span>Receipt ID:</span>
+                    <span style={{ fontFamily: 'monospace', fontWeight: 'bold', color: 'var(--text-primary)' }}>{transactionId}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '8px 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                    <span>Amount Credited:</span>
+                    <span style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>${bonusAmount}.00 USD</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '8px 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                    <span>Beneficiary:</span>
+                    <span style={{ fontWeight: 'bold', color: 'var(--text-primary)', textAlign: 'right' }}>
+                      {verifyingComplaint?.assignedToType === 'team'
+                        ? `👥 ${verifyingComplaint?.team?.name || 'Sanitation Team'} (Split)`
+                        : `👷 ${verifyingComplaint?.worker?.name || 'Sanitation Worker'}`}
+                      {verifyingComplaint?.assignedToType === 'team' && (
+                        <div style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: 'normal', marginTop: '2px' }}>
+                          Split equally among members
+                        </div>
+                      )}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                    <span>Status:</span>
+                    <span style={{ fontWeight: 'bold', color: 'var(--color-primary)', textTransform: 'uppercase' }}>Cleared (Success)</span>
+                  </div>
+                </div>
+
+                <button onClick={executeCleanupVerification} className="btn btn-primary" style={{ width: '100%', padding: '12px' }}>
+                  Complete Cleanup Verification
+                </button>
+              </div>
+            )}
+
           </div>
         </div>
       )}

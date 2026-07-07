@@ -108,7 +108,7 @@ const Navbar = () => {
     );
   }
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const unreadCount = Array.isArray(notifications) ? notifications.filter((n) => !n.isRead).length : 0;
 
   return (
     <nav style={{
@@ -249,7 +249,7 @@ const Navbar = () => {
               </div>
 
               <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
-                {notifications.length === 0 ? (
+                {(!Array.isArray(notifications) || notifications.length === 0) ? (
                   <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
                     No notifications yet.
                   </div>
