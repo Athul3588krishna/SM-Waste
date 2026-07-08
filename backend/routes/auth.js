@@ -187,6 +187,46 @@ router.get('/leaderboard', protect, async (req, res) => {
       citizens: topCitizens,
       workers: topWorkers,
     });
+// @desc    Redeem points for tax vouchers
+// @route   PUT /api/auth/redeem
+// @access  Private
+router.put('/redeem', protect, async (req, res) => {
+  const { pointsToDeduct, voucherName } = req.body;
+
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.points < pointsToDeduct) {
+      return res.status(400).json({ message: 'Insufficient Eco-Points' });
+    }
+
+    user.points -= pointsToDeduct;
+    
+    // Recalculate badge based on new points count
+    const getBadge = (pts) => {
+      if (pts >= 300) return 'Green Champion';
+      if (pts >= 100) return 'Eco Sentinel';
+      return 'Novice Reporter';
+    };
+    user.badge = getBadge(user.points);
+    await user.save();
+
+    // Create Notification
+    const Notification = require('../models/Notification');
+    await Notification.create({
+      user: user._id,
+      title: 'Voucher Redeemed 🎁',
+      message: `Successfully redeemed ${pointsToDeduct} Eco-Points for "${voucherName}". Your coupon is now active!`,
+    });
+
+    res.json({
+      message: 'Points redeemed successfully',
+      points: user.points,
+      badge: user.badge
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

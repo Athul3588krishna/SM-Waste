@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import API from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
-import { Award, PlusCircle, AlertCircle, Clock, MapPin, CheckCircle2, ChevronRight, Trophy, Megaphone, Calendar } from 'lucide-react';
+import { Award, PlusCircle, AlertCircle, Clock, MapPin, CheckCircle2, ChevronRight, Trophy, Megaphone, Calendar, Lock, Gift } from 'lucide-react';
 
 const CitizenDashboard = () => {
   const { user, setUser } = useContext(AuthContext);
@@ -11,6 +11,12 @@ const CitizenDashboard = () => {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Rewards States
+  const [activeSubTab, setActiveSubTab] = useState('complaints'); // 'complaints' or 'rewards'
+  const [redeeming, setRedeeming] = useState(null); // stores active voucher being redeemed
+  const [voucherCode, setVoucherCode] = useState('');
+  const [redeemingState, setRedeemingState] = useState(false);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -41,6 +47,33 @@ const CitizenDashboard = () => {
 
     fetchDashboardData();
   }, []);
+
+  const handleRedeem = async (voucherName, cost) => {
+    if ((user?.points || 0) < cost) {
+      alert('Insufficient Eco-Points');
+      return;
+    }
+
+    setRedeemingState(true);
+    try {
+      const res = await API.put('/auth/redeem', { pointsToDeduct: cost, voucherName });
+      setUser({ ...user, points: res.data.points, badge: res.data.badge });
+      
+      // Generate a random mock voucher code
+      const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let code = 'ECO-';
+      for (let i = 0; i < 8; i++) {
+        code += characters.charAt(Math.floor(Math.random() * characters.length));
+      }
+      
+      setVoucherCode(code);
+      setRedeeming({ name: voucherName, cost, code });
+    } catch (err) {
+      alert(err.response?.data?.message || 'Points redemption failed');
+    } finally {
+      setRedeemingState(false);
+    }
+  };
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -199,88 +232,226 @@ const CitizenDashboard = () => {
           </div>
         </div>
 
-        {/* Middle Side: Reported List */}
+        {/* Middle Side: Dynamic Tabs (Reported List vs Rewards Center) */}
         <div className="glass-panel" style={{ gridColumn: 'span 2' }}>
-          <h3 style={{ fontSize: '18px', color: 'var(--text-primary)', marginBottom: '20px' }}>
-            My Reported Dumps ({complaints.length})
-          </h3>
+          
+          <div style={{ display: 'flex', borderBottom: '1px solid var(--border-glass)', marginBottom: '20px', paddingBottom: '10px', gap: '20px' }}>
+            <button 
+              onClick={() => setActiveSubTab('complaints')}
+              style={{ 
+                background: 'none', 
+                border: 'none', 
+                color: activeSubTab === 'complaints' ? 'var(--color-primary)' : 'var(--text-secondary)',
+                fontSize: '15px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                borderBottom: activeSubTab === 'complaints' ? '2px solid var(--color-primary)' : '2px solid transparent',
+                paddingBottom: '8px',
+                transition: 'all 0.3s'
+              }}
+            >
+              My Reported Dumps ({complaints.length})
+            </button>
+            <button 
+              onClick={() => setActiveSubTab('rewards')}
+              style={{ 
+                background: 'none', 
+                border: 'none', 
+                color: activeSubTab === 'rewards' ? 'var(--color-primary)' : 'var(--text-secondary)',
+                fontSize: '15px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                borderBottom: activeSubTab === 'rewards' ? '2px solid var(--color-primary)' : '2px solid transparent',
+                paddingBottom: '8px',
+                transition: 'all 0.3s'
+              }}
+            >
+              Eco-Rewards Center 🎁
+            </button>
+          </div>
 
-          {complaints.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 20px', border: '1px dashed var(--border-glass)', borderRadius: '12px' }}>
-              <MapPin size={40} color="var(--text-muted)" style={{ marginBottom: '16px' }} />
-              <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>You haven\'t reported any waste dumps yet.</p>
-              <Link to="/report" className="btn btn-outline" style={{ marginTop: '16px', display: 'inline-flex' }}>
-                Report First Incident
-              </Link>
+          {activeSubTab === 'complaints' ? (
+            <div>
+              {complaints.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px 20px', border: '1px dashed var(--border-glass)', borderRadius: '12px' }}>
+                  <MapPin size={40} color="var(--text-muted)" style={{ marginBottom: '16px' }} />
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>You haven't reported any waste dumps yet.</p>
+                  <Link to="/report" className="btn btn-outline" style={{ marginTop: '16px', display: 'inline-flex' }}>
+                    Report First Incident
+                  </Link>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {complaints.map((complaint) => (
+                    <Link
+                      key={complaint._id}
+                      to={`/complaint/${complaint._id}`}
+                      style={{ textDecoration: 'none', display: 'block', transition: 'transform 0.2s' }}
+                      onMouseEnter={(e) => e.currentTarget.style.transform = 'translateX(4px)'}
+                      onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
+                    >
+                      <div style={{
+                        background: 'rgba(255,255,255,0.01)',
+                        border: '1px solid var(--border-glass)',
+                        borderRadius: '12px',
+                        padding: '14px',
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: '12px'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1, minWidth: '220px' }}>
+                          <div style={{
+                            width: '54px',
+                            height: '54px',
+                            borderRadius: '8px',
+                            overflow: 'hidden',
+                            background: '#090d16',
+                            border: '1px solid var(--border-glass)'
+                          }}>
+                            <img
+                              src={complaint.photoBefore.startsWith('http') ? complaint.photoBefore : `http://localhost:5000${complaint.photoBefore}`}
+                              alt="waste dump"
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                          </div>
+                          <div>
+                            <h4 style={{ fontSize: '15px', color: 'var(--text-primary)', fontWeight: '600' }}>{complaint.title}</h4>
+                            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <MapPin size={11} /> {complaint.location.address.slice(0, 40)}{complaint.location.address.length > 40 ? '...' : ''}
+                            </p>
+                            <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
+                              <span style={{ fontSize: '10px', background: 'rgba(255,255,255,0.04)', color: 'var(--text-secondary)', padding: '2px 6px', borderRadius: '4px' }}>
+                                {complaint.wasteType}
+                              </span>
+                              <span style={{
+                                fontSize: '10px',
+                                background: complaint.severity === 'High' ? 'rgba(255, 74, 90, 0.1)' : 'rgba(255,255,255,0.04)',
+                                color: complaint.severity === 'High' ? 'var(--color-danger)' : 'var(--text-secondary)',
+                                padding: '2px 6px',
+                                borderRadius: '4px'
+                              }}>
+                                {complaint.severity}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <span className={`badge-status ${getBadgeClass(complaint.status)}`} style={{ fontSize: '11px', padding: '2px 10px' }}>
+                            {getStatusIcon(complaint.status)}
+                            {complaint.status.replace('_', ' ')}
+                          </span>
+                          <ChevronRight size={16} color="var(--text-muted)" />
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {complaints.map((complaint) => (
-                <Link
-                  key={complaint._id}
-                  to={`/complaint/${complaint._id}`}
-                  style={{ textDecoration: 'none', display: 'block', transition: 'transform 0.2s' }}
-                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateX(4px)'}
-                  onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
-                >
-                  <div style={{
-                    background: 'rgba(255,255,255,0.01)',
-                    border: '1px solid var(--border-glass)',
-                    borderRadius: '12px',
-                    padding: '14px',
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: '12px'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1, minWidth: '220px' }}>
-                      <div style={{
-                        width: '54px',
-                        height: '54px',
-                        borderRadius: '8px',
-                        overflow: 'hidden',
-                        background: '#090d16',
-                        border: '1px solid var(--border-glass)'
-                      }}>
-                        <img
-                          src={complaint.photoBefore.startsWith('http') ? complaint.photoBefore : `http://localhost:5000${complaint.photoBefore}`}
-                          alt="waste dump"
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                      </div>
-                      <div>
-                        <h4 style={{ fontSize: '15px', color: 'var(--text-primary)', fontWeight: '600' }}>{complaint.title}</h4>
-                        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <MapPin size={11} /> {complaint.location.address.slice(0, 40)}{complaint.location.address.length > 40 ? '...' : ''}
-                        </p>
-                        <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
-                          <span style={{ fontSize: '10px', background: 'rgba(255,255,255,0.04)', color: 'var(--text-secondary)', padding: '2px 6px', borderRadius: '4px' }}>
-                            {complaint.wasteType}
+            <div>
+              <div style={{ background: 'rgba(16, 185, 129, 0.04)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '10px', padding: '14px', marginBottom: '24px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                🎉 You have <strong style={{ color: 'var(--color-primary)' }}>{user?.points || 0} Eco-Points</strong> available! Spend your points to redeem discount vouchers for municipal services and utility taxes.
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {[
+                  {
+                    name: '5% Municipal Services Tax Discount',
+                    cost: 50,
+                    badgeReq: 'Eco Cadet',
+                    desc: 'Deduct 50 points to receive a voucher code providing 5% off on your municipal service tax bill.',
+                  },
+                  {
+                    name: '10% Municipal Water Bill Coupon',
+                    cost: 100,
+                    badgeReq: 'Eco Sentinel',
+                    desc: 'Deduct 100 points to claim a 10% discount on your municipal water utility billing.',
+                  },
+                  {
+                    name: '15% Annual Property Tax Voucher',
+                    cost: 250,
+                    badgeReq: 'Green Champion',
+                    desc: 'Spend 250 points to unlock a premium 15% discount voucher on your annual property tax.',
+                  }
+                ].map((reward, rewardIdx) => {
+                  const isPointsEnough = (user?.points || 0) >= reward.cost;
+                  
+                  // Evaluate rank eligibility
+                  const userRankWeight = 
+                    user?.badge === 'Green Champion' ? 3 :
+                    user?.badge === 'Eco Sentinel' ? 2 :
+                    user?.badge === 'Eco Cadet' ? 1 : 0;
+
+                  const reqRankWeight = 
+                    reward.badgeReq === 'Green Champion' ? 3 :
+                    reward.badgeReq === 'Eco Sentinel' ? 2 :
+                    reward.badgeReq === 'Eco Cadet' ? 1 : 0;
+
+                  const isRankEnough = userRankWeight >= reqRankWeight;
+                  const isEligible = isPointsEnough && isRankEnough;
+
+                  return (
+                    <div key={rewardIdx} style={{
+                      background: 'rgba(255,255,255,0.01)',
+                      border: '1px solid var(--border-glass)',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: '16px',
+                      opacity: isRankEnough ? 1 : 0.6
+                    }}>
+                      <div style={{ flex: 1, minWidth: '240px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '18px' }}>🎁</span>
+                          <h4 style={{ fontSize: '15px', color: 'var(--text-primary)', fontWeight: '700' }}>{reward.name}</h4>
+                        </div>
+                        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px', lineHeight: '1.4' }}>{reward.desc}</p>
+                        
+                        <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '11px', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--color-primary)', padding: '2px 8px', borderRadius: '4px', fontWeight: 'bold' }}>
+                            Cost: {reward.cost} pts
                           </span>
-                          <span style={{
-                            fontSize: '10px',
-                            background: complaint.severity === 'High' ? 'rgba(255, 74, 90, 0.1)' : 'rgba(255,255,255,0.04)',
-                            color: complaint.severity === 'High' ? 'var(--color-danger)' : 'var(--text-secondary)',
-                            padding: '2px 6px',
-                            borderRadius: '4px'
+                          <span style={{ 
+                            fontSize: '11px', 
+                            background: isRankEnough ? 'rgba(59, 130, 246, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
+                            color: isRankEnough ? 'var(--color-secondary)' : 'var(--color-danger)', 
+                            padding: '2px 8px', 
+                            borderRadius: '4px',
+                            fontWeight: '600'
                           }}>
-                            {complaint.severity}
+                            Rank Req: {reward.badgeReq}
                           </span>
                         </div>
                       </div>
+
+                      <div>
+                        {isEligible ? (
+                          <button 
+                            className="btn btn-primary"
+                            onClick={() => handleRedeem(reward.name, reward.cost)}
+                            style={{ padding: '8px 16px', fontSize: '12px' }}
+                            disabled={redeemingState}
+                          >
+                            Redeem Reward
+                          </button>
+                        ) : (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', fontSize: '12px', background: 'rgba(255,255,255,0.03)', padding: '8px 14px', borderRadius: '8px', border: '1px dashed var(--border-glass)' }}>
+                            <Lock size={12} />
+                            <span>{!isRankEnough ? `Requires ${reward.badgeReq}` : 'Need More Points'}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <span className={`badge-status ${getBadgeClass(complaint.status)}`} style={{ fontSize: '11px', padding: '2px 10px' }}>
-                        {getStatusIcon(complaint.status)}
-                        {complaint.status.replace('_', ' ')}
-                      </span>
-                      <ChevronRight size={16} color="var(--text-muted)" />
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
@@ -319,6 +490,71 @@ const CitizenDashboard = () => {
         </div>
 
       </div>
+
+      {/* VOUCHER REDEEMED MODAL OVERLAY */}
+      {redeeming && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '420px', textAlign: 'center', padding: '30px' }}>
+            <div style={{
+              width: '60px',
+              height: '60px',
+              background: 'rgba(16, 185, 129, 0.1)',
+              borderRadius: '50%',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '16px',
+              border: '2px solid var(--color-primary)',
+              boxShadow: 'var(--shadow-neon)'
+            }}>
+              <Gift size={32} color="var(--color-primary)" />
+            </div>
+            
+            <h3 style={{ fontSize: '20px', color: 'var(--text-primary)', marginBottom: '8px' }}>Eco-Voucher Redeemed!</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.4' }}>
+              Successfully redeemed <strong style={{ color: 'var(--text-primary)' }}>{redeeming.cost} Eco-Points</strong> for:
+            </p>
+            <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--color-secondary)', marginTop: '8px' }}>
+              {redeeming.name}
+            </div>
+
+            <div style={{
+              background: '#090d16',
+              border: '2px dashed var(--color-primary)',
+              borderRadius: '8px',
+              padding: '16px',
+              margin: '24px 0',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
+                Your Discount Code
+              </div>
+              <div style={{
+                fontSize: '22px',
+                fontWeight: 'bold',
+                color: 'var(--color-primary)',
+                fontFamily: 'monospace',
+                letterSpacing: '3px',
+                textShadow: '0 0 8px rgba(16, 185, 129, 0.5)'
+              }}>
+                {redeeming.code}
+              </div>
+            </div>
+
+            <p style={{ color: 'var(--text-muted)', fontSize: '11px', lineHeight: '1.4', marginBottom: '24px' }}>
+              Apply this coupon code during tax payments or utility bills via the municipality website to claim your discount.
+            </p>
+
+            <button 
+              className="btn btn-primary"
+              style={{ width: '100%' }}
+              onClick={() => setRedeeming(null)}
+            >
+              Close & Dismiss
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );
