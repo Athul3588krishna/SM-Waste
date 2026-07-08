@@ -4,7 +4,7 @@ import API from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
-import { Hammer, MapPin, CheckSquare, Upload, AlertCircle, Calendar, Clock, Clipboard, Sparkles, Megaphone, DollarSign } from 'lucide-react';
+import { Hammer, MapPin, CheckSquare, Upload, AlertCircle, Calendar, Clock, Clipboard, Sparkles, Megaphone, DollarSign, ExternalLink } from 'lucide-react';
 
 const customIcon = new L.Icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -393,6 +393,43 @@ const WorkerDashboard = () => {
                   </Marker>
                 </MapContainer>
               </div>
+            </div>
+
+            {/* Get Directions Button */}
+            <div style={{ marginTop: '12px' }}>
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${selectedTask.location.latitude},${selectedTask.location.longitude}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  width: '100%',
+                  padding: '10px',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  background: 'rgba(59, 130, 246, 0.1)',
+                  border: '1px solid rgba(59, 130, 246, 0.2)',
+                  color: 'var(--color-secondary)',
+                  transition: 'all 0.2s',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)';
+                  e.currentTarget.style.borderColor = 'var(--color-secondary)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)';
+                  e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.2)';
+                }}
+              >
+                <ExternalLink size={14} />
+                Get Navigation Directions (Google Maps)
+              </a>
             </div>
 
           </div>

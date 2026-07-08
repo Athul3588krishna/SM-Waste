@@ -265,7 +265,13 @@ router.get('/complaints', async (req, res) => {
       .sort({ createdAt: -1 })
       .populate('citizen', 'name email badge')
       .populate('worker', 'name email points')
-      .populate('team', 'name');
+      .populate({
+        path: 'team',
+        populate: {
+          path: 'members',
+          select: 'name email'
+        }
+      });
     res.json(complaints);
   } catch (error) {
     res.status(500).json({ message: error.message });

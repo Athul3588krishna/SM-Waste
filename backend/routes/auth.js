@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Otp = require('../models/Otp');
+const sendEmail = require('../utils/emailService');
 const { protect } = require('../middleware/auth');
 
 // Helper to generate JWT Token
@@ -11,7 +13,7 @@ const generateToken = (id) => {
   });
 };
 
-// @desc    Register a new citizen
+// @desc    Register a new citizen (Generates & Sends Email OTP)
 // @route   POST /api/auth/register
 // @access  Public
 router.post('/register', async (req, res) => {
@@ -24,28 +26,66 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    const user = await User.create({
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Save to pending OTP collection (expiring in 5 minutes)
+    await Otp.deleteMany({ email }); // clean previous attempts
+    await Otp.create({
       name,
       email,
       password,
+      otp,
+    });
+
+    // Send OTP to email
+    await sendEmail({
+      to: email,
+      subject: 'EcoClean Account Verification OTP',
+      text: `Dear ${name},\n\nThank you for registering on EcoClean. Please use the following 6-digit One Time Password (OTP) to verify and activate your account:\n\n${otp}\n\nThis OTP is valid for 5 minutes.\n\nBest regards,\nEcoClean Municipality Team`,
+    });
+
+    res.status(200).json({ message: 'OTP sent to email. Please verify.', email });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Verify OTP and complete registration
+// @route   POST /api/auth/verify-otp
+// @access  Public
+router.post('/verify-otp', async (req, res) => {
+  const { email, otp } = req.body;
+
+  try {
+    const otpRecord = await Otp.findOne({ email, otp });
+
+    if (!otpRecord) {
+      return res.status(400).json({ message: 'Invalid or expired OTP code' });
+    }
+
+    // Create verified User
+    const user = await User.create({
+      name: otpRecord.name,
+      email: otpRecord.email,
+      password: otpRecord.password,
       role: 'citizen',
       points: 0,
       badge: 'Novice Reporter',
     });
 
-    if (user) {
-      res.status(201).json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        points: user.points,
-        badge: user.badge,
-        token: generateToken(user._id),
-      });
-    } else {
-      res.status(400).json({ message: 'Invalid user data' });
-    }
+    // Clean up OTP document
+    await Otp.deleteOne({ _id: otpRecord._id });
+
+    res.status(201).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      points: user.points,
+      badge: user.badge,
+      token: generateToken(user._id),
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

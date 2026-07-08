@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import API from '../utils/api';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
-import { ArrowLeft, Clock, ShieldCheck, Hammer, CheckCircle2, AlertTriangle, MapPin, Calendar } from 'lucide-react';
+import { ArrowLeft, Clock, ShieldCheck, Hammer, CheckCircle2, AlertTriangle, MapPin, Calendar, Sparkles } from 'lucide-react';
 
 const customIcon = new L.Icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -276,6 +276,26 @@ const ComplaintDetail = () => {
                 <div>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Assigned Worker</div>
                   <div style={{ fontSize: '14px', color: 'var(--text-primary)', marginTop: '2px' }}>👷 {complaint.worker?.name}</div>
+                </div>
+              )}
+
+              {complaint.aiAnalysis && (
+                <div style={{ 
+                  marginTop: '12px',
+                  padding: '12px', 
+                  background: 'rgba(16, 185, 129, 0.05)', 
+                  border: '1px solid rgba(16, 185, 129, 0.2)', 
+                  borderRadius: '8px' 
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                    <Sparkles size={14} color="var(--color-primary)" />
+                    <span style={{ fontSize: '11px', color: 'var(--color-primary)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      AI Diagnostic Insights
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0, fontStyle: 'italic', lineHeight: '1.4' }}>
+                    "{complaint.aiAnalysis}"
+                  </p>
                 </div>
               )}
             </div>

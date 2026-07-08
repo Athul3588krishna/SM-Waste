@@ -1088,9 +1088,21 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* Amount display */}
-                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-glass)', borderRadius: '10px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Bonus Payout Payout:</span>
-                  <span style={{ fontSize: '18px', fontWeight: '800', color: 'var(--color-secondary)' }}>${bonusAmount}.00 USD</span>
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-glass)', borderRadius: '10px', padding: '12px 16px', marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Total Bonus Payout:</span>
+                    <span style={{ fontSize: '18px', fontWeight: '800', color: 'var(--color-secondary)' }}>${bonusAmount}.00 USD</span>
+                  </div>
+                  {verifyingComplaint?.assignedToType === 'team' && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '6px' }}>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                        Split per Worker ({verifyingComplaint?.team?.members?.length || 0} members):
+                      </span>
+                      <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-primary)' }}>
+                        ${(Number(bonusAmount) / (verifyingComplaint?.team?.members?.length || 1)).toFixed(2)} USD
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <form onSubmit={(e) => {
@@ -1181,7 +1193,12 @@ const AdminDashboard = () => {
                 <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-glass)', borderRadius: '10px', padding: '12px 16px', marginBottom: '20px', textAlign: 'center' }}>
                   <div style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Transaction Payout</div>
                   <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)', marginTop: '4px' }}>${bonusAmount}.00 USD</div>
-                  <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>TxID: {transactionId}</div>
+                  {verifyingComplaint?.assignedToType === 'team' && (
+                    <div style={{ fontSize: '12px', color: 'var(--color-primary)', fontWeight: 'bold', marginTop: '4px' }}>
+                      Split: ${(Number(bonusAmount) / (verifyingComplaint?.team?.members?.length || 1)).toFixed(2)} USD per member ({verifyingComplaint?.team?.members?.length || 0} workers)
+                    </div>
+                  )}
+                  <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '6px' }}>TxID: {transactionId}</div>
                 </div>
 
                 <form onSubmit={(e) => {
@@ -1233,20 +1250,31 @@ const AdminDashboard = () => {
                     <span style={{ fontFamily: 'monospace', fontWeight: 'bold', color: 'var(--text-primary)' }}>{transactionId}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '8px 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                    <span>Amount Credited:</span>
+                    <span>Total Payout:</span>
                     <span style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>${bonusAmount}.00 USD</span>
                   </div>
+                  {verifyingComplaint?.assignedToType === 'team' && (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '8px 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                        <span>Team Size:</span>
+                        <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>
+                          {verifyingComplaint?.team?.members?.length || 0} members
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '8px 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                        <span>Split per Worker:</span>
+                        <span style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>
+                          ${(Number(bonusAmount) / (verifyingComplaint?.team?.members?.length || 1)).toFixed(2)} USD
+                        </span>
+                      </div>
+                    </>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '8px 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
                     <span>Beneficiary:</span>
                     <span style={{ fontWeight: 'bold', color: 'var(--text-primary)', textAlign: 'right' }}>
                       {verifyingComplaint?.assignedToType === 'team'
-                        ? `👥 ${verifyingComplaint?.team?.name || 'Sanitation Team'} (Split)`
+                        ? `👥 ${verifyingComplaint?.team?.name || 'Sanitation Team'}`
                         : `👷 ${verifyingComplaint?.worker?.name || 'Sanitation Worker'}`}
-                      {verifyingComplaint?.assignedToType === 'team' && (
-                        <div style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: 'normal', marginTop: '2px' }}>
-                          Split equally among members
-                        </div>
-                      )}
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>

@@ -10,6 +10,11 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loadingSubmit, setLoadingSubmit] = useState(false);
+  
+  // OTP States
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
 
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -28,12 +33,27 @@ const Register = () => {
 
     try {
       await API.post('/auth/register', { name, email, password });
-      alert('Thank you for registering. Please log in using your credentials.');
-      navigate('/login?role=citizen');
+      setOtpSent(true);
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
     } finally {
       setLoadingSubmit(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    setError('');
+    setVerifyingOtp(true);
+
+    try {
+      await API.post('/auth/verify-otp', { email, otp: otpCode });
+      alert('Verification successful! Your account has been activated. Please log in.');
+      navigate('/login?role=citizen');
+    } catch (err) {
+      setError(err.response?.data?.message || 'OTP Verification failed');
+    } finally {
+      setVerifyingOtp(false);
     }
   };
 
@@ -60,9 +80,13 @@ const Register = () => {
           }}>
             <UserPlus size={24} color="#000" />
           </div>
-          <h2 style={{ fontSize: '28px', color: 'var(--text-primary)' }}>Create Account</h2>
+          <h2 style={{ fontSize: '28px', color: 'var(--text-primary)' }}>
+            {otpSent ? 'Verify Account' : 'Create Account'}
+          </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '6px' }}>
-            Join the community to keep our spaces clean
+            {otpSent 
+              ? 'Enter the 6-digit code sent to your email' 
+              : 'Join the community to keep our spaces clean'}
           </p>
         </div>
 
@@ -84,53 +108,94 @@ const Register = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label">Full Name</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="Adarsh Nair"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
+        {!otpSent ? (
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label className="form-label">Full Name</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Adarsh Nair"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
 
-          <div className="form-group">
-            <label className="form-label">Email Address</label>
-            <input
-              type="email"
-              className="form-input"
-              placeholder="name@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
+            <div className="form-group">
+              <label className="form-label">Email Address</label>
+              <input
+                type="email"
+                className="form-input"
+                placeholder="name@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
 
-          <div className="form-group">
-            <label className="form-label">Password</label>
-            <input
-              type="password"
-              className="form-input"
-              placeholder="Minimum 6 characters"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              minLength={6}
-              required
-            />
-          </div>
+            <div className="form-group">
+              <label className="form-label">Password</label>
+              <input
+                type="password"
+                className="form-input"
+                placeholder="Minimum 6 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                minLength={6}
+                required
+              />
+            </div>
 
-          <button
-            type="submit"
-            className="btn btn-primary"
-            style={{ width: '100%', marginTop: '10px' }}
-            disabled={loadingSubmit}
-          >
-            {loadingSubmit ? 'Registering...' : 'Register'}
-          </button>
-        </form>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              style={{ width: '100%', marginTop: '10px' }}
+              disabled={loadingSubmit}
+            >
+              {loadingSubmit ? 'Sending OTP...' : 'Register'}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleVerifyOtp}>
+            <div style={{ background: 'rgba(59, 130, 246, 0.05)', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: '8px', padding: '12px', marginBottom: '20px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+              We sent a 6-digit One-Time Password to <strong style={{ color: 'var(--text-primary)' }}>{email}</strong>. Please check your inbox and enter it below.
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Verification OTP</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="123456"
+                maxLength={6}
+                pattern="[0-9]{6}"
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value)}
+                style={{ textAlign: 'center', fontSize: '20px', letterSpacing: '4px', fontWeight: 'bold' }}
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="btn btn-primary"
+              style={{ width: '100%', marginTop: '10px' }}
+              disabled={verifyingOtp}
+            >
+              {verifyingOtp ? 'Verifying...' : 'Verify & Create Account'}
+            </button>
+
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setOtpSent(false)}
+              style={{ width: '100%', marginTop: '10px' }}
+            >
+              Back to Edit Details
+            </button>
+          </form>
+        )}
 
         <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px' }}>
           <span style={{ color: 'var(--text-secondary)' }}>Already have an account? </span>

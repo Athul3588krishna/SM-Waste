@@ -31,6 +31,8 @@ const ReportWaste = () => {
   const [scanComplete, setScanComplete] = useState(false);
   const [wasteType, setWasteType] = useState('Mixed');
   const [severity, setSeverity] = useState('Medium');
+  const [aiAnalysis, setAiAnalysis] = useState('');
+  const [scanStatus, setScanStatus] = useState('AI Scanner analyzing image...');
 
   // UI state
   const [error, setError] = useState('');
@@ -68,7 +70,6 @@ const ReportWaste = () => {
   };
 
   // Simulate AI waste scanner
-  // AI waste scanner using backend analyze endpoint (real Gemini / filename fallback)
   const handlePhotoChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -78,6 +79,23 @@ const ReportWaste = () => {
     setError('');
     setScanning(true);
     setScanComplete(false);
+    setAiAnalysis('');
+    setScanStatus('Optimizing image buffer...');
+
+    const statuses = [
+      "Optimizing image buffer...",
+      "Analyzing visual markers...",
+      "Connecting to Gemini 1.5 Flash API...",
+      "Classifying waste characteristics...",
+      "Finalizing diagnostic report..."
+    ];
+    let idx = 0;
+    const interval = setInterval(() => {
+      if (idx < statuses.length - 1) {
+        idx++;
+        setScanStatus(statuses[idx]);
+      }
+    }, 600);
 
     const formData = new FormData();
     formData.append('photo', file);
@@ -90,12 +108,17 @@ const ReportWaste = () => {
       });
       setWasteType(data.wasteType);
       setSeverity(data.severity);
+      setAiAnalysis(data.explanation || '');
+      setScanStatus('AI Scan Successful!');
     } catch (err) {
       console.error('AI Scan failed, falling back to local defaults:', err);
       // fallback defaults
       setWasteType('Mixed');
       setSeverity('Medium');
+      setAiAnalysis('Local scanning fallback classification applied.');
+      setScanStatus('AI Scan Complete (Fallback Mode)');
     } finally {
+      clearInterval(interval);
       setScanning(false);
       setScanComplete(true);
     }
@@ -120,6 +143,9 @@ const ReportWaste = () => {
     formData.append('address', address || `Waste reported at Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}`);
     formData.append('wasteType', wasteType);
     formData.append('severity', severity);
+    if (aiAnalysis) {
+      formData.append('aiAnalysis', aiAnalysis);
+    }
 
     try {
       await API.post('/complaints', formData, {
@@ -235,7 +261,7 @@ const ReportWaste = () => {
                 gap: '8px'
               }}>
                 <Sparkles size={16} className="text-gradient" />
-                <span style={{ fontSize: '13px', color: 'var(--color-primary)', fontWeight: '600' }}>AI Scanner analyzing image...</span>
+                <span style={{ fontSize: '13px', color: 'var(--color-primary)', fontWeight: '600' }}>{scanStatus}</span>
               </div>
             )}
 
@@ -251,6 +277,25 @@ const ReportWaste = () => {
                   <Sparkles size={16} color="var(--color-primary)" />
                   <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--color-primary)' }}>AI Scan Diagnosis</span>
                 </div>
+
+                {aiAnalysis && (
+                  <div style={{
+                    marginBottom: '16px',
+                    padding: '10px 12px',
+                    background: 'rgba(59, 130, 246, 0.04)',
+                    border: '1px solid rgba(59, 130, 246, 0.15)',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    color: 'var(--text-secondary)',
+                    fontStyle: 'italic',
+                    lineHeight: '1.4'
+                  }}>
+                    <strong style={{ color: 'var(--color-secondary)', fontStyle: 'normal', fontSize: '10px', textTransform: 'uppercase', display: 'block', marginBottom: '4px', letterSpacing: '0.5px' }}>
+                      🤖 AI Vision Analysis Summary
+                    </strong>
+                    "{aiAnalysis}"
+                  </div>
+                )}
 
                 <div className="grid-2" style={{ gap: '12px' }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
