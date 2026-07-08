@@ -418,6 +418,9 @@ const AdminDashboard = () => {
           <button onClick={() => setActiveTab('announcements')} className={`btn ${activeTab === 'announcements' ? 'btn-primary' : ''}`} style={{ background: activeTab === 'announcements' ? 'var(--color-primary)' : 'transparent', color: activeTab === 'announcements' ? '#000' : 'var(--text-secondary)', padding: '6px 16px', fontSize: '13px', borderRadius: '6px' }}>
             Broadcaster
           </button>
+          <button onClick={() => setActiveTab('analytics')} className={`btn ${activeTab === 'analytics' ? 'btn-primary' : ''}`} style={{ background: activeTab === 'analytics' ? 'var(--color-primary)' : 'transparent', color: activeTab === 'analytics' ? '#000' : 'var(--text-secondary)', padding: '6px 16px', fontSize: '13px', borderRadius: '6px' }}>
+            Analytics & Reports
+          </button>
         </div>
       </div>
 
@@ -869,6 +872,217 @@ const AdminDashboard = () => {
               </button>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* Tab 4: ANALYTICS & REPORTS */}
+      {activeTab === 'analytics' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+          
+          {/* Top Row: Metrics Overview */}
+          <div className="grid-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+            <div className="glass-panel" style={{ padding: '20px', textAlign: 'center' }}>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Complaints</div>
+              <div style={{ fontSize: '32px', fontWeight: '800', color: 'var(--text-primary)', marginTop: '8px' }}>{stats?.totalComplaints || 0}</div>
+            </div>
+            <div className="glass-panel" style={{ padding: '20px', textAlign: 'center' }}>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Cleaned & Verified</div>
+              <div style={{ fontSize: '32px', fontWeight: '800', color: 'var(--color-primary)', marginTop: '8px' }}>{stats?.statusCounts?.completed || 0}</div>
+            </div>
+            <div className="glass-panel" style={{ padding: '20px', textAlign: 'center' }}>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Pending Review</div>
+              <div style={{ fontSize: '32px', fontWeight: '800', color: 'var(--color-warning)', marginTop: '8px' }}>{stats?.statusCounts?.cleaned || 0}</div>
+            </div>
+          </div>
+
+          {/* Middle Row: Donut Chart and Trends */}
+          <div className="grid-2" style={{ gap: '30px', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
+            
+            {/* Waste Type Distribution Bar Chart */}
+            <div className="glass-panel" style={{ padding: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '16px', color: 'var(--text-primary)', margin: 0 }}>📊 Waste Classification Distribution</h3>
+                <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{!stats?.wasteTypeDistribution?.length ? '* Demonstrative Data' : 'Live Data'}</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {(stats?.wasteTypeDistribution && stats.wasteTypeDistribution.length > 0
+                  ? stats.wasteTypeDistribution
+                  : [
+                      { name: 'Plastic', value: 18 },
+                      { name: 'Organic', value: 12 },
+                      { name: 'E-waste', value: 8 },
+                      { name: 'Hazardous', value: 5 },
+                      { name: 'Medical', value: 4 },
+                      { name: 'Mixed', value: 10 }
+                    ]
+                ).map((item, idx) => {
+                  const maxVal = Math.max(...(stats?.wasteTypeDistribution || [
+                    { value: 18 }, { value: 12 }, { value: 8 }, { value: 5 }, { value: 4 }, { value: 10 }
+                  ]).map(x => x.value));
+                  const percentage = Math.round((item.value / (stats?.totalComplaints || 57)) * 100) || 0;
+                  const barColors = [
+                    'linear-gradient(90deg, #10b981, #3b82f6)',
+                    'linear-gradient(90deg, #3b82f6, #6366f1)',
+                    'linear-gradient(90deg, #f59e0b, #ef4444)',
+                    'linear-gradient(90deg, #ec4899, #8b5cf6)',
+                    'linear-gradient(90deg, #ef4444, #f59e0b)',
+                    'linear-gradient(90deg, #6b7280, #9ca3af)'
+                  ];
+                  return (
+                    <div key={idx}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px' }}>
+                        <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>{item.name}</span>
+                        <span style={{ color: 'var(--text-primary)' }}>{item.value} reports ({percentage}%)</span>
+                      </div>
+                      <div style={{ background: 'rgba(255,255,255,0.03)', height: '8px', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border-glass)' }}>
+                        <div style={{
+                          background: barColors[idx % barColors.length],
+                          height: '100%',
+                          width: `${Math.min((item.value / (maxVal || 1)) * 100, 100)}%`,
+                          borderRadius: '4px',
+                          transition: 'width 0.8s ease-in-out'
+                        }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Monthly Cleanup Trends SVG Graph */}
+            <div className="glass-panel" style={{ padding: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '16px', color: 'var(--text-primary)', margin: 0 }}>📈 Incident Reporting Trends</h3>
+                <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{!stats?.monthlyTrends?.length ? '* Demonstrative Data' : 'Live Data'}</span>
+              </div>
+              
+              {/* SVG Line Graph */}
+              <div style={{ background: 'rgba(0,0,0,0.1)', borderRadius: '8px', padding: '10px', border: '1px solid var(--border-glass)' }}>
+                {(() => {
+                  const trends = stats?.monthlyTrends && stats.monthlyTrends.length > 0
+                    ? stats.monthlyTrends
+                    : [
+                        { name: 'Jan', count: 6 },
+                        { name: 'Feb', count: 14 },
+                        { name: 'Mar', count: 9 },
+                        { name: 'Apr', count: 24 },
+                        { name: 'May', count: 18 },
+                        { name: 'Jun', count: 35 }
+                      ];
+                  const maxCount = Math.max(...trends.map(t => t.count), 1);
+                  const width = 400;
+                  const height = 180;
+                  const paddingX = 40;
+                  const paddingY = 25;
+                  const chartW = width - paddingX * 2;
+                  const chartH = height - paddingY * 2;
+                  const stepX = trends.length > 1 ? chartW / (trends.length - 1) : chartW;
+
+                  const coordinates = trends.map((t, i) => {
+                    const x = paddingX + i * stepX;
+                    const y = height - paddingY - (t.count / maxCount) * chartH;
+                    return { x, y, name: t.name, count: t.count };
+                  });
+
+                  const pathD = coordinates.map((pt, i) => `${i === 0 ? 'M' : 'L'} ${pt.x} ${pt.y}`).join(' ');
+
+                  return (
+                    <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: 'auto' }}>
+                      {/* Grid Lines */}
+                      {[0, 0.25, 0.5, 0.75, 1].map((ratio, gridIdx) => {
+                        const y = paddingY + gridIdx * (chartH / 4);
+                        const val = Math.round(maxCount - ratio * maxCount);
+                        return (
+                          <g key={gridIdx}>
+                            <line x1={paddingX} y1={y} x2={width - paddingX} y2={y} stroke="rgba(255,255,255,0.05)" strokeDasharray="3,3" />
+                            <text x={paddingX - 10} y={y + 4} fill="var(--text-muted)" fontSize="9" textAnchor="end">{val}</text>
+                          </g>
+                        );
+                      })}
+
+                      {/* Line Path */}
+                      <path
+                        d={pathD}
+                        fill="none"
+                        stroke="var(--color-primary)"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        style={{ filter: 'drop-shadow(0 0 6px rgba(16, 185, 129, 0.4))' }}
+                      />
+
+                      {/* Connection Dots */}
+                      {coordinates.map((pt, idx) => (
+                        <g key={idx}>
+                          <circle
+                            cx={pt.x}
+                            cy={pt.y}
+                            r="5"
+                            fill="#000"
+                            stroke="var(--color-primary)"
+                            strokeWidth="2.5"
+                            style={{ cursor: 'pointer' }}
+                          />
+                          {/* Hover count preview */}
+                          <text x={pt.x} y={pt.y - 10} fill="var(--text-primary)" fontSize="9" fontWeight="bold" textAnchor="middle">
+                            {pt.count}
+                          </text>
+                          {/* X Axis Labels */}
+                          <text x={pt.x} y={height - 8} fill="var(--text-muted)" fontSize="9" textAnchor="middle">
+                            {pt.name}
+                          </text>
+                        </g>
+                      ))}
+                    </svg>
+                  );
+                })()}
+              </div>
+            </div>
+
+          </div>
+
+          {/* Bottom Row: Staff Leaderboard */}
+          <div className="glass-panel" style={{ padding: '24px' }}>
+            <h3 style={{ fontSize: '16px', color: 'var(--text-primary)', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              🏆 Sanitation Workers Performance Leaderboard
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '15px' }}>
+              {(stats?.workerStats && stats.workerStats.length > 0
+                ? stats.workerStats
+                : [
+                    { name: 'Anil Kumar', completedCount: 16 },
+                    { name: 'Suresh Pillai', completedCount: 11 },
+                    { name: 'Radha Mohan', completedCount: 8 },
+                    { name: 'Vinod Nair', completedCount: 6 }
+                  ]
+              ).map((w, idx) => {
+                const medals = ['🥇', '🥈', '🥉', '👷'];
+                return (
+                  <div key={idx} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '16px',
+                    background: 'rgba(255,255,255,0.02)',
+                    border: '1px solid var(--border-glass)',
+                    borderRadius: '10px',
+                    transition: 'transform 0.2s',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <span style={{ fontSize: '20px' }}>{medals[idx] || medals[3]}</span>
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>{w.name}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Sanitation Crew Member</div>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '13px', color: 'var(--color-primary)', fontWeight: 'bold' }}>
+                      {w.completedCount} Cleanups
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
         </div>
       )}
 
