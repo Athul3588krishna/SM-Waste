@@ -227,8 +227,58 @@ const ReportWaste = () => {
                   <img src={photoPreview} alt="upload preview" className="scanner-preview" />
                   
                   {scanning && (
-                    <div className="scanner-overlay">
-                      <div className="scanner-line"></div>
+                    <div className="scanner-overlay" style={{
+                      background: 'linear-gradient(rgba(16, 185, 129, 0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(16, 185, 129, 0.06) 1px, transparent 1px)',
+                      backgroundSize: '20px 20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: '8px'
+                    }}>
+                      {/* Laser scanning beam */}
+                      <div className="scanner-line" style={{
+                        height: '6px',
+                        background: 'var(--color-primary)',
+                        boxShadow: '0 0 20px var(--color-primary), 0 0 35px var(--color-primary)'
+                      }}></div>
+
+                      {/* Target Reticle Crosshair */}
+                      <div style={{
+                        width: '80px',
+                        height: '80px',
+                        border: '2px solid rgba(16, 185, 129, 0.3)',
+                        borderRadius: '12px',
+                        position: 'absolute',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        animation: 'pulse-glow 1s infinite ease-in-out'
+                      }}>
+                        {/* Corner markers */}
+                        <div style={{ position: 'absolute', top: '-4px', left: '-4px', width: '12px', height: '12px', borderTop: '4px solid var(--color-primary)', borderLeft: '4px solid var(--color-primary)' }}></div>
+                        <div style={{ position: 'absolute', top: '-4px', right: '-4px', width: '12px', height: '12px', borderTop: '4px solid var(--color-primary)', borderRight: '4px solid var(--color-primary)' }}></div>
+                        <div style={{ position: 'absolute', bottom: '-4px', left: '-4px', width: '12px', height: '12px', borderBottom: '4px solid var(--color-primary)', borderLeft: '4px solid var(--color-primary)' }}></div>
+                        <div style={{ position: 'absolute', bottom: '-4px', right: '-4px', width: '12px', height: '12px', borderBottom: '4px solid var(--color-primary)', borderRight: '4px solid var(--color-primary)' }}></div>
+                        
+                        <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'var(--color-primary)', boxShadow: '0 0 8px var(--color-primary)' }}></div>
+                      </div>
+
+                      {/* Dynamic Scan status text on the image */}
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '20px',
+                        background: 'rgba(0, 0, 0, 0.85)',
+                        border: '1px solid var(--color-primary)',
+                        color: 'var(--color-primary)',
+                        fontFamily: 'monospace',
+                        fontSize: '10px',
+                        padding: '4px 10px',
+                        borderRadius: '4px',
+                        letterSpacing: '1px',
+                        boxShadow: '0 0 10px rgba(16, 185, 129, 0.2)'
+                      }}>
+                        [ RUNNING VISION_DIAGNOSTIC_v1.5 ]
+                      </div>
                     </div>
                   )}
                 </div>

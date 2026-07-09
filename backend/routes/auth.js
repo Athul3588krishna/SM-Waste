@@ -187,6 +187,11 @@ router.get('/leaderboard', protect, async (req, res) => {
       citizens: topCitizens,
       workers: topWorkers,
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // @desc    Redeem points for tax vouchers
 // @route   PUT /api/auth/redeem
 // @access  Private

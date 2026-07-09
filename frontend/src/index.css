@@ -1,28 +1,29 @@
 /* Custom CSS Design System - EcoClean Smart Waste Management */
 
 :root {
-  --bg-main: #0b0d13;
-  --bg-card: rgba(22, 28, 45, 0.65);
-  --bg-card-hover: rgba(30, 38, 61, 0.8);
-  --border-glass: rgba(255, 255, 255, 0.07);
-  --border-glass-focus: rgba(16, 185, 129, 0.4);
+  --bg-main: #06070a;
+  --bg-card: rgba(10, 14, 23, 0.7);
+  --bg-card-hover: rgba(16, 22, 37, 0.85);
+  --border-glass: rgba(255, 255, 255, 0.05);
+  --border-glass-focus: rgba(139, 92, 246, 0.4);
   
-  /* Neon Accents */
-  --color-primary: #10b981;      /* Emerald (Success/Completed/Eco) */
-  --color-secondary: #00d2ff;    /* Neon Blue (Assigned/Process) */
-  --color-warning: #f59e0b;      /* Amber (Pending/Attention) */
-  --color-danger: #ff4a5a;       /* Neon Red (Rejected) */
+  /* Linear Accents */
+  --color-primary: #8b5cf6;      /* Electric Violet */
+  --color-secondary: #06b6d4;    /* Neon Teal */
+  --color-warning: #fbbf24;      /* Gold/Amber */
+  --color-danger: #ef4444;       /* Crimson Red */
   
-  --text-primary: #f3f4f6;
+  --text-primary: #f9fafb;
   --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
+  --text-muted: #4b5563;
   
-  --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --shadow-neon: 0 0 15px rgba(16, 185, 129, 0.2);
-  --shadow-neon-blue: 0 0 15px rgba(0, 210, 255, 0.2);
-  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --shadow-neon: 0 0 15px rgba(139, 92, 246, 0.15);
+  --shadow-neon-blue: 0 0 15px rgba(6, 182, 212, 0.15);
+  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
   
-  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 * {
@@ -35,9 +36,9 @@ body {
   font-family: var(--font-sans);
   background-color: var(--bg-main);
   background-image: 
-    radial-gradient(at 10% 20%, rgba(16, 185, 129, 0.04) 0px, transparent 50%),
-    radial-gradient(at 90% 10%, rgba(0, 210, 255, 0.04) 0px, transparent 50%),
-    radial-gradient(at 50% 80%, rgba(245, 158, 11, 0.02) 0px, transparent 50%);
+    radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.06) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(6, 182, 212, 0.05) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(139, 92, 246, 0.02) 0px, transparent 50%);
   color: var(--text-primary);
   min-height: 100vh;
   overflow-x: hidden;
@@ -46,15 +47,15 @@ body {
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: var(--bg-main);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-primary);
@@ -62,9 +63,10 @@ body {
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.25;
+  font-family: var(--font-display), var(--font-sans);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
 }
 
 /* Glassmorphism Panel */
