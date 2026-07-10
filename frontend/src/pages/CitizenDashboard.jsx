@@ -311,7 +311,7 @@ const CitizenDashboard = () => {
                             border: '1px solid var(--border-glass)'
                           }}>
                             <img
-                              src={complaint.photoBefore.startsWith('http') ? complaint.photoBefore : `http://localhost:5000${complaint.photoBefore}`}
+                              src={complaint.photoBefore.startsWith('http') ? complaint.photoBefore : `http://localhost:5002${complaint.photoBefore}`}
                               alt="waste dump"
                               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             />

@@ -50,11 +50,23 @@ const copyAssets = () => {
 const seedData = async () => {
   try {
     // Connect to database
-    await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/smart-waste', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log('Connected to DB for seeding...');
+    console.log('Connecting to database...');
+    try {
+      await mongoose.connect(process.env.MONGO_URI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 4000
+      });
+      console.log('Connected to MongoDB Atlas for seeding.');
+    } catch (atlasErr) {
+      console.warn(`Atlas connection failed: ${atlasErr.message}. Falling back to Local MongoDB...`);
+      await mongoose.connect('mongodb://localhost:27017/smart-waste', {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 4000
+      });
+      console.log('Connected to Local MongoDB for seeding.');
+    }
 
     // Clear existing data
     await User.deleteMany();
@@ -124,58 +136,40 @@ const seedData = async () => {
 
     // 2. Create Cleaning Teams
     const team1 = await Team.create({
-      name: 'Kochi East Cleaners',
+      name: 'Perinthalmanna East Cleaners',
       members: [worker1._id, worker3._id],
     });
 
     const team2 = await Team.create({
-      name: 'Tripunithura Squad',
+      name: 'Angadipuram Squad',
       members: [worker2._id],
     });
-
-    // Update worker users with their respective teams
-    worker1.team = team1._id;
-    await worker1.save();
-    
-    worker2.team = team2._id;
-    await worker2.save();
-    
-    worker3.team = team1._id;
-    await worker3.save();
 
     console.log('Teams seeded successfully!');
 
     // 3. Create Announcements
     await Announcement.create({
-      title: 'Welcome to EcoClean!',
-      content: 'We are thrilled to launch the Smart Waste Management Portal. Citizens can now report issues online. Let\'s keep our city clean!',
-      target: 'all',
+      title: 'Perinthalmanna Green Protocol Active',
+      message: 'Perinthalmanna Municipality has activated strict green protocols across all residential blocks. Earn double Eco-Points for reporting plastic waste.',
     });
 
     await Announcement.create({
-      title: 'Monsoon Cleanliness Special Protocol',
-      content: 'Sanitation workers, please ensure all organic dump sites are cleared within 24 hours of assignment during the heavy rain period.',
-      target: 'workers',
-    });
-
-    await Announcement.create({
-      title: 'Citizen Bonus Points Event',
-      content: 'Earn double Eco-points for reporting waste piles in school zones this week!',
-      target: 'citizens',
+      title: 'Sanitation Volunteers Clean Drive',
+      message: 'Join the weekend cleanup drive at Perinthalmanna Bypass Road. Meet at Jubilee Junction at 7:00 AM.',
     });
 
     console.log('Announcements seeded successfully!');
 
     // 4. Create Complaints
-    // Complaint 1: Pending (Kochi)
+    // Complaint 1: Pending (Perinthalmanna)
     await Complaint.create({
       citizen: citizen._id,
-      title: 'Metro Pillar 45 Garbage Pile',
-      description: 'A large pile of plastic waste and food containers discarded near the metro pillar. Causing traffic obstruction.',
+      title: 'Jubilee Junction Garbage Pile',
+      description: 'A large pile of plastic waste and food containers discarded near Jubilee Junction. Causing pedestrian obstruction.',
       location: {
-        latitude: 9.9816,
-        longitude: 76.2999,
-        address: 'Kochi Metro Pillar 45, Ernakulam, Kerala',
+        latitude: 10.9752,
+        longitude: 76.2238,
+        address: 'Jubilee Junction, Kozhikode Road, Perinthalmanna, Malappuram, Kerala',
       },
       wasteType: 'Plastic',
       severity: 'Medium',
@@ -183,15 +177,15 @@ const seedData = async () => {
       status: 'pending',
     });
 
-    // Complaint 2: Verified & Unassigned (Aluva)
+    // Complaint 2: Verified & Unassigned (Angadipuram)
     await Complaint.create({
       citizen: citizen2._id,
-      title: 'Chemical Cans on River Bank',
-      description: 'Multiple paint cans and pesticide canisters dumped on the river bank. Needs hazardous disposal.',
+      title: 'Chemical Cans on Bypass Road Canal',
+      description: 'Multiple paint cans and pesticide canisters dumped on the bypass road canal. Needs hazardous disposal.',
       location: {
-        latitude: 10.1076,
-        longitude: 76.3458,
-        address: 'Periyar River Canal Road, Aluva, Kerala',
+        latitude: 10.9850,
+        longitude: 76.2050,
+        address: 'Bypass Road Canal Road, Angadipuram, Perinthalmanna, Malappuram, Kerala',
       },
       wasteType: 'Hazardous',
       severity: 'High',
@@ -199,15 +193,15 @@ const seedData = async () => {
       status: 'verified',
     });
 
-    // Complaint 3: Assigned to Individual Worker (Kakkanad) - Active
+    // Complaint 3: Assigned to Individual Worker (Manathumangalam) - Active
     await Complaint.create({
       citizen: citizen._id,
-      title: 'Rotting Organic Food Waste near Market',
+      title: 'Rotting Organic Food Waste near Perinthalmanna Market',
       description: 'Market waste dumped behind the bus shelter. Emitting foul smell.',
       location: {
-        latitude: 10.0159,
-        longitude: 76.3419,
-        address: 'Civil Line Road, Kakkanad, Kerala',
+        latitude: 10.9620,
+        longitude: 76.2380,
+        address: 'Market Road, Manathumangalam, Perinthalmanna, Kerala',
       },
       wasteType: 'Organic',
       severity: 'High',
@@ -219,15 +213,15 @@ const seedData = async () => {
       deadlineAt: new Date(Date.now() + 18 * 60 * 60 * 1000), // 1 day total (18h left)
     });
 
-    // Complaint 4: Cleaned by Worker but Pending Admin Verification (Tripunithura)
+    // Complaint 4: Cleaned by Worker but Pending Admin Verification (Ooty Road)
     await Complaint.create({
       citizen: citizen._id,
       title: 'Cardboard & Paper Scrap Pile',
       description: 'Cardboard boxes, papers, and packing materials piled up in the public playground.',
       location: {
-        latitude: 9.9514,
-        longitude: 76.3496,
-        address: 'Hill Palace Road, Tripunithura, Kerala',
+        latitude: 10.9580,
+        longitude: 76.2180,
+        address: 'Ooty Road, Perinthalmanna, Kerala',
       },
       wasteType: 'Mixed',
       severity: 'Low',
@@ -242,15 +236,15 @@ const seedData = async () => {
       cleanedAt: new Date(Date.now() - 1 * 60 * 60 * 1000), // Cleaned 1 hour ago
     });
 
-    // Complaint 5: Fully Completed & Verified with Bonus (Vyttila)
+    // Complaint 5: Fully Completed & Verified with Bonus (Pattambi Road)
     const completedComplaint = await Complaint.create({
       citizen: citizen2._id,
       title: 'Discarded E-Waste pile',
       description: 'Old TVs and computer monitors dumped behind the garbage bin.',
       location: {
-        latitude: 9.9678,
-        longitude: 76.3195,
-        address: 'Vyttila Junction, Ernakulam, Kerala',
+        latitude: 10.9820,
+        longitude: 76.2420,
+        address: 'Pattambi Road, Perinthalmanna, Kerala',
       },
       wasteType: 'E-waste',
       severity: 'Medium',

@@ -484,7 +484,7 @@ const AdminDashboard = () => {
           <div className="glass-panel" style={{ marginBottom: '30px' }}>
             <h3 style={{ fontSize: '16px', color: 'var(--text-primary)', marginBottom: '16px' }}>Incident Placement Map</h3>
             <div className="map-container" style={{ height: '350px' }}>
-              <MapContainer center={[9.9816, 76.2999]} zoom={11} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
+              <MapContainer center={[10.9752, 76.2238]} zoom={13} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
                 <TileLayer
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -579,7 +579,7 @@ const AdminDashboard = () => {
                           <td style={{ padding: '14px 16px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                               <div style={{ width: '40px', height: '40px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border-glass)', background: '#090d16' }}>
-                                <img src={comp.photoBefore ? (comp.photoBefore.startsWith('http') ? comp.photoBefore : `http://localhost:5000${comp.photoBefore}`) : ''} alt="waste" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                <img src={comp.photoBefore ? (comp.photoBefore.startsWith('http') ? comp.photoBefore : `http://localhost:5002${comp.photoBefore}`) : ''} alt="waste" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                               </div>
                               <div>
                                 <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>{comp.title || 'Untitled'}</div>
@@ -1158,11 +1158,11 @@ const AdminDashboard = () => {
             <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
               <div>
                 <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>BEFORE</div>
-                <img src={verifyingComplaint.photoBefore.startsWith('http') ? verifyingComplaint.photoBefore : `http://localhost:5000${verifyingComplaint.photoBefore}`} alt="before" style={{ width: '100%', height: '100px', objectFit: 'cover', borderRadius: '4px' }} />
+                <img src={verifyingComplaint.photoBefore.startsWith('http') ? verifyingComplaint.photoBefore : `http://localhost:5002${verifyingComplaint.photoBefore}`} alt="before" style={{ width: '100%', height: '100px', objectFit: 'cover', borderRadius: '4px' }} />
               </div>
               <div>
                 <div style={{ fontSize: '10px', color: 'var(--color-primary)' }}>AFTER</div>
-                <img src={verifyingComplaint.photoAfter.startsWith('http') ? verifyingComplaint.photoAfter : `http://localhost:5000${verifyingComplaint.photoAfter}`} alt="after" style={{ width: '100%', height: '100px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--color-primary)' }} />
+                <img src={verifyingComplaint.photoAfter.startsWith('http') ? verifyingComplaint.photoAfter : `http://localhost:5002${verifyingComplaint.photoAfter}`} alt="after" style={{ width: '100%', height: '100px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--color-primary)' }} />
               </div>
             </div>
 

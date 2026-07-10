@@ -362,7 +362,7 @@ const WorkerDashboard = () => {
               <div>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>BEFORE CLEANUP</div>
                 <img
-                  src={selectedTask.photoBefore.startsWith('http') ? selectedTask.photoBefore : `http://localhost:5000${selectedTask.photoBefore}`}
+                  src={selectedTask.photoBefore.startsWith('http') ? selectedTask.photoBefore : `http://localhost:5002${selectedTask.photoBefore}`}
                   alt="Before cleanup"
                   className="comparison-image"
                 />
@@ -371,7 +371,7 @@ const WorkerDashboard = () => {
                 <div>
                   <div style={{ fontSize: '11px', color: 'var(--color-primary)', marginBottom: '4px' }}>AFTER CLEANUP</div>
                   <img
-                    src={selectedTask.photoAfter.startsWith('http') ? selectedTask.photoAfter : `http://localhost:5000${selectedTask.photoAfter}`}
+                    src={selectedTask.photoAfter.startsWith('http') ? selectedTask.photoAfter : `http://localhost:5002${selectedTask.photoAfter}`}
                     alt="After cleanup"
                     className="comparison-image"
                     style={{ borderColor: 'var(--color-primary)' }}

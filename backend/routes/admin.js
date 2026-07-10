@@ -387,6 +387,27 @@ router.put('/complaints/:id/reassign', async (req, res) => {
     // Reset after photo and cleanup records in case worker already uploaded something
     complaint.photoAfter = null;
     complaint.cleanedAt = null;
+
+    // Dispatch a warning notification if the task was already overdue
+    if (complaint.status === 'assigned' && complaint.deadlineAt < Date.now()) {
+      if (complaint.assignedToType === 'individual' && complaint.worker) {
+        await Notification.create({
+          user: complaint.worker,
+          title: '⚠️ Overdue Warning',
+          message: `You had an overdue task: "${complaint.title}" which has been reassigned. Please ensure tasks are completed within the deadline in the future.`,
+        });
+      } else if (complaint.assignedToType === 'team' && complaint.team) {
+        const team = await Team.findById(complaint.team);
+        if (team) {
+          const warningNotifications = team.members.map((memberId) => ({
+            user: memberId,
+            title: '⚠️ Overdue Warning',
+            message: `Your team had an overdue task: "${complaint.title}" which has been reassigned. Please ensure tasks are completed within the deadline in the future.`,
+          }));
+          await Notification.insertMany(warningNotifications);
+        }
+      }
+    }
     
     complaint.assignedToType = assignedToType;
     complaint.status = 'assigned';

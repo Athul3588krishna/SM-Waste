@@ -22,8 +22,8 @@ const ReportWaste = () => {
   const [description, setDescription] = useState('');
   const [photo, setPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
-  const [latitude, setLatitude] = useState(9.9816); // Kochi default
-  const [longitude, setLongitude] = useState(76.2999);
+  const [latitude, setLatitude] = useState(10.9752); // Perinthalmanna default
+  const [longitude, setLongitude] = useState(76.2238);
   const [address, setAddress] = useState('');
 
   // AI Scanner states

@@ -200,7 +200,7 @@ const ComplaintDetail = () => {
               <div>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px', fontWeight: 'bold' }}>BEFORE CLEANUP (SUBMITTED)</div>
                 <img
-                  src={complaint.photoBefore.startsWith('http') ? complaint.photoBefore : `http://localhost:5000${complaint.photoBefore}`}
+                  src={complaint.photoBefore.startsWith('http') ? complaint.photoBefore : `http://localhost:5002${complaint.photoBefore}`}
                   alt="Before cleanup"
                   className="comparison-image"
                   style={{ height: '240px' }}
@@ -211,7 +211,7 @@ const ComplaintDetail = () => {
                 <div>
                   <div style={{ fontSize: '11px', color: 'var(--color-primary)', marginBottom: '6px', fontWeight: 'bold' }}>AFTER CLEANUP (RESOLVED)</div>
                   <img
-                    src={complaint.photoAfter.startsWith('http') ? complaint.photoAfter : `http://localhost:5000${complaint.photoAfter}`}
+                    src={complaint.photoAfter.startsWith('http') ? complaint.photoAfter : `http://localhost:5002${complaint.photoAfter}`}
                     alt="After cleanup"
                     className="comparison-image"
                     style={{ height: '240px', borderColor: 'var(--color-primary)' }}

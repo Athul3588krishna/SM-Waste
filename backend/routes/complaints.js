@@ -193,7 +193,7 @@ router.post('/analyze', protect, upload.single('photo'), async (req, res) => {
     }
   } catch (error) {
     console.error('Image analysis failed, using fallback:', error.message);
-    
+
     // Clean up file if still exists
     const fs = require('fs');
     if (fs.existsSync(filePath)) {
