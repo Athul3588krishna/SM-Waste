@@ -234,6 +234,70 @@ router.put('/redeem', protect, async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
+// @desc    Request password reset OTP
+// @route   POST /api/auth/forgot-password
+// @access  Public
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'No user registered with this email address' });
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Clean previous attempts and save to Otp collection
+    await Otp.deleteMany({ email });
+    await Otp.create({
+      email,
+      otp,
+      name: user.name,
+      password: 'RESET_PASSWORD_DUMMY'
+    });
+
+    // Send OTP to user's email
+    await sendEmail({
+      to: email,
+      subject: 'EcoClean Password Reset OTP',
+      text: `Dear ${user.name},\n\nYou requested a password reset. Please use the following 6-digit One Time Password (OTP) to reset your account password:\n\n${otp}\n\nThis OTP is valid for 5 minutes. If you did not request this, please ignore this email.\n\nBest regards,\nEcoClean Municipality Team`,
+    });
+
+    res.json({ message: 'Password reset OTP sent to email', email });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Verify OTP and reset password
+// @route   POST /api/auth/reset-password
+// @access  Public
+router.post('/reset-password', async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+
+  try {
+    const otpRecord = await Otp.findOne({ email, otp });
+    if (!otpRecord) {
+      return res.status(400).json({ message: 'Invalid or expired OTP code' });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Set new password (pre-save hook in User model will automatically encrypt it)
+    user.password = newPassword;
+    await user.save();
+
+    // Delete OTP record
+    await Otp.deleteMany({ email });
+
+    res.json({ message: 'Password updated successfully. You can now log in.' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 });
 

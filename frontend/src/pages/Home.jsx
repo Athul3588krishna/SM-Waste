@@ -50,13 +50,13 @@ const InteractiveGlobe = ({ onRotationChange }) => {
     setIsDragging(false);
   };
 
-  // Coordinates of Kochi hotspots
+  // Coordinates of Perinthalmanna hotspots
   const hotspots = [
-    { lon: 76.26, lat: 9.93, label: 'Kochi Central' },
-    { lon: 76.20, lat: 9.90, label: 'Fort Kochi' },
-    { lon: 76.32, lat: 10.01, label: 'Edapally Sector' },
-    { lon: 76.35, lat: 10.10, label: 'Aluva Hub' },
-    { lon: 76.24, lat: 9.85, label: 'Kakkayur Zone' }
+    { lon: 76.2238, lat: 10.9752, label: 'Perinthalmanna Town' },
+    { lon: 76.2050, lat: 10.9790, label: 'Angadipuram Sector' },
+    { lon: 76.2300, lat: 10.9650, label: 'Manathumangalam Zone' },
+    { lon: 76.2280, lat: 10.9850, label: 'Ooty Road Sector' },
+    { lon: 76.2150, lat: 10.9580, label: 'Pattambi Road Zone' }
   ];
 
   return (
@@ -588,7 +588,7 @@ const Home = () => {
               color: 'rgba(255,255,255,0.7)',
               letterSpacing: '0.5px'
             }}>
-              // RADAR_SWEEPING_SECTORS: Kochi_Grid_Active
+              // RADAR_SWEEPING_SECTORS: Perinthalmanna_Grid_Active
             </div>
           </div>
 

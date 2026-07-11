@@ -602,3 +602,15 @@ select.form-input {
   border-color: rgba(255, 255, 255, 0.1);
 }
 
+@keyframes confetti-burst {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1.2) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(var(--x), var(--y), 0) scale(0.3) rotate(var(--r));
+    opacity: 0;
+  }
+}
+
+

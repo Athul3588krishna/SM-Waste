@@ -2,12 +2,57 @@ import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { Trash2, Hammer, Shield, AlertCircle, ArrowLeft } from 'lucide-react';
+import API from '../utils/api';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loadingSubmit, setLoadingSubmit] = useState(false);
+
+  // Forgot Password States
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetOtp, setResetOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [resetStep, setResetStep] = useState(1);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState('');
+  const [resetSuccess, setResetSuccess] = useState('');
+
+  const handleRequestResetOtp = async (e) => {
+    e.preventDefault();
+    setResetLoading(true);
+    setResetError('');
+    setResetSuccess('');
+    try {
+      await API.post('/auth/forgot-password', { email: resetEmail });
+      setResetSuccess('OTP code sent successfully! Please check your email inbox.');
+      setResetStep(2);
+    } catch (err) {
+      setResetError(err.response?.data?.message || 'Failed to send OTP code');
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleResetSubmit = async (e) => {
+    e.preventDefault();
+    setResetLoading(true);
+    setResetError('');
+    setResetSuccess('');
+    try {
+      await API.post('/auth/reset-password', { email: resetEmail, otp: resetOtp, newPassword });
+      setResetSuccess('Password reset successful! Closing...');
+      setTimeout(() => {
+        setShowResetModal(false);
+      }, 2000);
+    } catch (err) {
+      setResetError(err.response?.data?.message || 'Password reset failed');
+    } finally {
+      setResetLoading(false);
+    }
+  };
   
   const { user, login } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -187,6 +232,25 @@ const Login = () => {
             />
           </div>
 
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '-8px', marginBottom: '18px' }}>
+            <span 
+              onClick={() => {
+                setResetEmail('');
+                setResetOtp('');
+                setNewPassword('');
+                setResetStep(1);
+                setResetError('');
+                setResetSuccess('');
+                setShowResetModal(true);
+              }} 
+              style={{ color: 'var(--text-muted)', fontSize: '12px', cursor: 'pointer', textDecoration: 'underline' }}
+              onMouseEnter={(e) => e.target.style.color = currentPortal.color}
+              onMouseLeave={(e) => e.target.style.color = 'var(--text-muted)'}
+            >
+              Forgot Password?
+            </span>
+          </div>
+
           <button
             type="submit"
             className="btn"
@@ -228,6 +292,73 @@ const Login = () => {
           </div>
         )}
       </div>
+
+      {showResetModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', borderColor: 'var(--border-glass)' }}>
+            <h3 style={{ fontSize: '18px', color: 'var(--text-primary)', marginBottom: '8px' }}>Reset Password</h3>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: '1.4' }}>
+              {resetStep === 1 
+                ? 'Enter your registered email address to receive a 6-digit verification code.'
+                : 'Enter the 6-digit OTP code sent to your email and set your new password.'
+              }
+            </p>
+
+            {resetError && <div style={{ color: 'var(--color-danger)', background: 'rgba(255,74,90,0.1)', padding: '10px', borderRadius: '6px', fontSize: '13px', marginBottom: '16px' }}>{resetError}</div>}
+            {resetSuccess && <div style={{ color: 'var(--color-primary)', background: 'rgba(16,185,129,0.1)', padding: '10px', borderRadius: '6px', fontSize: '13px', marginBottom: '16px' }}>{resetSuccess}</div>}
+
+            {resetStep === 1 ? (
+              <form onSubmit={handleRequestResetOtp}>
+                <div className="form-group">
+                  <label className="form-label" style={{ color: 'var(--text-secondary)' }}>Email Address</label>
+                  <input 
+                    type="email" 
+                    className="form-input" 
+                    value={resetEmail} 
+                    onChange={(e) => setResetEmail(e.target.value)} 
+                    placeholder="name@example.com"
+                    required 
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowResetModal(false)} style={{ flex: 1 }}>Cancel</button>
+                  <button type="submit" className="btn btn-primary" disabled={resetLoading} style={{ flex: 1 }}>{resetLoading ? 'Sending...' : 'Send OTP'}</button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleResetSubmit}>
+                <div className="form-group">
+                  <label className="form-label" style={{ color: 'var(--text-secondary)' }}>6-Digit OTP Code</label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    value={resetOtp} 
+                    onChange={(e) => setResetOtp(e.target.value)} 
+                    placeholder="123456"
+                    maxLength={6}
+                    required 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" style={{ color: 'var(--text-secondary)' }}>New Password</label>
+                  <input 
+                    type="password" 
+                    className="form-input" 
+                    value={newPassword} 
+                    onChange={(e) => setNewPassword(e.target.value)} 
+                    placeholder="••••••••"
+                    required 
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                  <button type="button" className="btn btn-secondary" onClick={() => setResetStep(1)} style={{ flex: 1 }}>Back</button>
+                  <button type="submit" className="btn btn-primary" disabled={resetLoading} style={{ flex: 1 }}>{resetLoading ? 'Resetting...' : 'Reset Password'}</button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

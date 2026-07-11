@@ -107,10 +107,11 @@ router.post('/analyze', protect, upload.single('photo'), async (req, res) => {
       Do not include any markdown wrappers, codeblocks (like \`\`\`json), or additional text. Just output the raw JSON object.`;
 
       const modelsToTry = [
-        'gemini-1.5-flash',
-        'gemini-1.5-flash-latest',
-        'gemini-1.5-pro',
-        'gemini-pro-vision'
+        'gemini-2.0-flash-lite',
+        'gemini-3.1-flash-lite',
+        'gemini-3.5-flash',
+        'gemini-flash-latest',
+        'gemini-2.0-flash'
       ];
 
       let apiSuccess = false;
@@ -157,6 +158,9 @@ router.post('/analyze', protect, upload.single('photo'), async (req, res) => {
               usedModel = model;
               break;
             }
+          } else {
+            const errBody = await response.json().catch(() => ({}));
+            console.warn(`Model ${model} returned status ${response.status}:`, JSON.stringify(errBody));
           }
         } catch (err) {
           console.warn(`Model ${model} try failed:`, err.message);

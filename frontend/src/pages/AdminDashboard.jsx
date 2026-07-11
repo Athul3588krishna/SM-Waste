@@ -1628,7 +1628,7 @@ const AdminDashboard = () => {
                 <label className="form-label">Team Name</label>
                 <input
                   type="text"
-                  placeholder="e.g., Kochi East Squad"
+                  placeholder="e.g., Perinthalmanna East Squad"
                   className="form-input"
                   value={teamName}
                   onChange={(e) => setTeamName(e.target.value)}

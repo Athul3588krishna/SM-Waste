@@ -4,6 +4,61 @@ import API from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
 import { Award, PlusCircle, AlertCircle, Clock, MapPin, CheckCircle2, ChevronRight, Trophy, Megaphone, Calendar, Lock, Gift } from 'lucide-react';
 
+const ConfettiPopper = () => {
+  const particleCount = 80;
+  const styles = [];
+  const elements = [];
+
+  for (let i = 0; i < particleCount; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 80 + Math.random() * 260;
+    const x = Math.cos(angle) * distance;
+    const y = Math.sin(angle) * distance + 120; // gravity fall
+    const size = 6 + Math.random() * 8;
+    const r = Math.random() * 720;
+    const delay = Math.random() * 0.25;
+    const colors = ['#a78bfa', '#06b6d4', '#10b981', '#fbbf24', '#ef4444', '#ec4899'];
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const animName = `confetti-burst-${i}`;
+
+    styles.push(`
+      @keyframes ${animName} {
+        0% {
+          transform: translate(0, 0) scale(1.2) rotate(0deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translate(${x}px, ${y}px) scale(0.3) rotate(${r}deg);
+          opacity: 0;
+        }
+      }
+      .confetti-particle-${i} {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: ${size}px;
+        height: ${size}px;
+        background-color: ${color};
+        border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+        z-index: 10000;
+        pointer-events: none;
+        animation: ${animName} 1.8s cubic-bezier(0.1, 0.8, 0.3, 1) ${delay}s forwards;
+      }
+    `);
+
+    elements.push(<div key={i} className={`confetti-particle-${i}`} />);
+  }
+
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: styles.join('\n') }} />
+      <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', pointerEvents: 'none', zIndex: 10000 }}>
+        {elements}
+      </div>
+    </>
+  );
+};
+
 const CitizenDashboard = () => {
   const { user, setUser } = useContext(AuthContext);
   const [complaints, setComplaints] = useState([]);
@@ -17,6 +72,7 @@ const CitizenDashboard = () => {
   const [redeeming, setRedeeming] = useState(null); // stores active voucher being redeemed
   const [voucherCode, setVoucherCode] = useState('');
   const [redeemingState, setRedeemingState] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -54,6 +110,9 @@ const CitizenDashboard = () => {
       return;
     }
 
+    const confirmRedeem = window.confirm(`Are you sure you want to spend ${cost} Eco-Points to redeem "${voucherName}"?`);
+    if (!confirmRedeem) return;
+
     setRedeemingState(true);
     try {
       const res = await API.put('/auth/redeem', { pointsToDeduct: cost, voucherName });
@@ -68,6 +127,7 @@ const CitizenDashboard = () => {
       
       setVoucherCode(code);
       setRedeeming({ name: voucherName, cost, code });
+      setShowConfetti(true);
     } catch (err) {
       alert(err.response?.data?.message || 'Points redemption failed');
     } finally {
@@ -491,6 +551,8 @@ const CitizenDashboard = () => {
 
       </div>
 
+      {showConfetti && <ConfettiPopper />}
+
       {/* VOUCHER REDEEMED MODAL OVERLAY */}
       {redeeming && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
@@ -548,7 +610,7 @@ const CitizenDashboard = () => {
             <button 
               className="btn btn-primary"
               style={{ width: '100%' }}
-              onClick={() => setRedeeming(null)}
+              onClick={() => { setRedeeming(null); setShowConfetti(false); }}
             >
               Close & Dismiss
             </button>

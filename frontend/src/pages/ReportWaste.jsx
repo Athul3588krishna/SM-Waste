@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import API from '../utils/api';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
-import { ArrowLeft, Upload, AlertCircle, Sparkles, Navigation, Check } from 'lucide-react';
+import { ArrowLeft, Upload, Camera, AlertCircle, Sparkles, Navigation, Check } from 'lucide-react';
 
 // Setup standard Leaflet Marker Icon to avoid Vite packaging failures
 const customIcon = new L.Icon({
@@ -22,9 +22,26 @@ const ReportWaste = () => {
   const [description, setDescription] = useState('');
   const [photo, setPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
-  const [latitude, setLatitude] = useState(10.9752); // Perinthalmanna default
+  const [latitude, setLatitude] = useState(10.9752); // Default fallback
   const [longitude, setLongitude] = useState(76.2238);
   const [address, setAddress] = useState('');
+
+  // Automatically fetch live GPS location on page load
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLatitude(position.coords.latitude);
+          setLongitude(position.coords.longitude);
+          setAddress(`Current Live Location: ${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`);
+        },
+        (error) => {
+          console.warn('Geolocation access denied/failed, falling back to Perinthalmanna center.', error);
+          setAddress('Perinthalmanna Town Center');
+        }
+      );
+    }
+  }, []);
 
   // AI Scanner states
   const [scanning, setScanning] = useState(false);
@@ -207,20 +224,39 @@ const ReportWaste = () => {
           <div className="glass-panel" style={{ padding: '20px' }}>
             <h3 style={{ fontSize: '18px', color: 'var(--text-primary)', marginBottom: '16px' }}>1. Upload Photo</h3>
             
-            <input
-              type="file"
-              id="photo-picker"
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={handlePhotoChange}
-            />
-
             {!photoPreview ? (
-              <label htmlFor="photo-picker" className="scanner-container">
-                <Upload size={32} color="var(--color-primary)" style={{ marginBottom: '12px' }} />
-                <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>Select Photo</span>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>PNG, JPG or JPEG up to 5MB</span>
-              </label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <label htmlFor="photo-gallery" className="scanner-container" style={{ cursor: 'pointer', minHeight: '140px', padding: '16px' }}>
+                    <Upload size={24} color="var(--color-primary)" style={{ marginBottom: '8px' }} />
+                    <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Upload Photo</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', textAlign: 'center' }}>Choose from gallery</span>
+                  </label>
+                  
+                  <label htmlFor="photo-camera" className="scanner-container" style={{ cursor: 'pointer', minHeight: '140px', padding: '16px' }}>
+                    <Camera size={24} color="var(--color-secondary)" style={{ marginBottom: '8px' }} />
+                    <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Take Photo</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', textAlign: 'center' }}>Open device camera</span>
+                  </label>
+                </div>
+                
+                <input
+                  type="file"
+                  id="photo-gallery"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handlePhotoChange}
+                />
+                
+                <input
+                  type="file"
+                  id="photo-camera"
+                  accept="image/*"
+                  capture="environment"
+                  style={{ display: 'none' }}
+                  onChange={handlePhotoChange}
+                />
+              </div>
             ) : (
               <div style={{ position: 'relative' }}>
                 <div className={`scanner-container ${scanning ? 'scanner-running' : ''}`} style={{ padding: '4px' }}>
@@ -283,17 +319,28 @@ const ReportWaste = () => {
                   )}
                 </div>
                 
-                <label htmlFor="photo-picker" className="btn btn-secondary" style={{
-                  position: 'absolute',
-                  top: '12px',
-                  right: '12px',
-                  padding: '6px 12px',
-                  fontSize: '12px',
-                  borderRadius: '6px',
-                  zIndex: 2
-                }}>
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setPhoto(null);
+                    setPhotoPreview(null);
+                    setScanComplete(false);
+                    setScanning(false);
+                  }}
+                  className="btn btn-secondary" 
+                  style={{
+                    position: 'absolute',
+                    top: '12px',
+                    right: '12px',
+                    padding: '6px 12px',
+                    fontSize: '12px',
+                    borderRadius: '6px',
+                    zIndex: 2,
+                    cursor: 'pointer'
+                  }}
+                >
                   Change
-                </label>
+                </button>
               </div>
             )}
 
