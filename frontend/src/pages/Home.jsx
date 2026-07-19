@@ -139,8 +139,8 @@ const InteractiveGlobe = ({ onRotationChange }) => {
         const radLon = (h.lon * Math.PI) / 180;
         const radLat = (h.lat * Math.PI) / 180;
 
-        // 720px matches one full loop of texture
-        const theta = radLon + (bgOffset / 720) * 2 * Math.PI;
+        // Apply a +90 degree (+Math.PI / 2) offset to align the 2D map texture center with 3D sphere coordinates
+        const theta = radLon + (bgOffset / 720) * 2 * Math.PI + Math.PI / 2;
 
         const x3d = Math.cos(radLat) * Math.sin(theta);
         const y3d = Math.sin(radLat);

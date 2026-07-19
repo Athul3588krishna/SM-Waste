@@ -296,6 +296,25 @@ const WorkerDashboard = () => {
                       )}
                     </div>
 
+                    {task.severity && task.severity.toLowerCase() === 'high' && (
+                      <div style={{ 
+                        fontSize: '9px', 
+                        background: 'rgba(239, 68, 68, 0.12)', 
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        color: '#ef4444', 
+                        padding: '2px 6px', 
+                        borderRadius: '4px', 
+                        display: 'inline-flex', 
+                        alignItems: 'center',
+                        gap: '4px',
+                        marginTop: '6px', 
+                        fontWeight: 'bold'
+                      }}>
+                        <span style={{ width: '5px', height: '5px', background: '#ef4444', borderRadius: '50%', display: 'inline-block' }}></span>
+                        URGENT PRIORITY
+                      </div>
+                    )}
+
                     {isOver && (
                       <div style={{ fontSize: '9px', background: 'rgba(255,74,90,0.15)', color: 'var(--color-danger)', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', marginTop: '6px', fontWeight: 'bold' }}>
                         ⚠️ OVERDUE DEADLINE

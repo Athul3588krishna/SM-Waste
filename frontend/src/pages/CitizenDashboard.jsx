@@ -104,6 +104,28 @@ const CitizenDashboard = () => {
     fetchDashboardData();
   }, []);
 
+  const playSuccessSound = () => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const playNote = (freq, startTime, duration) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, startTime);
+        gain.gain.setValueAtTime(0.15, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+      };
+      playNote(523.25, ctx.currentTime, 0.15); // C5 (Do)
+      playNote(783.99, ctx.currentTime + 0.12, 0.45); // G5 (So)
+    } catch (err) {
+      console.warn('AudioContext failed to play success sound:', err);
+    }
+  };
+
   const handleRedeem = async (voucherName, cost) => {
     if ((user?.points || 0) < cost) {
       alert('Insufficient Eco-Points');
@@ -128,6 +150,7 @@ const CitizenDashboard = () => {
       setVoucherCode(code);
       setRedeeming({ name: voucherName, cost, code });
       setShowConfetti(true);
+      playSuccessSound();
     } catch (err) {
       alert(err.response?.data?.message || 'Points redemption failed');
     } finally {
@@ -168,6 +191,122 @@ const CitizenDashboard = () => {
 
   const progress = getBadgeProgress(user?.points || 0);
 
+  const handlePrintCertificate = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Eco-Appreciation Certificate - ${user?.name}</title>
+          <style>
+            body {
+              font-family: 'Georgia', serif;
+              background: #fdfdfd;
+              color: #333;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              height: 100vh;
+              margin: 0;
+            }
+            .certificate-container {
+              border: 12px double #b45309;
+              padding: 50px 40px;
+              width: 700px;
+              background: #fff;
+              text-align: center;
+              position: relative;
+              box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            }
+            .title {
+              font-size: 38px;
+              color: #b45309;
+              margin-bottom: 20px;
+              text-transform: uppercase;
+              letter-spacing: 2px;
+              font-weight: bold;
+            }
+            .subtitle {
+              font-size: 16px;
+              font-weight: 600;
+              letter-spacing: 3px;
+              margin-bottom: 30px;
+              color: #777;
+              text-transform: uppercase;
+            }
+            .name {
+              font-size: 32px;
+              font-weight: bold;
+              text-decoration: underline;
+              color: #111;
+              margin-bottom: 25px;
+              font-style: italic;
+            }
+            .text {
+              font-size: 16px;
+              line-height: 1.6;
+              color: #444;
+              margin-bottom: 45px;
+            }
+            .signature-section {
+              display: flex;
+              justify-content: space-around;
+              margin-top: 50px;
+            }
+            .signature {
+              border-top: 1px dashed #999;
+              width: 220px;
+              padding-top: 8px;
+              font-size: 13px;
+              color: #555;
+              font-family: sans-serif;
+            }
+            .stamp {
+              position: absolute;
+              bottom: 40px;
+              right: 40px;
+              width: 90px;
+              height: 90px;
+              border: 3px double #10b981;
+              border-radius: 50%;
+              color: #10b981;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 11px;
+              font-weight: bold;
+              text-transform: uppercase;
+              transform: rotate(-15deg);
+              background: rgba(16, 185, 129, 0.05);
+            }
+          </style>
+        </head>
+        <body>
+          <div class="certificate-container">
+            <div class="title">Certificate of Appreciation</div>
+            <div class="subtitle">PROUDLY PRESENTED TO</div>
+            <div class="name">${user?.name}</div>
+            <div class="text">
+              in recognition of their outstanding citizen partnership, active waste reporting, and dedicated environmental preservation contributions towards achieving a zero-waste clean community in <strong>Perinthalmanna Municipality</strong>.
+            </div>
+            <div class="signature-section">
+              <div class="signature">Municipal Authority</div>
+              <div class="signature">EcoClean Programme Director</div>
+            </div>
+            <div class="stamp">EcoClean<br/>Certified</div>
+          </div>
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(() => { window.close(); }, 500);
+            }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
@@ -203,7 +342,7 @@ const CitizenDashboard = () => {
           background: 'rgba(255, 255, 255, 0.02)',
           border: '1px solid var(--border-glass)',
           borderRadius: '12px'
-        }} className="grid-2">
+        }} className="grid-3">
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div style={{
@@ -233,6 +372,24 @@ const CitizenDashboard = () => {
             <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
               <div style={{ width: `${progress.pct}%`, height: '100%', background: 'linear-gradient(to right, var(--color-primary), var(--color-secondary))', borderRadius: '4px', transition: 'width 0.5s ease' }}></div>
             </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'md-flex-end' }}>
+            {user?.points >= 100 ? (
+              <button 
+                onClick={handlePrintCertificate}
+                className="btn btn-outline"
+                style={{ width: '100%', padding: '10px 14px', fontSize: '12.5px', borderColor: 'var(--color-primary)', color: 'var(--color-primary)', cursor: 'pointer' }}
+              >
+                📜 Print Certificate
+              </button>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.65 }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'right', width: '100%' }}>
+                  🔒 Earn 100 points to unlock Certificate
+                </span>
+              </div>
+            )}
           </div>
 
         </div>
@@ -278,9 +435,9 @@ const CitizenDashboard = () => {
                     border: citizen._id === user?._id ? '1px solid var(--color-primary)' : '1px solid transparent',
                     borderRadius: '8px'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: '800', color: idx === 0 ? 'var(--color-warning)' : idx === 1 ? '#9ca3af' : idx === 2 ? '#b45309' : 'var(--text-muted)' }}>
-                        #{idx + 1}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '13px', fontWeight: '800' }}>
+                        {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`}
                       </span>
                       <span style={{ fontSize: '13px', color: 'var(--text-primary)' }}>{citizen.name}</span>
                     </div>
