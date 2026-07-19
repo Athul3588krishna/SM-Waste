@@ -27,6 +27,39 @@ const WorkerDashboard = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  const [workerCoords, setWorkerCoords] = useState(null);
+
+  // Automatically fetch worker's current GPS location for distance calculation
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setWorkerCoords({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.warn('Worker location access denied/failed for distance tracking:', error.message);
+        }
+      );
+    }
+  }, []);
+
+  // Haversine formula to compute distance in kilometers between coordinates
+  const getDistance = (lat1, lon1, lat2, lon2) => {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+    const R = 6371; // Radius of the Earth in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
   const fetchWorkerData = async () => {
     try {
       setLoading(true);
@@ -227,6 +260,10 @@ const WorkerDashboard = () => {
             ) : (
               complaints.map((task) => {
                 const isOver = isTaskOverdue(task);
+                const dist = workerCoords && task.location?.latitude && task.location?.longitude
+                  ? getDistance(workerCoords.latitude, workerCoords.longitude, task.location.latitude, task.location.longitude)
+                  : null;
+
                 return (
                   <div
                     key={task._id}
@@ -248,6 +285,17 @@ const WorkerDashboard = () => {
                         {task.status.replace('_', ' ')}
                       </span>
                     </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>
+                      <MapPin size={11} color="var(--color-secondary)" />
+                      <span>{task.address ? task.address.slice(0, 22) + '...' : 'Unknown'}</span>
+                      {dist !== null && (
+                        <span style={{ marginLeft: 'auto', background: 'rgba(6, 182, 212, 0.1)', color: 'var(--color-secondary)', padding: '1px 4px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold' }}>
+                          {dist < 1 ? `${Math.round(dist * 1000)}m` : `${dist.toFixed(1)}km`}
+                        </span>
+                      )}
+                    </div>
+
                     {isOver && (
                       <div style={{ fontSize: '9px', background: 'rgba(255,74,90,0.15)', color: 'var(--color-danger)', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', marginTop: '6px', fontWeight: 'bold' }}>
                         ⚠️ OVERDUE DEADLINE

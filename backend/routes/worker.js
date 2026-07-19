@@ -101,7 +101,10 @@ router.put('/complaints/:id/clean', upload.single('photo'), uploadImage, async (
     }
 
     // Verify worker association
-    if (complaint.worker.toString() !== req.user._id.toString()) {
+    const isAssignedToUser = complaint.worker && complaint.worker.toString() === req.user._id.toString();
+    const isAssignedToTeam = complaint.team && req.user.team && complaint.team.toString() === req.user.team.toString();
+
+    if (!isAssignedToUser && !isAssignedToTeam) {
       return res.status(403).json({ message: 'You are not authorized to clean this task' });
     }
 

@@ -234,6 +234,9 @@ router.put('/redeem', protect, async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
 // @desc    Request password reset OTP
 // @route   POST /api/auth/forgot-password
 // @access  Public

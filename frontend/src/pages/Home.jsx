@@ -52,11 +52,7 @@ const InteractiveGlobe = ({ onRotationChange }) => {
 
   // Coordinates of Perinthalmanna hotspots
   const hotspots = [
-    { lon: 76.2238, lat: 10.9752, label: 'Perinthalmanna Town' },
-    { lon: 76.2050, lat: 10.9790, label: 'Angadipuram Sector' },
-    { lon: 76.2300, lat: 10.9650, label: 'Manathumangalam Zone' },
-    { lon: 76.2280, lat: 10.9850, label: 'Ooty Road Sector' },
-    { lon: 76.2150, lat: 10.9580, label: 'Pattambi Road Zone' }
+    { lon: 76.2238, lat: 10.9752, label: 'Perinthalmanna Municipality (Active)' }
   ];
 
   return (
@@ -167,8 +163,8 @@ const InteractiveGlobe = ({ onRotationChange }) => {
               zIndex: 15
             }}
           >
-            <div style={{ width: '6px', height: '6px', background: '#06b6d4', borderRadius: '50%', boxShadow: '0 0 10px #06b6d4' }}></div>
-            <div style={{ position: 'absolute', width: '12px', height: '12px', border: '1.5px solid rgba(6, 182, 212, 0.7)', borderRadius: '50%', top: '-4px', left: '-4px', animation: 'pulse-ring 1.5s infinite' }}></div>
+            <div style={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', boxShadow: '0 0 12px #10b981' }}></div>
+            <div style={{ position: 'absolute', width: '16px', height: '16px', border: '2px solid rgba(16, 185, 129, 0.8)', borderRadius: '50%', top: '-4px', left: '-4px', animation: 'pulse-ring 1.5s infinite' }}></div>
             <span style={{ 
               position: 'absolute', 
               left: '12px', 
@@ -177,7 +173,7 @@ const InteractiveGlobe = ({ onRotationChange }) => {
               fontSize: '9px', 
               fontFamily: 'monospace', 
               fontWeight: 'bold',
-              textShadow: '0 1px 3px #000, 0 0 4px rgba(6, 182, 212, 0.6)',
+              textShadow: '0 1px 3px #000, 0 0 4px rgba(16, 185, 129, 0.6)',
               whiteSpace: 'nowrap' 
             }}>
               {h.label}
