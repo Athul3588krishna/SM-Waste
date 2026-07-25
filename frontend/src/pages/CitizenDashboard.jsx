@@ -151,6 +151,14 @@ const CitizenDashboard = () => {
       setRedeeming({ name: voucherName, cost, code });
       setShowConfetti(true);
       playSuccessSound();
+
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(`Congratulations! ${voucherName} redeemed successfully.`);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        window.speechSynthesis.speak(utterance);
+      }
     } catch (err) {
       alert(err.response?.data?.message || 'Points redemption failed');
     } finally {

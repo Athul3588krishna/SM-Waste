@@ -121,6 +121,24 @@ router.put('/complaints/:id/clean', upload.single('photo'), uploadImage, async (
     complaint.cleanedAt = Date.now();
     await complaint.save();
 
+    // Socket emission to admin & citizen
+    const io = req.app.get('io');
+    if (io) {
+      const title = 'Cleanup Submitted';
+      const message = `Worker completed cleanup for: "${complaint.title}". Awaiting verification.`;
+      
+      // Notify admins
+      io.to('admin').emit('task_cleaned', { title, message, complaintId: complaint._id });
+
+      // Notify citizen
+      io.to(`user_${complaint.citizen.toString()}`).emit('complaint_status_updated', {
+        title: 'Cleanup Work Finished',
+        message: `Sanitation crew has cleaned "${complaint.title}"! Awaiting municipal verification.`,
+        complaintId: complaint._id,
+        status: 'cleaned'
+      });
+    }
+
     res.json({ message: 'Task marked as cleaned. Awaiting administrator verification.', complaint });
   } catch (error) {
     console.error('Error uploading cleanup:', error);

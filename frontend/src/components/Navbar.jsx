@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import API from '../utils/api';
 import { Trash2, LogOut, Award, Shield, Hammer, Bell, User, Check } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
+import io from 'socket.io-client';
 
 const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
@@ -11,6 +13,32 @@ const Navbar = () => {
   // Notification states
   const [notifications, setNotifications] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [activeToast, setActiveToast] = useState(null);
+
+  // Web Audio API beep synthesizer (100% code-based, no external assets needed)
+  const playNotificationSound = () => {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const playNote = (frequency, startTime, duration) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(frequency, startTime);
+        gain.gain.setValueAtTime(0.08, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+      };
+      
+      const now = audioCtx.currentTime;
+      playNote(523.25, now, 0.15); // C5
+      playNote(659.25, now + 0.1, 0.25); // E5
+    } catch (err) {
+      console.error('Audio playback failed', err);
+    }
+  };
 
   const fetchNotifications = async () => {
     try {
@@ -23,11 +51,89 @@ const Navbar = () => {
   };
 
   useEffect(() => {
+    let socket;
     if (user) {
       fetchNotifications();
-      // Poll notifications every 30 seconds for live updates
-      const interval = setInterval(fetchNotifications, 30000);
-      return () => clearInterval(interval);
+      
+      // Connect to Socket server
+      socket = io('http://localhost:5002');
+
+      // Join rooms
+      socket.emit('join', user._id);
+      socket.emit('join_role', user.role);
+
+      const handleSocketNotification = (data) => {
+        playNotificationSound();
+        setActiveToast({
+          title: data.title || 'New Update',
+          message: data.message || 'You have a new update.'
+        });
+
+        // Refresh list
+        fetchNotifications();
+
+        // Auto close after 6s
+        setTimeout(() => {
+          setActiveToast((curr) => {
+            if (curr && curr.message === data.message) return null;
+            return curr;
+          });
+        }, 6000);
+      };
+
+      // Listeners
+      socket.on('new_complaint', (data) => {
+        handleSocketNotification({
+          title: 'New Complaint Reported 📍',
+          message: `A new ${data.severity} severity ${data.wasteType} complaint was reported by ${data.citizenName || 'a citizen'}: "${data.title}"`
+        });
+      });
+
+      socket.on('new_task_assigned', (data) => {
+        handleSocketNotification({
+          title: data.title || 'New Task Assigned 👷',
+          message: data.message || 'You have been assigned a new cleanup task.'
+        });
+      });
+
+      socket.on('complaint_status_updated', (data) => {
+        handleSocketNotification({
+          title: data.title || 'Report Status Updated ⚙️',
+          message: data.message || 'Your reported complaint status has changed.'
+        });
+      });
+
+      socket.on('task_cleaned', (data) => {
+        handleSocketNotification({
+          title: 'Task Cleaned 🧹',
+          message: data.message || 'A worker has completed cleaning and uploaded verification photos.'
+        });
+      });
+
+      socket.on('complaint_completed', (data) => {
+        handleSocketNotification({
+          title: 'Task Completed & Verified 🎉',
+          message: data.message || 'Your report was successfully verified and points awarded!'
+        });
+      });
+
+      socket.on('points_updated', (data) => {
+        handleSocketNotification({
+          title: data.title || 'Points Awarded 🏆',
+          message: data.message || 'You have received points for your contribution.'
+        });
+      });
+
+      socket.on('new_announcement', (data) => {
+        handleSocketNotification({
+          title: 'Municipal Notice 📢',
+          message: `"${data.title}": ${data.content}`
+        });
+      });
+
+      return () => {
+        if (socket) socket.disconnect();
+      };
     }
   }, [user]);
 
@@ -53,7 +159,7 @@ const Navbar = () => {
         position: 'sticky',
         top: 0,
         zIndex: 100,
-        background: 'rgba(11, 13, 19, 0.85)',
+        background: 'var(--nav-bg)',
         backdropFilter: 'blur(16px)',
         borderBottom: '1px solid var(--border-glass)',
         padding: '12px 24px',
@@ -97,6 +203,7 @@ const Navbar = () => {
 
         {/* Guest Action Buttons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <ThemeToggle />
           <Link to="/login?role=citizen" className="btn btn-outline" style={{ padding: '8px 16px', fontSize: '13px' }}>
             Citizen Portal
           </Link>
@@ -115,7 +222,7 @@ const Navbar = () => {
       position: 'sticky',
       top: 0,
       zIndex: 100,
-      background: 'rgba(11, 13, 19, 0.85)',
+      background: 'var(--nav-bg)',
       backdropFilter: 'blur(16px)',
       borderBottom: '1px solid var(--border-glass)',
       padding: '12px 24px',
@@ -171,9 +278,11 @@ const Navbar = () => {
 
       {/* Profile & Notifications Actions */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <ThemeToggle />
+
         {user.role === 'citizen' && (
           <div style={{
-            background: 'rgba(255, 255, 255, 0.02)',
+            background: 'var(--badge-bg)',
             border: '1px solid var(--border-glass)',
             padding: '4px 10px',
             borderRadius: '20px',
@@ -195,7 +304,7 @@ const Navbar = () => {
           <button
             onClick={() => setShowDropdown(!showDropdown)}
             style={{
-              background: 'rgba(255, 255, 255, 0.03)',
+              background: 'var(--badge-bg)',
               border: '1px solid var(--border-glass)',
               padding: '8px',
               borderRadius: '8px',
@@ -236,7 +345,7 @@ const Navbar = () => {
               right: 0,
               top: '40px',
               width: '320px',
-              background: '#111622',
+              background: 'var(--modal-bg)',
               border: '1px solid var(--border-glass)',
               borderRadius: '12px',
               boxShadow: 'var(--shadow-glass)',
@@ -311,6 +420,58 @@ const Navbar = () => {
           </button>
         </div>
       </div>
+
+      {/* Toast Alert Banner */}
+      {activeToast && (
+        <>
+          <style>{`
+            @keyframes slideInToast {
+              from { transform: translateY(100px) scale(0.9); opacity: 0; }
+              to { transform: translateY(0) scale(1); opacity: 1; }
+            }
+          `}</style>
+          <div style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: '24px',
+            background: 'rgba(10, 14, 23, 0.95)',
+            border: '1px solid var(--color-primary)',
+            borderRadius: '12px',
+            padding: '16px',
+            boxShadow: '0 8px 32px 0 rgba(139, 92, 246, 0.25)',
+            zIndex: 1000,
+            width: '320px',
+            backdropFilter: 'blur(16px)',
+            animation: 'slideInToast 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '6px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '12px', fontWeight: '800', color: 'var(--color-primary)' }}>
+                {activeToast.title}
+              </span>
+              <button 
+                onClick={() => setActiveToast(null)} 
+                style={{ 
+                  background: 'none', 
+                  border: 'none', 
+                  color: 'var(--text-secondary)', 
+                  cursor: 'pointer', 
+                  fontSize: '16px',
+                  lineHeight: 1,
+                  padding: '0 4px'
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <p style={{ fontSize: '11px', color: 'var(--text-primary)', margin: 0, lineHeight: '1.4' }}>
+              {activeToast.message}
+            </p>
+          </div>
+        </>
+      )}
     </nav>
   );
 };

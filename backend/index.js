@@ -44,6 +44,29 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5002;
 
-app.listen(PORT, () => {
+const http = require('http');
+const { Server } = require('socket.io');
+
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  },
+});
+
+app.set('io', io);
+
+io.on('connection', (socket) => {
+  socket.on('join', (userId) => {
+    socket.join(`user_${userId}`);
+  });
+
+  socket.on('join_role', (role) => {
+    socket.join(role);
+  });
+});
+
+server.listen(PORT, () => {
   console.log(`Server running in development mode on port ${PORT}`);
 });

@@ -244,6 +244,17 @@ router.post('/announcements', async (req, res) => {
       target: target || 'all',
     });
 
+    // Socket emission for announcement
+    const io = req.app.get('io');
+    if (io) {
+      const room = target || 'all';
+      if (room === 'all') {
+        io.emit('new_announcement', { title, content, target: room });
+      } else {
+        io.to(room).emit('new_announcement', { title, content, target: room });
+      }
+    }
+
     res.status(201).json(announcement);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -296,12 +307,26 @@ router.put('/complaints/:id/status', async (req, res) => {
     complaint.status = status;
     await complaint.save();
 
+    const title = `Waste Report ${status === 'verified' ? 'Approved' : 'Rejected'}`;
+    const message = `Your report titled "${complaint.title}" has been ${status === 'verified' ? 'verified by the municipality. It is now awaiting assignment.' : 'rejected by municipal reviews.'}`;
+
     // Trigger Notification
     await Notification.create({
       user: complaint.citizen,
-      title: `Waste Report ${status === 'verified' ? 'Approved' : 'Rejected'}`,
-      message: `Your report titled "${complaint.title}" has been ${status === 'verified' ? 'verified by the municipality. It is now awaiting assignment.' : 'rejected by municipal reviews.'}`,
+      title,
+      message,
     });
+
+    // Socket emission to citizen
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`user_${complaint.citizen.toString()}`).emit('complaint_status_updated', {
+        title,
+        message,
+        complaintId: complaint._id,
+        status,
+      });
+    }
 
     res.json(complaint);
   } catch (error) {
@@ -366,6 +391,29 @@ router.put('/complaints/:id/assign', async (req, res) => {
     }
 
     await complaint.save();
+
+    // Socket emission to worker or team members
+    const io = req.app.get('io');
+    if (io) {
+      const title = assignedToType === 'individual' ? 'New Assignment' : 'New Team Assignment';
+      const message = `You have been assigned a new cleanup: "${complaint.title}". Deadline: ${days} day(s).`;
+      
+      if (assignedToType === 'individual') {
+        io.to(`user_${workerId}`).emit('new_task_assigned', { title, message, complaintId: complaint._id });
+      } else {
+        const team = await Team.findById(teamId);
+        if (team && team.members) {
+          team.members.forEach((memberId) => {
+            io.to(`user_${memberId.toString()}`).emit('new_task_assigned', { 
+              title, 
+              message: `Your team "${team.name}" has been assigned a cleanup: "${complaint.title}". Deadline: ${days} day(s).`,
+              complaintId: complaint._id 
+            });
+          });
+        }
+      }
+    }
+
     res.json(complaint);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -437,6 +485,29 @@ router.put('/complaints/:id/reassign', async (req, res) => {
     }
 
     await complaint.save();
+
+    // Socket emission for reassignment
+    const io = req.app.get('io');
+    if (io) {
+      const title = assignedToType === 'individual' ? 'Overdue Task Reassignment' : 'Overdue Team Reassignment';
+      const message = `You have been assigned a new cleanup: "${complaint.title}". Deadline: ${days} day(s).`;
+      
+      if (assignedToType === 'individual') {
+        io.to(`user_${workerId}`).emit('new_task_assigned', { title, message, complaintId: complaint._id });
+      } else {
+        const team = await Team.findById(teamId);
+        if (team && team.members) {
+          team.members.forEach((memberId) => {
+            io.to(`user_${memberId.toString()}`).emit('new_task_assigned', { 
+              title, 
+              message: `Your team "${team.name}" has been reassigned an overdue cleanup: "${complaint.title}". Deadline: ${days} day(s).`,
+              complaintId: complaint._id 
+            });
+          });
+        }
+      }
+    }
+
     res.json(complaint);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -540,6 +611,36 @@ router.put('/complaints/:id/verify-cleanup', async (req, res) => {
       subject: emailSubject,
       text: emailText,
     });
+
+    // Socket emission to citizen & worker/team
+    const io = req.app.get('io');
+    if (io) {
+      // Notify citizen
+      io.to(`user_${complaint.citizen._id.toString()}`).emit('complaint_completed', {
+        title: 'Cleanup Resolved & Verified',
+        message: `Great news! The garbage dump you reported "${complaint.title}" has been cleaned and verified. +50 Eco-Points awarded!`,
+        points: 50,
+        complaintId: complaint._id,
+      });
+
+      // Notify worker
+      if (complaint.assignedToType === 'individual' && complaint.worker) {
+        io.to(`user_${complaint.worker.toString()}`).emit('points_updated', {
+          title: 'Task Verified',
+          message: `Your cleaning for "${complaint.title}" was verified!`,
+        });
+      } else if (complaint.assignedToType === 'team' && complaint.team) {
+        const team = await Team.findById(complaint.team);
+        if (team && team.members) {
+          team.members.forEach(memberId => {
+            io.to(`user_${memberId.toString()}`).emit('points_updated', {
+              title: 'Team Task Verified',
+              message: `Your team cleaning for "${complaint.title}" was verified!`,
+            });
+          });
+        }
+      }
+    }
 
     res.json({ message: 'Cleanup successfully verified!', complaint });
   } catch (error) {

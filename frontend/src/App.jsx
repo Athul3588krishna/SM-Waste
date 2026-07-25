@@ -1,7 +1,9 @@
 import React, { useContext } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, AuthContext } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import Navbar from './components/Navbar';
+import EcoBotWidget from './components/EcoBotWidget';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import CitizenDashboard from './pages/CitizenDashboard';
@@ -51,8 +53,9 @@ const HomeDispatcher = () => {
 
 const App = () => {
   return (
-    <AuthProvider>
-      <BrowserRouter>
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
           <Navbar />
           <div style={{ flex: 1 }}>
@@ -106,9 +109,11 @@ const App = () => {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>
+          <EcoBotWidget />
         </div>
       </BrowserRouter>
     </AuthProvider>
+    </ThemeProvider>
   );
 };
 

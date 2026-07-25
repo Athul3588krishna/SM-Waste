@@ -138,6 +138,16 @@ const ReportWaste = () => {
       clearInterval(interval);
       setScanning(false);
       setScanComplete(true);
+
+      const typeToSpeak = data?.wasteType || 'Mixed';
+      const severityToSpeak = data?.severity || 'Medium';
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(`${typeToSpeak} waste detected. ${severityToSpeak} severity level.`);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        window.speechSynthesis.speak(utterance);
+      }
     }
   };
 

@@ -8,12 +8,12 @@
 
 ### SUBMITTED TO:
 **DEPARTMENT OF COMPUTER APPLICATIONS**  
-**AWH ENGINEERING COLLEGE KUTTIKKATTOOR, KOZHIKODE**  
+**MEA ENGINEERING COLLEGE, PERINTHALMANNA**  
 *(Affiliated to APJ Abdul Kalam Technological University)*
 
 ### BY:
-**ATHUL KRISHNA**  
-*(Register No: AWH24MCA-XXXX)*
+**ATHUL KRISHNA R**  
+*(Register No: MEA24MCA-XXXX)*
 
 **JULY 2026**
 
@@ -22,21 +22,21 @@
 
 ## CERTIFICATE
 
-This is to certify that the project thesis entitled **"ECOCLEAN: SMART WASTE REPORTING AND MANAGEMENT SYSTEM"** submitted by **ATHUL KRISHNA** in partial fulfillment of the requirements for the award of the degree of Master of Computer Applications under APJ Abdul Kalam Technological University, is an authentic record of the work carried out under our guidance and supervision during the academic year 2025 - 2026.
+This is to certify that the project thesis entitled **"ECOCLEAN: SMART WASTE REPORTING AND MANAGEMENT SYSTEM"** submitted by **ATHUL KRISHNA R** in partial fulfillment of the requirements for the award of the degree of Master of Computer Applications under APJ Abdul Kalam Technological University, is an authentic record of the work carried out under our guidance and supervision during the academic year 2025 - 2026.
 
 <br><br>
 
 **Mrs. Sruti Sudevan**  
 *Assistant Professor & HOD*  
 *Department of Computer Applications*  
-*AWH Engineering College*  
+*MEA Engineering College*  
 
 <br>
 
 **Ms. Prajina K**  
 *Assistant Professor & Project Guide*  
 *Department of Computer Applications*  
-*AWH Engineering College*  
+*MEA Engineering College*  
 
 <br><br>
 
@@ -47,13 +47,13 @@ This is to certify that the project thesis entitled **"ECOCLEAN: SMART WASTE REP
 
 ## ACKNOWLEDGEMENT
 
-I express my sincere gratitude to our beloved Principal, **Dr. Sabeena M V**, for providing me with the required facilities and environment for executing this project work. 
+I express my sincere gratitude to our beloved Principal for providing me with the required facilities and environment for executing this project work. 
 
 I express my hearty thanks to **Mrs. Sruti Sudevan**, Head of the Department of MCA, and **Ms. Prajina K**, Assistant Professor and Project Guide, for their continuous guidance, support, and constructive feedback throughout the course of this project.
 
 I am also thankful to all other teaching and non-teaching staff of the MCA department for their encouragement and support. Finally, I extend my appreciation to my family and peers who have supported me in completing this work successfully.
 
-**ATHUL KRISHNA**
+**ATHUL KRISHNA R**
 
 ---
 ---

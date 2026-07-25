@@ -1,11 +1,13 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { ThemeContext } from '../context/ThemeContext';
 import API from '../utils/api';
-import { User, Mail, Lock, Save, ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react';
+import { User, Mail, Lock, Save, ArrowLeft, AlertCircle, CheckCircle, Sun, Moon } from 'lucide-react';
 
 const Profile = () => {
   const { user, setUser } = useContext(AuthContext);
+  const { theme, setTheme } = useContext(ThemeContext);
   const navigate = useNavigate();
 
   const [name, setName] = useState(user?.name || '');
@@ -56,7 +58,7 @@ const Profile = () => {
       {/* Back button */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
         <button onClick={() => navigate(-1)} style={{
-          background: 'rgba(255,255,255,0.03)',
+          background: 'var(--badge-bg)',
           border: '1px solid var(--border-glass)',
           borderRadius: '8px',
           padding: '8px',
@@ -105,7 +107,7 @@ const Profile = () => {
         </div>
       )}
 
-      <div className="glass-panel">
+      <div className="glass-panel" style={{ marginBottom: '24px' }}>
         <form onSubmit={handleSubmit}>
           
           <div className="form-group">
@@ -187,6 +189,62 @@ const Profile = () => {
           </button>
 
         </form>
+      </div>
+
+      {/* Theme Preference Settings Card */}
+      <div className="glass-panel">
+        <h4 style={{ fontSize: '14px', color: 'var(--text-primary)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          Appearance Preference
+        </h4>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '16px' }}>
+          Choose your preferred interface theme.
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <button
+            type="button"
+            onClick={() => setTheme('dark')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              padding: '14px',
+              borderRadius: '10px',
+              border: theme === 'dark' ? '2px solid var(--color-primary)' : '1px solid var(--border-glass)',
+              background: theme === 'dark' ? 'rgba(139, 92, 246, 0.15)' : 'var(--badge-bg)',
+              color: theme === 'dark' ? 'var(--color-primary)' : 'var(--text-secondary)',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <Moon size={18} color={theme === 'dark' ? 'var(--color-primary)' : 'var(--text-secondary)'} />
+            <span>Dark Mode</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setTheme('light')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              padding: '14px',
+              borderRadius: '10px',
+              border: theme === 'light' ? '2px solid var(--color-secondary)' : '1px solid var(--border-glass)',
+              background: theme === 'light' ? 'rgba(6, 182, 212, 0.15)' : 'var(--badge-bg)',
+              color: theme === 'light' ? 'var(--color-secondary)' : 'var(--text-secondary)',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <Sun size={18} color={theme === 'light' ? 'var(--color-secondary)' : 'var(--text-secondary)'} />
+            <span>Light Mode</span>
+          </button>
+        </div>
       </div>
 
     </div>
