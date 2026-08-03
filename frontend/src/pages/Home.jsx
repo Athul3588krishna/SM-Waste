@@ -13,21 +13,41 @@ const InteractiveGlobe = ({ onRotationChange }) => {
   const [isAutoRotate, setIsAutoRotate] = useState(true);
   const [selectedHotspot, setSelectedHotspot] = useState(null);
 
-  useEffect(() => {
-    if (isDragging || !isAutoRotate) return;
-    
-    const interval = setInterval(() => {
-      setBgOffset(prev => {
-        const next = (prev - 0.5) % 720;
-        if (onRotationChange) {
-          const lonDegrees = Math.round(((-next / 720) * 360) % 360);
-          onRotationChange(lonDegrees);
-        }
-        return next;
-      });
-    }, 30);
+  const velocityRef = React.useRef(-0.6); // Continuous spin speed
+  const animFrameRef = React.useRef(null);
 
-    return () => clearInterval(interval);
+  useEffect(() => {
+    let lastTime = performance.now();
+
+    const animateGlobe = (now) => {
+      const delta = Math.min((now - lastTime) / 16.66, 2);
+      lastTime = now;
+
+      if (!isDragging && isAutoRotate) {
+        setBgOffset(prev => {
+          const next = (prev + velocityRef.current * delta) % 720;
+          if (onRotationChange) {
+            const lonDegrees = Math.round(((-next / 720) * 360) % 360);
+            onRotationChange(lonDegrees);
+          }
+          return next;
+        });
+
+        // Smoothly decay spin momentum back to target base speed (-0.6px/frame)
+        if (Math.abs(velocityRef.current - (-0.6)) > 0.05) {
+          velocityRef.current += (-0.6 - velocityRef.current) * 0.05;
+        } else {
+          velocityRef.current = -0.6;
+        }
+      }
+
+      animFrameRef.current = requestAnimationFrame(animateGlobe);
+    };
+
+    animFrameRef.current = requestAnimationFrame(animateGlobe);
+    return () => {
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    };
   }, [isDragging, isAutoRotate, onRotationChange]);
 
   const handleMouseDown = (e) => {
@@ -39,6 +59,8 @@ const InteractiveGlobe = ({ onRotationChange }) => {
     if (!isDragging) return;
     const dx = e.clientX - prevMouse.x;
     const dy = e.clientY - prevMouse.y;
+
+    velocityRef.current = dx * 0.8; // Impart drag velocity to spinning momentum
 
     setBgOffset(prev => {
       const next = (prev + dx * 0.8) % 720;
