@@ -648,34 +648,6 @@ const Home = () => {
           >
             Automated environmental control console powered by real-time Google Gemini AI vision diagnostics and tactical sanitation crew allocation.
           </motion.p>
-
-          {/* HERO LIVE METRICS COUNTER BAR */}
-          <motion.div 
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.3, duration: 0.5 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto mt-6 mb-2 p-3 bg-gray-950/60 border border-gray-800/80 backdrop-blur-xl rounded-2xl shadow-xl"
-          >
-            <div className="flex flex-col items-center p-2.5 rounded-xl bg-emerald-500/5 border border-emerald-500/10 hover:border-emerald-500/30 transition-all">
-              <span className="text-xl md:text-2xl font-bold text-emerald-400 font-mono">12,480+ Kg</span>
-              <span className="text-[10px] text-gray-400 font-mono uppercase tracking-wider mt-0.5">Recycled Waste</span>
-            </div>
-
-            <div className="flex flex-col items-center p-2.5 rounded-xl bg-cyan-500/5 border border-cyan-500/10 hover:border-cyan-500/30 transition-all">
-              <span className="text-xl md:text-2xl font-bold text-cyan-300 font-mono">98.4%</span>
-              <span className="text-[10px] text-gray-400 font-mono uppercase tracking-wider mt-0.5">AI Precision Rate</span>
-            </div>
-
-            <div className="flex flex-col items-center p-2.5 rounded-xl bg-amber-500/5 border border-amber-500/10 hover:border-amber-500/30 transition-all">
-              <span className="text-xl md:text-2xl font-bold text-amber-400 font-mono">45,200+</span>
-              <span className="text-[10px] text-gray-400 font-mono uppercase tracking-wider mt-0.5">Eco Points Earned</span>
-            </div>
-
-            <div className="flex flex-col items-center p-2.5 rounded-xl bg-purple-500/5 border border-purple-500/10 hover:border-purple-500/30 transition-all">
-              <span className="text-xl md:text-2xl font-bold text-purple-400 font-mono">24/7</span>
-              <span className="text-[10px] text-gray-400 font-mono uppercase tracking-wider mt-0.5">Tactical Dispatch</span>
-            </div>
-          </motion.div>
         </div>
 
         {/* 3-COLUMN CONTROL MODULE GRID */}
