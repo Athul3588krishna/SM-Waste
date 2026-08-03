@@ -190,7 +190,7 @@ const InteractiveGlobe = ({ onRotationChange }) => {
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
   
-  const sentence = "Municipal Eco-Net Terminal";
+  const sentence = "AI Powered Smart Waste Management Portal";
 
   const titleContainer = {
     hidden: { opacity: 0 },
