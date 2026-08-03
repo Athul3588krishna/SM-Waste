@@ -150,12 +150,12 @@ const seedData = async () => {
     // 3. Create Announcements
     await Announcement.create({
       title: 'Perinthalmanna Green Protocol Active',
-      message: 'Perinthalmanna Municipality has activated strict green protocols across all residential blocks. Earn double Eco-Points for reporting plastic waste.',
+      content: 'Perinthalmanna Municipality has activated strict green protocols across all residential blocks. Earn double Eco-Points for reporting plastic waste.',
     });
 
     await Announcement.create({
       title: 'Sanitation Volunteers Clean Drive',
-      message: 'Join the weekend cleanup drive at Perinthalmanna Bypass Road. Meet at Jubilee Junction at 7:00 AM.',
+      content: 'Join the weekend cleanup drive at Perinthalmanna Bypass Road. Meet at Jubilee Junction at 7:00 AM.',
     });
 
     console.log('Announcements seeded successfully!');

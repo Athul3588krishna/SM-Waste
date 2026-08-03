@@ -2,6 +2,8 @@ import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { Search, Users, ShieldAlert, Hammer, ArrowRight, Sparkles, Terminal, AlertCircle, ShieldCheck, Zap, HeartHandshake, Activity, Globe, Compass } from 'lucide-react';
+import { motion } from 'framer-motion';
+import MouseTiltCard from '../components/MouseTiltCard';
 
 const InteractiveGlobe = ({ onRotationChange }) => {
   const [isDragging, setIsDragging] = useState(false);
@@ -187,6 +189,29 @@ const InteractiveGlobe = ({ onRotationChange }) => {
 
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  
+  const sentence = "Municipal Eco-Net Terminal";
+
+  const titleContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.03,
+        delayChildren: 0.15
+      }
+    }
+  };
+
+  const letterVariant = {
+    hidden: { opacity: 0, y: 15, filter: "blur(3px)" },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      filter: "blur(0px)",
+      transition: { type: 'spring', damping: 14, stiffness: 180 }
+    }
+  };
   const [showAdminOverlay, setShowAdminOverlay] = useState(false);
   const [adminEmail, setAdminEmail] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
@@ -257,12 +282,13 @@ const Home = () => {
       position: 'relative', 
       overflow: 'hidden', 
       minHeight: 'calc(100vh - 80px)',
-      background: '#020306',
-      color: '#f9fafb',
+      background: 'var(--bg-main)',
+      color: 'var(--text-primary)',
       fontFamily: 'var(--font-sans)',
       display: 'flex',
       flexDirection: 'column',
-      justifyContent: 'space-between'
+      justifyContent: 'space-between',
+      transition: 'background-color 0.3s ease, color 0.3s ease'
     }}>
       
       {/* Sci-Fi Global Style Overrides */}
@@ -290,12 +316,12 @@ const Home = () => {
         }
         
         .hud-panel {
-          background: rgba(10, 14, 23, 0.45);
-          border: 1px solid rgba(139, 92, 246, 0.15);
+          background: var(--bg-card);
+          border: 1px solid var(--border-glass);
           border-radius: 12px;
           padding: 24px;
           backdrop-filter: blur(16px);
-          box-shadow: 0 10px 40px rgba(0,0,0,0.8), inset 0 0 20px rgba(139, 92, 246, 0.05);
+          box-shadow: var(--shadow-glass);
           transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
           position: relative;
           overflow: hidden;
@@ -413,8 +439,8 @@ const Home = () => {
       {/* TOP STATUS BAR */}
       <div style={{ 
         width: '100%', 
-        borderBottom: '1px solid rgba(255,255,255,0.04)', 
-        background: 'rgba(5, 7, 12, 0.8)', 
+        borderBottom: '1px solid var(--border-glass)', 
+        background: 'var(--nav-bg)', 
         padding: '12px 24px', 
         display: 'flex', 
         justifyContent: 'space-between', 
@@ -422,7 +448,7 @@ const Home = () => {
         fontSize: '11px',
         fontFamily: 'monospace',
         letterSpacing: '1px',
-        color: 'rgba(255,255,255,0.6)',
+        color: 'var(--text-secondary)',
         position: 'relative',
         zIndex: 10
       }}>
@@ -454,39 +480,63 @@ const Home = () => {
         
         {/* UPPER HUD BANNER */}
         <div style={{ textAlign: 'center', position: 'relative' }}>
-          <div style={{
-            background: 'rgba(139, 92, 246, 0.05)',
-            border: '1px solid rgba(139, 92, 246, 0.2)',
-            padding: '5px 14px',
-            borderRadius: '4px',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            color: '#c084fc',
-            fontSize: '11px',
-            fontWeight: '700',
-            fontFamily: 'monospace',
-            marginBottom: '16px',
-            textTransform: 'uppercase',
-            letterSpacing: '1.5px'
-          }}>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+            style={{
+              background: 'rgba(139, 92, 246, 0.05)',
+              border: '1px solid rgba(139, 92, 246, 0.2)',
+              padding: '5px 14px',
+              borderRadius: '4px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              color: '#c084fc',
+              fontSize: '11px',
+              fontWeight: '700',
+              fontFamily: 'monospace',
+              marginBottom: '16px',
+              textTransform: 'uppercase',
+              letterSpacing: '1.5px'
+            }}
+          >
             <Activity size={12} /> Diagnostic HUD Matrix v2.0
-          </div>
+          </motion.div>
           
-          <h1 style={{ 
-            fontSize: '44px', 
-            fontWeight: '900', 
-            lineHeight: 1.1, 
-            color: '#ffffff', 
-            letterSpacing: '-1.5px', 
-            fontFamily: 'var(--font-display)',
-            margin: 0
-          }}>
-            Municipal Eco-Net Terminal
-          </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14.5px', maxWidth: '580px', margin: '8px auto 0', lineHeight: 1.5 }}>
+          <motion.h1 
+            variants={titleContainer}
+            initial="hidden"
+            animate="visible"
+            style={{ 
+              fontSize: '44px', 
+              fontWeight: '900', 
+              lineHeight: 1.1, 
+              color: 'var(--text-primary)', 
+              letterSpacing: '-1.5px', 
+              fontFamily: 'var(--font-display)',
+              margin: 0
+            }}
+          >
+            {sentence.split("").map((char, index) => (
+              <motion.span 
+                key={index} 
+                variants={letterVariant} 
+                style={{ display: 'inline-block', whiteSpace: char === ' ' ? 'pre' : 'normal' }}
+              >
+                {char}
+              </motion.span>
+            ))}
+          </motion.h1>
+          
+          <motion.p 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.1, duration: 0.5 }}
+            style={{ color: 'var(--text-secondary)', fontSize: '14.5px', maxWidth: '580px', margin: '8px auto 0', lineHeight: 1.5 }}
+          >
             Automated environmental control console powered by real-time Google Gemini AI vision diagnostics and tactical sanitation crew allocation.
-          </p>
+          </motion.p>
         </div>
 
         {/* 3-COLUMN CONTROL MODULE GRID */}
@@ -499,39 +549,41 @@ const Home = () => {
         }} className="grid-3">
           
           {/* LEFT COLUMN: CITIZEN HUB PANEL */}
-          <div className="hud-panel hud-panel-citizen">
-            {/* HUD Corner Brackets */}
-            <div className="hud-border-bracket" style={{ top: '8px', left: '8px', borderLeftWidth: '2px', borderTopWidth: '2px' }}></div>
-            <div className="hud-border-bracket" style={{ top: '8px', right: '8px', borderRightWidth: '2px', borderTopWidth: '2px' }}></div>
-            <div className="hud-border-bracket" style={{ bottom: '8px', left: '8px', borderLeftWidth: '2px', borderBottomWidth: '2px' }}></div>
-            <div className="hud-border-bracket" style={{ bottom: '8px', right: '8px', borderRightWidth: '2px', borderBottomWidth: '2px' }}></div>
+          <MouseTiltCard glowColor="rgba(16, 185, 129, 0.25)" tiltMax={10}>
+            <div className="hud-panel hud-panel-citizen" style={{ height: '100%' }}>
+              {/* HUD Corner Brackets */}
+              <div className="hud-border-bracket" style={{ top: '8px', left: '8px', borderLeftWidth: '2px', borderTopWidth: '2px' }}></div>
+              <div className="hud-border-bracket" style={{ top: '8px', right: '8px', borderRightWidth: '2px', borderTopWidth: '2px' }}></div>
+              <div className="hud-border-bracket" style={{ bottom: '8px', left: '8px', borderLeftWidth: '2px', borderBottomWidth: '2px' }}></div>
+              <div className="hud-border-bracket" style={{ bottom: '8px', right: '8px', borderRightWidth: '2px', borderBottomWidth: '2px' }}></div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-              <Users size={18} color="#10b981" />
-              <span className="hud-label-citizen">Telemetry: Citizens Node</span>
-            </div>
-            
-            <h3 style={{ fontSize: '20px', fontWeight: '800', margin: '0 0 10px 0', color: '#fff', fontFamily: 'var(--font-display)' }}>
-              Public Portal
-            </h3>
-            
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.55, margin: '0 0 20px 0' }}>
-              Allows registered citizens to catalog local sanitation anomalies, log visual diagnostics, and claim municipal point rewards.
-            </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+                <Users size={18} color="#10b981" />
+                <span className="hud-label-citizen">Telemetry: Citizens Node</span>
+              </div>
+              
+              <h3 style={{ fontSize: '20px', fontWeight: '800', margin: '0 0 10px 0', color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
+                Public Portal
+              </h3>
+              
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.55, margin: '0 0 20px 0' }}>
+                Allows registered citizens to catalog local sanitation anomalies, log visual diagnostics, and claim municipal point rewards.
+              </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <button className="glow-btn-hud-green" onClick={() => navigate(user ? '/dashboard' : '/login?role=citizen')}>
-                Open Workspace <ArrowRight size={14} />
-              </button>
-              {!user && (
-                <div style={{ textAlign: 'center' }}>
-                  <Link to="/register" style={{ fontSize: '12px', color: '#10b981', textDecoration: 'none', fontWeight: 'bold', fontFamily: 'monospace' }}>
-                    [REGISTER_NEW_NODE]
-                  </Link>
-                </div>
-              )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <button className="glow-btn-hud-green" onClick={() => navigate(user ? '/dashboard' : '/login?role=citizen')}>
+                  Open Workspace <ArrowRight size={14} />
+                </button>
+                {!user && (
+                  <div style={{ textAlign: 'center' }}>
+                    <Link to="/register" style={{ fontSize: '12px', color: '#10b981', textDecoration: 'none', fontWeight: 'bold', fontFamily: 'monospace' }}>
+                      [REGISTER_NEW_NODE]
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          </MouseTiltCard>
 
           {/* CENTER COLUMN: INTERACTIVE 3D EARTH DECK */}
           <div style={{ 
@@ -589,35 +641,37 @@ const Home = () => {
           </div>
 
           {/* RIGHT COLUMN: SANITATION CREW HUB PANEL */}
-          <div className="hud-panel hud-panel-worker">
-            {/* HUD Corner Brackets */}
-            <div className="hud-border-bracket" style={{ top: '8px', left: '8px', borderLeftWidth: '2px', borderTopWidth: '2px' }}></div>
-            <div className="hud-border-bracket" style={{ top: '8px', right: '8px', borderRightWidth: '2px', borderTopWidth: '2px' }}></div>
-            <div className="hud-border-bracket" style={{ bottom: '8px', left: '8px', borderLeftWidth: '2px', borderBottomWidth: '2px' }}></div>
-            <div className="hud-border-bracket" style={{ bottom: '8px', right: '8px', borderRightWidth: '2px', borderBottomWidth: '2px' }}></div>
+          <MouseTiltCard glowColor="rgba(6, 182, 212, 0.25)" tiltMax={10}>
+            <div className="hud-panel hud-panel-worker" style={{ height: '100%' }}>
+              {/* HUD Corner Brackets */}
+              <div className="hud-border-bracket" style={{ top: '8px', left: '8px', borderLeftWidth: '2px', borderTopWidth: '2px' }}></div>
+              <div className="hud-border-bracket" style={{ top: '8px', right: '8px', borderRightWidth: '2px', borderTopWidth: '2px' }}></div>
+              <div className="hud-border-bracket" style={{ bottom: '8px', left: '8px', borderLeftWidth: '2px', borderBottomWidth: '2px' }}></div>
+              <div className="hud-border-bracket" style={{ bottom: '8px', right: '8px', borderRightWidth: '2px', borderBottomWidth: '2px' }}></div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-              <Hammer size={18} color="#06b6d4" />
-              <span className="hud-label-worker">Telemetry: Crew Node</span>
-            </div>
-            
-            <h3 style={{ fontSize: '20px', fontWeight: '800', margin: '0 0 10px 0', color: '#fff', fontFamily: 'var(--font-display)' }}>
-              Sanitation Panel
-            </h3>
-            
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.55, margin: '0 0 20px 0' }}>
-              Allows dispatch crews to monitor assignments, trace mapping coordinates, verify resolutions, and trigger escrow split payouts.
-            </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+                <Hammer size={18} color="#06b6d4" />
+                <span className="hud-label-worker">Telemetry: Crew Node</span>
+              </div>
+              
+              <h3 style={{ fontSize: '20px', fontWeight: '800', margin: '0 0 10px 0', color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
+                Sanitation Panel
+              </h3>
+              
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.55, margin: '0 0 20px 0' }}>
+                Allows dispatch crews to monitor assignments, trace mapping coordinates, verify resolutions, and trigger escrow split payouts.
+              </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <button className="glow-btn-hud-cyan" onClick={() => navigate(user ? '/dashboard' : '/login?role=worker')}>
-                Open Sanitation Panel <ArrowRight size={14} />
-              </button>
-              <div style={{ textAlign: 'center', fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
-                [SECURED_AUTHENTICATION]
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <button className="glow-btn-hud-cyan" onClick={() => navigate(user ? '/dashboard' : '/login?role=worker')}>
+                  Open Sanitation Panel <ArrowRight size={14} />
+                </button>
+                <div style={{ textAlign: 'center', fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                  [SECURED_AUTHENTICATION]
+                </div>
               </div>
             </div>
-          </div>
+          </MouseTiltCard>
 
         </div>
 
@@ -626,8 +680,8 @@ const Home = () => {
           maxWidth: '960px', 
           margin: '0 auto', 
           width: '100%',
-          border: '1px solid rgba(139, 92, 246, 0.15)',
-          background: 'rgba(10, 14, 23, 0.45)',
+          border: '1px solid var(--border-glass)',
+          background: 'var(--bg-card)',
           padding: '24px'
         }}>
           {/* HUD Corner Brackets */}
@@ -662,27 +716,27 @@ const Home = () => {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 padding: '12px 18px',
-                background: 'rgba(255,255,255,0.01)',
+                background: 'var(--badge-bg)',
                 borderRadius: '6px',
-                border: '1px solid rgba(255,255,255,0.03)'
+                border: '1px solid var(--border-glass)'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <span style={{
                     width: '24px',
                     height: '24px',
                     borderRadius: '50%',
-                    background: leader.rank === 1 ? '#fbbf24' : leader.rank === 2 ? '#cbd5e1' : '#b45309',
-                    color: '#000',
-                    fontSize: '11px',
-                    fontWeight: '800',
+                    background: leader.rank === 1 ? 'rgba(251,191,36,0.1)' : leader.rank === 2 ? 'rgba(156,163,175,0.1)' : 'rgba(217,119,6,0.1)',
+                    color: leader.rank === 1 ? '#fbbf24' : leader.rank === 2 ? '#9ca3af' : '#d97706',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    fontWeight: 'bold',
+                    fontSize: '12px',
                     fontFamily: 'monospace'
                   }}>
-                    0{leader.rank}
+                    {leader.rank}
                   </span>
-                  <span style={{ fontWeight: '600', color: '#fff', fontSize: '13.5px', fontFamily: 'monospace' }}>{leader.name}</span>
+                  <span style={{ fontWeight: '600', color: 'var(--text-primary)', fontSize: '13.5px', fontFamily: 'monospace' }}>{leader.name}</span>
                 </div>
                 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -713,26 +767,26 @@ const Home = () => {
 
         {/* BOTTOM HUD MODULES */}
         <div className="grid-3" style={{ gap: '20px', marginTop: '10px' }}>
-          <div className="glass-panel" style={{ padding: '16px 20px', display: 'flex', gap: '12px', alignItems: 'center', background: 'rgba(10,14,23,0.3)', border: '1px solid rgba(255,255,255,0.03)' }}>
+          <div className="glass-panel" style={{ padding: '16px 20px', display: 'flex', gap: '12px', alignItems: 'center', background: 'var(--badge-bg)', border: '1px solid var(--border-glass)' }}>
             <Zap size={18} color="#10b981" />
             <div>
-              <h5 style={{ margin: 0, fontSize: '12.5px', color: '#fff', fontWeight: '700', fontFamily: 'monospace' }}>VISION DIAGNOSTIC v1.5</h5>
+              <h5 style={{ margin: 0, fontSize: '12.5px', color: 'var(--text-primary)', fontWeight: '700', fontFamily: 'monospace' }}>VISION DIAGNOSTIC v1.5</h5>
               <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-secondary)' }}>Automated classification accuracy: 98.4%</p>
             </div>
           </div>
 
-          <div className="glass-panel" style={{ padding: '16px 20px', display: 'flex', gap: '12px', alignItems: 'center', background: 'rgba(10,14,23,0.3)', border: '1px solid rgba(255,255,255,0.03)' }}>
+          <div className="glass-panel" style={{ padding: '16px 20px', display: 'flex', gap: '12px', alignItems: 'center', background: 'var(--badge-bg)', border: '1px solid var(--border-glass)' }}>
             <ShieldCheck size={18} color="#06b6d4" />
             <div>
-              <h5 style={{ margin: 0, fontSize: '12.5px', color: '#fff', fontWeight: '700', fontFamily: 'monospace' }}>TACTICAL CREW ALIGN</h5>
+              <h5 style={{ margin: 0, fontSize: '12.5px', color: 'var(--text-primary)', fontWeight: '700', fontFamily: 'monospace' }}>TACTICAL CREW ALIGN</h5>
               <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-secondary)' }}>Response crew proximity routing enabled</p>
             </div>
           </div>
 
-          <div className="glass-panel" style={{ padding: '16px 20px', display: 'flex', gap: '12px', alignItems: 'center', background: 'rgba(10,14,23,0.3)', border: '1px solid rgba(255,255,255,0.03)' }}>
+          <div className="glass-panel" style={{ padding: '16px 20px', display: 'flex', gap: '12px', alignItems: 'center', background: 'var(--badge-bg)', border: '1px solid var(--border-glass)' }}>
             <HeartHandshake size={18} color="#fbbf24" />
             <div>
-              <h5 style={{ margin: 0, fontSize: '12.5px', color: '#fff', fontWeight: '700', fontFamily: 'monospace' }}>MUNICIPAL ESCROW</h5>
+              <h5 style={{ margin: 0, fontSize: '12.5px', color: 'var(--text-primary)', fontWeight: '700', fontFamily: 'monospace' }}>MUNICIPAL ESCROW</h5>
               <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-secondary)' }}>Automated points and worker reward splitting</p>
             </div>
           </div>
@@ -743,8 +797,8 @@ const Home = () => {
       {/* BOTTOM CONSOLE INPUT FOOTER */}
       <div style={{ 
         width: '100%', 
-        borderTop: '1px solid rgba(255,255,255,0.04)', 
-        background: 'rgba(5, 7, 12, 0.9)', 
+        borderTop: '1px solid var(--border-glass)', 
+        background: 'var(--nav-bg)', 
         padding: '20px 24px', 
         position: 'relative', 
         zIndex: 10
@@ -762,18 +816,18 @@ const Home = () => {
               width: '100%',
               padding: '12px 20px 12px 46px',
               fontSize: '13px',
-              background: 'rgba(2, 3, 6, 0.8)',
-              border: '1px solid rgba(6, 182, 212, 0.2)',
+              background: 'var(--input-bg)',
+              border: '1px solid var(--border-glass)',
               borderRadius: '6px',
-              color: '#fff',
+              color: 'var(--text-primary)',
               outline: 'none',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.6)',
+              boxShadow: 'var(--shadow-glass)',
               transition: 'all 0.3s',
               fontFamily: 'monospace'
             }}
             className="form-input-search"
             onFocus={(e) => e.target.style.borderColor = '#06b6d4'}
-            onBlur={(e) => e.target.style.borderColor = 'rgba(6, 182, 212, 0.2)'}
+            onBlur={(e) => e.target.style.borderColor = 'var(--border-glass)'}
           />
           {searchQuery && (
             <span style={{
