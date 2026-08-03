@@ -11,6 +11,7 @@ const InteractiveGlobe = ({ onRotationChange }) => {
   const containerRef = React.useRef(null);
   const [selectedHotspot, setSelectedHotspot] = useState(null);
   const [isAutoRotate, setIsAutoRotate] = useState(true);
+  const [screenHotspots, setScreenHotspots] = useState([]);
 
   const isDraggingRef = React.useRef(false);
   const previousMousePositionRef = React.useRef({ x: 0, y: 0 });
@@ -80,35 +81,43 @@ const InteractiveGlobe = ({ onRotationChange }) => {
     scene.add(atmosphereMesh);
 
     // 3D Hotspot Markers on Sphere Surface
+    const marker3DItems = [];
     hotspots.forEach(h => {
       const radius = 2.02;
       const phi = (90 - h.lat) * (Math.PI / 180);
       const theta = (h.lon + 180) * (Math.PI / 180);
 
-      const x = -(radius * Math.sin(phi) * Math.cos(theta));
-      const z = radius * Math.sin(phi) * Math.sin(theta);
-      const y = radius * Math.cos(phi);
+      const localVec = new THREE.Vector3(
+        -(radius * Math.sin(phi) * Math.cos(theta)),
+        radius * Math.cos(phi),
+        radius * Math.sin(phi) * Math.sin(theta)
+      );
 
-      const markerGeo = new THREE.SphereGeometry(0.04, 16, 16);
+      const markerGeo = new THREE.SphereGeometry(0.05, 16, 16);
       const markerMat = new THREE.MeshBasicMaterial({ color: 0x10b981 });
       const markerMesh = new THREE.Mesh(markerGeo, markerMat);
-      markerMesh.position.set(x, y, z);
+      markerMesh.position.copy(localVec);
 
       // Glow Ring
-      const ringGeo = new THREE.RingGeometry(0.05, 0.08, 32);
-      const ringMat = new THREE.MeshBasicMaterial({ color: 0x10b981, side: THREE.DoubleSide, transparent: true, opacity: 0.8 });
+      const ringGeo = new THREE.RingGeometry(0.06, 0.1, 32);
+      const ringMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide, transparent: true, opacity: 0.9 });
       const ringMesh = new THREE.Mesh(ringGeo, ringMat);
-      ringMesh.position.set(x, y, z);
-      ringMesh.lookAt(x * 2, y * 2, z * 2);
+      ringMesh.position.copy(localVec);
+      ringMesh.lookAt(localVec.x * 2, localVec.y * 2, localVec.z * 2);
 
       earthMesh.add(markerMesh);
       earthMesh.add(ringMesh);
+
+      marker3DItems.push({ data: h, localPos: localVec });
     });
 
     // 60FPS WebGL Animation Loop
     let animId;
+    let frameCount = 0;
+
     const animate = () => {
       animId = requestAnimationFrame(animate);
+      frameCount++;
 
       if (!isDraggingRef.current && isAutoRotate) {
         earthMesh.rotation.y += 0.003;
@@ -120,6 +129,27 @@ const InteractiveGlobe = ({ onRotationChange }) => {
       if (onRotationChange && earthMesh) {
         const lonDeg = Math.round(((earthMesh.rotation.y / (Math.PI * 2)) * 360) % 360);
         onRotationChange(lonDeg < 0 ? 360 + lonDeg : lonDeg);
+      }
+
+      // Update projected 2D HTML coordinates every 2 frames
+      if (frameCount % 2 === 0) {
+        earthMesh.updateMatrixWorld();
+        const coords = marker3DItems.map(item => {
+          const worldVec = item.localPos.clone().applyMatrix4(earthMesh.matrixWorld);
+          const isFacingFront = worldVec.z > 0.4;
+          worldVec.project(camera);
+
+          const screenX = (worldVec.x * 0.5 + 0.5) * 360;
+          const screenY = (-(worldVec.y * 0.5) + 0.5) * 360;
+
+          return {
+            ...item.data,
+            screenX,
+            screenY,
+            isVisible: isFacingFront && worldVec.z < 1,
+          };
+        });
+        setScreenHotspots(coords);
       }
 
       renderer.render(scene, camera);
@@ -164,12 +194,49 @@ const InteractiveGlobe = ({ onRotationChange }) => {
       >
         <div ref={containerRef} className="w-full h-full" />
 
+        {/* 2D Projected Hotspot Location Badges over 3D Globe */}
+        {screenHotspots.map((h) => {
+          if (!h.isVisible) return null;
+          const isSelected = selectedHotspot?.id === h.id;
+
+          return (
+            <div
+              key={h.id}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedHotspot(isSelected ? null : h);
+              }}
+              style={{
+                position: 'absolute',
+                left: `${h.screenX}px`,
+                top: `${h.screenY}px`,
+                transform: 'translate(-50%, -50%)',
+                zIndex: isSelected ? 35 : 20,
+                cursor: 'pointer',
+              }}
+              className="group"
+            >
+              <div className="relative flex items-center gap-1">
+                <div className={`w-3 h-3 rounded-full ${isSelected ? 'bg-cyan-400 shadow-[0_0_12px_#38bdf8]' : 'bg-emerald-400 shadow-[0_0_10px_#10b981]'}`} />
+                <div className="absolute -inset-1 rounded-full border border-emerald-400/80 animate-ping pointer-events-none" />
+                <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border backdrop-blur-sm whitespace-nowrap shadow-md transition-all ${
+                  isSelected 
+                    ? 'bg-cyan-950/90 text-cyan-300 border-cyan-400' 
+                    : 'bg-gray-950/80 text-white border-emerald-500/40 group-hover:border-emerald-400'
+                }`}>
+                  📍 {h.label}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+
         {/* Selected Hotspot Holographic HUD Card */}
         {selectedHotspot && (
           <motion.div 
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="absolute bottom-4 left-4 right-4 bg-gray-950/90 border border-cyan-500/40 backdrop-blur-md rounded-xl p-3 z-40 text-left"
+            className="absolute bottom-3 left-3 right-3 bg-gray-950/95 border border-cyan-500/50 backdrop-blur-md rounded-xl p-3 z-40 text-left shadow-2xl"
           >
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] font-mono font-bold text-cyan-400 uppercase tracking-wider">
@@ -224,7 +291,7 @@ const InteractiveGlobe = ({ onRotationChange }) => {
         </button>
 
         <span className="text-[10px] font-mono text-gray-500 hidden sm:inline">
-          🌐 Real 3D WebGL Sphere
+          🌐 3D WebGL Markers
         </span>
       </div>
     </div>
