@@ -7,17 +7,18 @@ import MouseTiltCard from '../components/MouseTiltCard';
 
 const InteractiveGlobe = ({ onRotationChange }) => {
   const [isDragging, setIsDragging] = useState(false);
-  const [prevMouseX, setPrevMouseX] = useState(0);
-  const [bgOffset, setBgOffset] = useState(0); // in pixels
+  const [prevMouse, setPrevMouse] = useState({ x: 0, y: 0 });
+  const [bgOffset, setBgOffset] = useState(0); // in pixels (X axis rotation)
+  const [pitch, setPitch] = useState(0); // in pixels/degrees (Y axis tilt)
+  const [isAutoRotate, setIsAutoRotate] = useState(true);
+  const [selectedHotspot, setSelectedHotspot] = useState(null);
 
   useEffect(() => {
-    if (isDragging) return;
+    if (isDragging || !isAutoRotate) return;
     
-    // Automatically rotate the globe slowly
     const interval = setInterval(() => {
-      // 720px matches one full loop for 360px height (aspect ratio 2:1)
       setBgOffset(prev => {
-        const next = (prev - 0.4) % 720;
+        const next = (prev - 0.5) % 720;
         if (onRotationChange) {
           const lonDegrees = Math.round(((-next / 720) * 360) % 360);
           onRotationChange(lonDegrees);
@@ -27,16 +28,18 @@ const InteractiveGlobe = ({ onRotationChange }) => {
     }, 30);
 
     return () => clearInterval(interval);
-  }, [isDragging, onRotationChange]);
+  }, [isDragging, isAutoRotate, onRotationChange]);
 
   const handleMouseDown = (e) => {
     setIsDragging(true);
-    setPrevMouseX(e.clientX);
+    setPrevMouse({ x: e.clientX, y: e.clientY });
   };
 
   const handleMouseMove = (e) => {
     if (!isDragging) return;
-    const dx = e.clientX - prevMouseX;
+    const dx = e.clientX - prevMouse.x;
+    const dy = e.clientY - prevMouse.y;
+
     setBgOffset(prev => {
       const next = (prev + dx * 0.8) % 720;
       if (onRotationChange) {
@@ -45,144 +48,278 @@ const InteractiveGlobe = ({ onRotationChange }) => {
       }
       return next;
     });
-    setPrevMouseX(e.clientX);
+
+    setPitch(prev => Math.max(-25, Math.min(25, prev + dy * 0.3)));
+    setPrevMouse({ x: e.clientX, y: e.clientY });
   };
 
   const handleMouseUp = () => {
     setIsDragging(false);
   };
 
-  // Coordinates of Perinthalmanna hotspots
+  // Multiple Interactive Kerala Hotspots
   const hotspots = [
-    { lon: 76.2238, lat: 10.9752, label: 'Perinthalmanna Municipality (Active)' }
+    { 
+      id: 'pnt',
+      lon: 76.2238, 
+      lat: 10.9752, 
+      label: 'Perinthalmanna Grid', 
+      status: 'Active Patrol', 
+      reports: 14, 
+      cleanedPct: '96%',
+      badge: 'Municipal Hub'
+    },
+    { 
+      id: 'cok',
+      lon: 76.2673, 
+      lat: 9.9312, 
+      label: 'Kochi Metro Sector', 
+      status: 'AI Scanner Operational', 
+      reports: 28, 
+      cleanedPct: '92%',
+      badge: 'AI Vision Station'
+    },
+    { 
+      id: 'trv',
+      lon: 76.9366, 
+      lat: 8.5241, 
+      label: 'Trivandrum HQ', 
+      status: 'Leaderboard Peak', 
+      reports: 42, 
+      cleanedPct: '98%',
+      badge: 'Eco Warriors'
+    },
+    { 
+      id: 'ccj',
+      lon: 75.7804, 
+      lat: 11.2588, 
+      label: 'Kozhikode Coastal', 
+      status: 'Clean Drive Active', 
+      reports: 19, 
+      cleanedPct: '90%',
+      badge: 'Ocean Protect'
+    }
   ];
 
   return (
-    <div 
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
-      style={{ 
-        position: 'relative', 
-        width: '360px', 
-        height: '360px', 
-        cursor: isDragging ? 'grabbing' : 'grab',
-        borderRadius: '50%',
-        overflow: 'hidden',
-        background: '#020306',
-        boxShadow: 'inset 25px 25px 50px rgba(255,255,255,0.08), inset -30px -30px 60px rgba(0,0,0,0.95), 0 0 50px rgba(6, 182, 212, 0.25)',
-        border: '2px solid rgba(6, 182, 212, 0.35)'
-      }}
-    >
-      {/* 3D Spherical Shading Texture Base (served locally from public folder!) */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        backgroundImage: `url('/earth.jpg')`,
-        backgroundSize: 'auto 100%',
-        backgroundRepeat: 'repeat-x',
-        backgroundPosition: `${bgOffset}px 0px`,
-        pointerEvents: 'none',
-        opacity: 0.85
-      }}></div>
-
-      {/* 3D Sphere Highlight overlay */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        background: 'radial-gradient(circle at 35% 35%, rgba(255,255,255,0.18) 0%, transparent 60%)',
-        pointerEvents: 'none'
-      }}></div>
-
-      {/* Rotating Conic Radar Sweep Overlay */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        background: 'conic-gradient(from 0deg, transparent 50%, rgba(6, 182, 212, 0.15) 100%)',
-        borderRadius: '50%',
-        animation: 'radar-sweep 6s infinite linear',
-        pointerEvents: 'none',
-        mixBlendMode: 'screen'
-      }}></div>
-
-      {/* Radar scanning sweeping line */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        animation: 'radar-sweep 6s infinite linear',
-        pointerEvents: 'none'
-      }}>
+    <div className="flex flex-col items-center gap-3">
+      {/* Globe Container */}
+      <div 
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        style={{ 
+          position: 'relative', 
+          width: '360px', 
+          height: '360px', 
+          cursor: isDragging ? 'grabbing' : 'grab',
+          borderRadius: '50%',
+          overflow: 'hidden',
+          background: '#020306',
+          boxShadow: 'inset 25px 25px 50px rgba(255,255,255,0.08), inset -30px -30px 60px rgba(0,0,0,0.95), 0 0 50px rgba(6, 182, 212, 0.3)',
+          border: '2px solid rgba(6, 182, 212, 0.4)',
+          transform: `perspective(600px) rotateX(${pitch}deg)`,
+          transition: isDragging ? 'none' : 'transform 0.3s ease-out'
+        }}
+      >
+        {/* 3D Spherical Shading Texture Base */}
         <div style={{
           position: 'absolute',
-          top: '50%',
-          left: '50%',
-          width: '50%',
-          height: '2px',
-          background: 'linear-gradient(to right, rgba(6, 182, 212, 0.7), transparent)',
-          transformOrigin: '0% 50%'
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundImage: `url('/earth.jpg')`,
+          backgroundSize: 'auto 100%',
+          backgroundRepeat: 'repeat-x',
+          backgroundPosition: `${bgOffset}px ${pitch * 0.5}px`,
+          pointerEvents: 'none',
+          opacity: 0.88
         }}></div>
+
+        {/* 3D Sphere Highlight overlay */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: 'radial-gradient(circle at 35% 35%, rgba(255,255,255,0.2) 0%, transparent 65%)',
+          pointerEvents: 'none'
+        }}></div>
+
+        {/* Rotating Conic Radar Sweep Overlay */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: 'conic-gradient(from 0deg, transparent 50%, rgba(6, 182, 212, 0.18) 100%)',
+          borderRadius: '50%',
+          animation: 'radar-sweep 6s infinite linear',
+          pointerEvents: 'none',
+          mixBlendMode: 'screen'
+        }}></div>
+
+        {/* Radar scanning sweeping line */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          animation: 'radar-sweep 6s infinite linear',
+          pointerEvents: 'none'
+        }}>
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            width: '50%',
+            height: '2px',
+            background: 'linear-gradient(to right, rgba(6, 182, 212, 0.8), transparent)',
+            transformOrigin: '0% 50%'
+          }}></div>
+        </div>
+
+        {/* Dynamic Interactive Hotspot tracking points */}
+        {hotspots.map((h) => {
+          const radLon = (h.lon * Math.PI) / 180;
+          const radLat = (h.lat * Math.PI) / 180;
+
+          const theta = radLon + (bgOffset / 720) * 2 * Math.PI + Math.PI / 2;
+
+          const x3d = Math.cos(radLat) * Math.sin(theta);
+          const y3d = Math.sin(radLat);
+          const z3d = Math.cos(radLat) * Math.cos(theta); // z3d > 0 is front side
+
+          if (z3d <= 0.05) return null; // Hide if on back hemisphere
+
+          const screenX = 180 + x3d * 170;
+          const screenY = 180 - y3d * 170 + pitch * 0.4;
+
+          const isSelected = selectedHotspot?.id === h.id;
+
+          return (
+            <div 
+              key={h.id} 
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedHotspot(isSelected ? null : h);
+              }}
+              style={{
+                position: 'absolute',
+                left: `${screenX}px`,
+                top: `${screenY}px`,
+                cursor: 'pointer',
+                transform: 'translate(-50%, -50%)',
+                zIndex: isSelected ? 30 : 15
+              }}
+            >
+              <div style={{ 
+                width: isSelected ? '12px' : '8px', 
+                height: isSelected ? '12px' : '8px', 
+                background: isSelected ? '#38bdf8' : '#10b981', 
+                borderRadius: '50%', 
+                boxShadow: isSelected ? '0 0 16px #38bdf8' : '0 0 12px #10b981',
+                transition: 'all 0.2s ease'
+              }}></div>
+              <div style={{ 
+                position: 'absolute', 
+                width: isSelected ? '24px' : '16px', 
+                height: isSelected ? '24px' : '16px', 
+                border: `2px solid ${isSelected ? '#38bdf8' : 'rgba(16, 185, 129, 0.8)'}`, 
+                borderRadius: '50%', 
+                top: isSelected ? '-6px' : '-4px', 
+                left: isSelected ? '-6px' : '-4px', 
+                animation: 'pulse-ring 1.5s infinite' 
+              }}></div>
+              
+              <span style={{ 
+                position: 'absolute', 
+                left: '14px', 
+                top: '-6px', 
+                color: isSelected ? '#38bdf8' : '#fff', 
+                fontSize: '9px', 
+                fontFamily: 'monospace', 
+                fontWeight: 'bold',
+                textShadow: '0 1px 4px #000, 0 0 6px rgba(16, 185, 129, 0.8)',
+                whiteSpace: 'nowrap',
+                background: 'rgba(5, 7, 12, 0.7)',
+                padding: '1px 5px',
+                borderRadius: '3px',
+                border: `1px solid ${isSelected ? '#38bdf8' : 'rgba(16, 185, 129, 0.3)'}`
+              }}>
+                {h.label}
+              </span>
+            </div>
+          );
+        })}
+
+        {/* Selected Hotspot Holographic HUD Card */}
+        {selectedHotspot && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="absolute bottom-4 left-4 right-4 bg-gray-950/90 border border-cyan-500/40 backdrop-blur-md rounded-xl p-3 z-40 text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] font-mono font-bold text-cyan-400 uppercase tracking-wider">
+                📍 {selectedHotspot.badge}
+              </span>
+              <button 
+                onClick={() => setSelectedHotspot(null)} 
+                className="text-gray-400 hover:text-white text-xs px-1"
+              >
+                ✕
+              </button>
+            </div>
+            <h4 className="text-xs font-bold text-white">{selectedHotspot.label}</h4>
+            <div className="grid grid-cols-2 gap-2 mt-2 text-[10px] font-mono text-gray-300">
+              <div className="bg-cyan-500/10 p-1.5 rounded border border-cyan-500/20">
+                <span className="text-gray-400 block">Status:</span>
+                <span className="text-emerald-400 font-bold">{selectedHotspot.status}</span>
+              </div>
+              <div className="bg-cyan-500/10 p-1.5 rounded border border-cyan-500/20">
+                <span className="text-gray-400 block">Clean Rate:</span>
+                <span className="text-cyan-300 font-bold">{selectedHotspot.cleanedPct}</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
 
-      {/* Dynamic Hotspot tracking points on the rotating globe */}
-      {hotspots.map((h, i) => {
-        const radLon = (h.lon * Math.PI) / 180;
-        const radLat = (h.lat * Math.PI) / 180;
+      {/* Interactive Controls Bar */}
+      <div className="flex items-center gap-2 bg-gray-950/80 border border-gray-800 rounded-full px-3 py-1.5 backdrop-blur-sm">
+        <button 
+          onClick={() => setIsAutoRotate(!isAutoRotate)}
+          className={`text-[11px] font-mono px-2.5 py-1 rounded-full border transition-all flex items-center gap-1 ${
+            isAutoRotate 
+              ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400' 
+              : 'bg-gray-800/50 border-gray-700 text-gray-400'
+          }`}
+        >
+          {isAutoRotate ? '⏸ Pause Spin' : '▶ Auto Spin'}
+        </button>
 
-        // Apply a +90 degree (+Math.PI / 2) offset to align the 2D map texture center with 3D sphere coordinates
-        const theta = radLon + (bgOffset / 720) * 2 * Math.PI + Math.PI / 2;
+        <button 
+          onClick={() => {
+            setBgOffset(0);
+            setPitch(0);
+            setSelectedHotspot(null);
+          }}
+          className="text-[11px] font-mono px-2.5 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 transition-all"
+        >
+          🔄 Reset View
+        </button>
 
-        const x3d = Math.cos(radLat) * Math.sin(theta);
-        const y3d = Math.sin(radLat);
-        const z3d = Math.cos(radLat) * Math.cos(theta); // z3d > 0 is front side
-
-        if (z3d <= 0.1) return null; // Hide if on the back hemisphere
-
-        const screenX = 180 + x3d * 170;
-        const screenY = 180 - y3d * 170;
-
-        return (
-          <div 
-            key={i} 
-            style={{
-              position: 'absolute',
-              left: `${screenX}px`,
-              top: `${screenY}px`,
-              pointerEvents: 'none',
-              transform: 'translate(-50%, -50%)',
-              zIndex: 15
-            }}
-          >
-            <div style={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', boxShadow: '0 0 12px #10b981' }}></div>
-            <div style={{ position: 'absolute', width: '16px', height: '16px', border: '2px solid rgba(16, 185, 129, 0.8)', borderRadius: '50%', top: '-4px', left: '-4px', animation: 'pulse-ring 1.5s infinite' }}></div>
-            <span style={{ 
-              position: 'absolute', 
-              left: '12px', 
-              top: '-6px', 
-              color: '#fff', 
-              fontSize: '9px', 
-              fontFamily: 'monospace', 
-              fontWeight: 'bold',
-              textShadow: '0 1px 3px #000, 0 0 4px rgba(16, 185, 129, 0.6)',
-              whiteSpace: 'nowrap' 
-            }}>
-              {h.label}
-            </span>
-          </div>
-        );
-      })}
+        <span className="text-[10px] font-mono text-gray-500 hidden sm:inline">
+          🖱️ Drag to rotate & tilt
+        </span>
+      </div>
     </div>
   );
 };
@@ -577,7 +714,7 @@ const Home = () => {
                 {!user && (
                   <div style={{ textAlign: 'center' }}>
                     <Link to="/register" style={{ fontSize: '12px', color: '#10b981', textDecoration: 'none', fontWeight: 'bold', fontFamily: 'monospace' }}>
-                      [REGISTER_NEW_NODE]
+                      [REGISTERATION]
                     </Link>
                   </div>
                 )}
