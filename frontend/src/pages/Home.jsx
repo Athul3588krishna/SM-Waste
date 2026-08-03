@@ -62,16 +62,8 @@ const InteractiveGlobe = ({ onRotationChange }) => {
 
     velocityRef.current = dx * 0.8; // Impart drag velocity to spinning momentum
 
-    setBgOffset(prev => {
-      const next = (prev + dx * 0.8) % 720;
-      if (onRotationChange) {
-        const lonDegrees = Math.round(((-next / 720) * 360) % 360);
-        onRotationChange(lonDegrees);
-      }
-      return next;
-    });
-
-    setPitch(prev => Math.max(-25, Math.min(25, prev + dy * 0.3)));
+    setBgOffset(prev => (prev + dx * 0.8) % 720);
+    setPitch(prev => (prev - dy * 0.5) % 360); // Full 360-degree vertical pitch
     setPrevMouse({ x: e.clientX, y: e.clientY });
   };
 
@@ -155,7 +147,7 @@ const InteractiveGlobe = ({ onRotationChange }) => {
           backgroundImage: `url('/earth.jpg')`,
           backgroundSize: 'auto 100%',
           backgroundRepeat: 'repeat-x',
-          backgroundPosition: `${bgOffset}px ${pitch * 0.5}px`,
+          backgroundPosition: `${bgOffset}px ${(pitch / 360) * 360}px`,
           pointerEvents: 'none',
           opacity: 0.88
         }}></div>
@@ -210,17 +202,23 @@ const InteractiveGlobe = ({ onRotationChange }) => {
         {hotspots.map((h) => {
           const radLon = (h.lon * Math.PI) / 180;
           const radLat = (h.lat * Math.PI) / 180;
+          const radPitch = (pitch * Math.PI) / 180;
 
           const theta = radLon + (bgOffset / 720) * 2 * Math.PI + Math.PI / 2;
 
-          const x3d = Math.cos(radLat) * Math.sin(theta);
-          const y3d = Math.sin(radLat);
-          const z3d = Math.cos(radLat) * Math.cos(theta); // z3d > 0 is front side
+          const x0 = Math.cos(radLat) * Math.sin(theta);
+          const y0 = Math.sin(radLat);
+          const z0 = Math.cos(radLat) * Math.cos(theta);
+
+          // Full 360-degree 3D matrix transformation
+          const x3d = x0;
+          const y3d = y0 * Math.cos(radPitch) - z0 * Math.sin(radPitch);
+          const z3d = y0 * Math.sin(radPitch) + z0 * Math.cos(radPitch);
 
           if (z3d <= 0.05) return null; // Hide if on back hemisphere
 
           const screenX = 180 + x3d * 170;
-          const screenY = 180 - y3d * 170 + pitch * 0.4;
+          const screenY = 180 - y3d * 170;
 
           const isSelected = selectedHotspot?.id === h.id;
 
