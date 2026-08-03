@@ -389,666 +389,283 @@ const Home = () => {
   };
 
   return (
-    <div style={{ 
-      position: 'relative', 
-      overflow: 'hidden', 
-      minHeight: 'calc(100vh - 80px)',
-      background: 'var(--bg-main)',
-      color: 'var(--text-primary)',
-      fontFamily: 'var(--font-sans)',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      transition: 'background-color 0.3s ease, color 0.3s ease'
-    }}>
+    <div className="relative min-h-[calc(100vh-80px)] bg-gray-950 text-white font-sans overflow-hidden flex flex-col justify-between">
       
-      {/* Sci-Fi Global Style Overrides */}
-      <style>{`
-        @keyframes float-slow {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-8px); }
-        }
-        @keyframes pulse-ring {
-          0% { transform: scale(0.95); opacity: 0.4; }
-          50% { transform: scale(1.15); opacity: 0.7; }
-          100% { transform: scale(0.95); opacity: 0.4; }
-        }
-        @keyframes radar-sweep {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        @keyframes orbit-rotate-clockwise {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        @keyframes orbit-rotate-counter {
-          0% { transform: rotate(360deg); }
-          100% { transform: rotate(0deg); }
-        }
-        
-        .hud-panel {
-          background: var(--bg-card);
-          border: 1px solid var(--border-glass);
-          border-radius: 12px;
-          padding: 24px;
-          backdrop-filter: blur(16px);
-          box-shadow: var(--shadow-glass);
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-          position: relative;
-          overflow: hidden;
-        }
-        .hud-panel::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 4px;
-          height: 100%;
-          background: var(--accent-gradient);
-          opacity: 0.6;
-        }
-        .hud-panel:hover {
-          border-color: rgba(6, 182, 212, 0.4);
-          box-shadow: 0 15px 45px rgba(6, 182, 212, 0.1), inset 0 0 25px rgba(6, 182, 212, 0.05);
-          transform: translateY(-2px);
-        }
+      {/* Background Decorative Gradient Orbs & Subtle Grid */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-900/20 via-gray-950 to-gray-950 pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-1/3 right-10 w-[400px] h-[400px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
 
-        .hud-panel-citizen::before {
-          background: #10b981;
-        }
-        .hud-panel-worker::before {
-          background: #06b6d4;
-        }
-
-        .hud-label-citizen {
-          color: #10b981;
-          font-family: var(--font-display);
-          font-size: 11px;
-          text-transform: uppercase;
-          letter-spacing: 1px;
-          font-weight: 700;
-        }
-        .hud-label-worker {
-          color: #06b6d4;
-          font-family: var(--font-display);
-          font-size: 11px;
-          text-transform: uppercase;
-          letter-spacing: 1px;
-          font-weight: 700;
-        }
-        
-        .glow-btn-hud-green {
-          background: rgba(16, 185, 129, 0.08);
-          color: #34d399;
-          border: 1px solid rgba(16, 185, 129, 0.3);
-          padding: 12px 20px;
-          font-weight: 700;
-          font-family: var(--font-display);
-          border-radius: 6px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justifyContent: center;
-          gap: 8px;
-          transition: all 0.2s;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          font-size: 12.5px;
-        }
-        .glow-btn-hud-green:hover {
-          background: #10b981;
-          color: #020306;
-          box-shadow: 0 0 20px rgba(16, 185, 129, 0.35);
-          border-color: #10b981;
-        }
-
-        .glow-btn-hud-cyan {
-          background: rgba(6, 182, 212, 0.08);
-          color: #22d3ee;
-          border: 1px solid rgba(6, 182, 212, 0.3);
-          padding: 12px 20px;
-          font-weight: 700;
-          font-family: var(--font-display);
-          border-radius: 6px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justifyContent: center;
-          gap: 8px;
-          transition: all 0.2s;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          font-size: 12.5px;
-        }
-        .glow-btn-hud-cyan:hover {
-          background: #06b6d4;
-          color: #020306;
-          box-shadow: 0 0 20px rgba(6, 182, 212, 0.35);
-          border-color: #06b6d4;
-        }
-        
-        .grid-pattern {
-          background-size: 40px 40px;
-          background-image: 
-            linear-gradient(to right, rgba(255, 255, 255, 0.007) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(255, 255, 255, 0.007) 1px, transparent 1px);
-        }
-        
-        .hud-border-bracket {
-          position: absolute;
-          width: 12px;
-          height: 12px;
-          border-color: rgba(6, 182, 212, 0.4);
-          border-style: solid;
-        }
-      `}</style>
-
-      {/* Grid Overlay Backdrops */}
-      <div className="grid-pattern" style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0, zIndex: 1 }}></div>
-      <div style={{ position: 'absolute', width: '600px', height: '600px', background: 'rgba(6, 182, 212, 0.04)', borderRadius: '50%', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', filter: 'blur(130px)', zIndex: 2 }}></div>
-
-      {/* TOP STATUS BAR */}
-      <div style={{ 
-        width: '100%', 
-        borderBottom: '1px solid var(--border-glass)', 
-        background: 'var(--nav-bg)', 
-        padding: '12px 24px', 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        fontSize: '11px',
-        fontFamily: 'monospace',
-        letterSpacing: '1px',
-        color: 'var(--text-secondary)',
-        position: 'relative',
-        zIndex: 10
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ width: '6px', height: '6px', background: '#10b981', borderRadius: '50%', animation: 'pulse-ring 1s infinite' }}></span>
-          <span>SYSTEM_NODE: ACT_ONLINE</span>
+      {/* TOP SYSTEM NAVBAR */}
+      <div className="w-full border-b border-gray-800/80 bg-gray-950/80 backdrop-blur-md px-6 py-3.5 flex items-center justify-between z-20">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold text-lg shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+            🌱
+          </div>
+          <div>
+            <span className="font-bold text-sm text-white tracking-wide">EcoClean AI</span>
+            <span className="text-[10px] text-gray-400 block font-mono">Smart Waste Portal v2.5</span>
+          </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <span>LAT_GRID: 9.9312° N</span>
-          <span>LON_GRID: 76.2673° E</span>
-          <span style={{ color: '#06b6d4' }}>ORBIT_ROT_Y: {lonRotation}°</span>
+
+        <div className="flex items-center gap-4 text-xs font-mono">
+          <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>AI Nodes Active</span>
+          </div>
+          
+          <button 
+            onClick={() => setShowAdminOverlay(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-900 border border-gray-800 text-gray-300 hover:text-white hover:border-gray-700 transition-all cursor-pointer"
+          >
+            <ShieldCheck size={14} className="text-cyan-400" />
+            <span>Admin Gateway</span>
+          </button>
         </div>
       </div>
 
-      {/* MAIN SCI-FI CONSOLE DECK */}
-      <div style={{ 
-        maxWidth: '1200px', 
-        width: '100%', 
-        margin: '0 auto', 
-        padding: '30px 24px', 
-        position: 'relative', 
-        zIndex: 10,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '40px',
-        flexGrow: 1,
-        justifyContent: 'center'
-      }}>
+      {/* MAIN HERO SECTION (2-Column Grid) */}
+      <div className="max-w-7xl w-full mx-auto px-6 py-12 relative z-10 flex-grow flex flex-col justify-center">
         
-        {/* UPPER HUD BANNER */}
-        <div style={{ textAlign: 'center', position: 'relative' }}>
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4 }}
-            style={{
-              background: 'rgba(139, 92, 246, 0.05)',
-              border: '1px solid rgba(139, 92, 246, 0.2)',
-              padding: '5px 14px',
-              borderRadius: '4px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              color: '#c084fc',
-              fontSize: '11px',
-              fontWeight: '700',
-              fontFamily: 'monospace',
-              marginBottom: '16px',
-              textTransform: 'uppercase',
-              letterSpacing: '1.5px'
-            }}
-          >
-            <Activity size={12} /> Diagnostic HUD Matrix v2.0
-          </motion.div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-16">
           
-          <motion.h1 
-            variants={titleContainer}
-            initial="hidden"
-            animate="visible"
-            style={{ 
-              fontSize: '44px', 
-              fontWeight: '900', 
-              lineHeight: 1.1, 
-              color: 'var(--text-primary)', 
-              letterSpacing: '-1.5px', 
-              fontFamily: 'var(--font-display)',
-              margin: 0
-            }}
-          >
-            {sentence.split("").map((char, index) => (
-              <motion.span 
-                key={index} 
-                variants={letterVariant} 
-                style={{ display: 'inline-block', whiteSpace: char === ' ' ? 'pre' : 'normal' }}
-              >
-                {char}
-              </motion.span>
-            ))}
-          </motion.h1>
-          
-          <motion.p 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.1, duration: 0.5 }}
-            style={{ color: 'var(--text-secondary)', fontSize: '14.5px', maxWidth: '580px', margin: '8px auto 0', lineHeight: 1.5 }}
-          >
-            Automated environmental control console powered by real-time Google Gemini AI vision diagnostics and tactical sanitation crew allocation.
-          </motion.p>
-        </div>
-
-        {/* 3-COLUMN CONTROL MODULE GRID */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: '1fr', 
-          gap: '30px', 
-          alignItems: 'center',
-          marginTop: '10px'
-        }} className="grid-3">
-          
-          {/* LEFT COLUMN: CITIZEN HUB PANEL */}
-          <MouseTiltCard glowColor="rgba(16, 185, 129, 0.25)" tiltMax={10}>
-            <div className="hud-panel hud-panel-citizen" style={{ height: '100%' }}>
-              {/* HUD Corner Brackets */}
-              <div className="hud-border-bracket" style={{ top: '8px', left: '8px', borderLeftWidth: '2px', borderTopWidth: '2px' }}></div>
-              <div className="hud-border-bracket" style={{ top: '8px', right: '8px', borderRightWidth: '2px', borderTopWidth: '2px' }}></div>
-              <div className="hud-border-bracket" style={{ bottom: '8px', left: '8px', borderLeftWidth: '2px', borderBottomWidth: '2px' }}></div>
-              <div className="hud-border-bracket" style={{ bottom: '8px', right: '8px', borderRightWidth: '2px', borderBottomWidth: '2px' }}></div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-                <Users size={18} color="#10b981" />
-                <span className="hud-label-citizen">Telemetry: Citizens Node</span>
-              </div>
-              
-              <h3 style={{ fontSize: '20px', fontWeight: '800', margin: '0 0 10px 0', color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
-                Public Portal
-              </h3>
-              
-              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.55, margin: '0 0 20px 0' }}>
-                Allows registered citizens to catalog local sanitation anomalies, log visual diagnostics, and claim municipal point rewards.
-              </p>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <button className="glow-btn-hud-green" onClick={() => navigate(user ? '/dashboard' : '/login?role=citizen')}>
-                  Open Workspace <ArrowRight size={14} />
-                </button>
-                {!user && (
-                  <div style={{ textAlign: 'center' }}>
-                    <Link to="/register" style={{ fontSize: '12px', color: '#10b981', textDecoration: 'none', fontWeight: 'bold', fontFamily: 'monospace' }}>
-                      [REGISTERATION]
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </div>
-          </MouseTiltCard>
-
-          {/* CENTER COLUMN: INTERACTIVE 3D EARTH DECK */}
-          <div style={{ 
-            display: 'flex', 
-            flexDirection: 'column',
-            alignItems: 'center', 
-            justifyContent: 'center',
-            position: 'relative'
-          }}>
-            {/* Outer Orbit Ring 1 */}
-            <div style={{
-              position: 'absolute',
-              width: '420px',
-              height: '420px',
-              border: '1px dashed rgba(6, 182, 212, 0.12)',
-              borderRadius: '50%',
-              animation: 'orbit-rotate-clockwise 25s infinite linear',
-              pointerEvents: 'none',
-              zIndex: 3
-            }}>
-              <div style={{ position: 'absolute', top: '10%', left: '10%', width: '6px', height: '6px', background: '#06b6d4', borderRadius: '50%' }}></div>
-              <div style={{ position: 'absolute', bottom: '15%', right: '15%', width: '4px', height: '4px', background: '#8b5cf6', borderRadius: '50%' }}></div>
-            </div>
-
-            {/* Outer Orbit Ring 2 */}
-            <div style={{
-              position: 'absolute',
-              width: '390px',
-              height: '390px',
-              border: '1px solid rgba(139, 92, 246, 0.08)',
-              borderRadius: '50%',
-              animation: 'orbit-rotate-counter 18s infinite linear',
-              pointerEvents: 'none',
-              zIndex: 3
-            }}>
-              <div style={{ position: 'absolute', top: '50%', right: '-3px', width: '6px', height: '6px', background: 'rgba(6, 182, 212, 0.5)', borderRadius: '50%' }}></div>
-            </div>
-
-            <InteractiveGlobe onRotationChange={setLonRotation} />
+          {/* LEFT COLUMN: HERO INTRO & CTAs */}
+          <div className="lg:col-span-7 flex flex-col gap-6 text-left">
             
-            {/* Mini HUD coordinates on globe base */}
-            <div style={{
-              marginTop: '16px',
-              background: 'rgba(5, 7, 12, 0.6)',
-              border: '1px solid rgba(255,255,255,0.05)',
-              borderRadius: '4px',
-              padding: '6px 14px',
-              fontSize: '10px',
-              fontFamily: 'monospace',
-              color: 'rgba(255,255,255,0.7)',
-              letterSpacing: '0.5px'
-            }}>
-              // RADAR_SWEEPING_SECTORS: Perinthalmanna_Grid_Active
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-semibold self-start"
+            >
+              <Sparkles size={14} /> AI-Powered Smart Waste Management Portal
+            </motion.div>
+
+            <motion.h1 
+              variants={titleContainer}
+              initial="hidden"
+              animate="visible"
+              className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-none font-display"
+            >
+              {sentence.split("").map((char, index) => (
+                <motion.span 
+                  key={index} 
+                  variants={letterVariant} 
+                  className="inline-block"
+                  style={{ whiteSpace: char === ' ' ? 'pre' : 'normal' }}
+                >
+                  {char}
+                </motion.span>
+              ))}
+            </motion.h1>
+
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+              className="text-base text-gray-400 max-w-xl leading-relaxed"
+            >
+              Transforming urban sanitation with real-time AI vision diagnostics, instant geospatial garbage dump mapping, and automated dispatch for clean cities.
+            </motion.p>
+
+            {/* ACTION CTA BUTTONS */}
+            <motion.div 
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.0 }}
+              className="flex flex-wrap items-center gap-4 mt-2"
+            >
+              <button 
+                onClick={() => navigate(user ? '/dashboard' : '/login?role=citizen')}
+                className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-gray-950 font-bold text-sm tracking-wide shadow-[0_0_25px_rgba(16,185,129,0.4)] hover:shadow-[0_0_35px_rgba(16,185,129,0.6)] hover:scale-105 transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <Users size={18} />
+                Open Citizen Workspace
+                <ArrowRight size={16} />
+              </button>
+
+              <button 
+                onClick={() => navigate(user ? '/dashboard' : '/login?role=worker')}
+                className="px-6 py-3.5 rounded-xl bg-gray-900 border border-cyan-500/40 text-cyan-300 hover:text-white hover:bg-cyan-500/10 font-bold text-sm tracking-wide hover:border-cyan-400 transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <Hammer size={18} />
+                Sanitation Fleet Panel
+              </button>
+            </motion.div>
+
+            {/* Micro Feature Indicators */}
+            <div className="flex items-center gap-6 mt-4 pt-4 border-t border-gray-900 text-xs font-mono text-gray-400">
+              <span className="flex items-center gap-1.5"><Zap size={14} className="text-emerald-400" /> Instant AI Vision</span>
+              <span className="flex items-center gap-1.5"><ShieldCheck size={14} className="text-cyan-400" /> Proof Verification</span>
+              <span className="flex items-center gap-1.5"><HeartHandshake size={14} className="text-amber-400" /> 50 Eco-Points / Report</span>
             </div>
+
           </div>
 
-          {/* RIGHT COLUMN: SANITATION CREW HUB PANEL */}
-          <MouseTiltCard glowColor="rgba(6, 182, 212, 0.25)" tiltMax={10}>
-            <div className="hud-panel hud-panel-worker" style={{ height: '100%' }}>
-              {/* HUD Corner Brackets */}
-              <div className="hud-border-bracket" style={{ top: '8px', left: '8px', borderLeftWidth: '2px', borderTopWidth: '2px' }}></div>
-              <div className="hud-border-bracket" style={{ top: '8px', right: '8px', borderRightWidth: '2px', borderTopWidth: '2px' }}></div>
-              <div className="hud-border-bracket" style={{ bottom: '8px', left: '8px', borderLeftWidth: '2px', borderBottomWidth: '2px' }}></div>
-              <div className="hud-border-bracket" style={{ bottom: '8px', right: '8px', borderRightWidth: '2px', borderBottomWidth: '2px' }}></div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-                <Hammer size={18} color="#06b6d4" />
-                <span className="hud-label-worker">Telemetry: Crew Node</span>
-              </div>
-              
-              <h3 style={{ fontSize: '20px', fontWeight: '800', margin: '0 0 10px 0', color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
-                Sanitation Panel
-              </h3>
-              
-              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.55, margin: '0 0 20px 0' }}>
-                Allows dispatch crews to monitor assignments, trace mapping coordinates, verify resolutions, and trigger escrow split payouts.
-              </p>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <button className="glow-btn-hud-cyan" onClick={() => navigate(user ? '/dashboard' : '/login?role=worker')}>
-                  Open Sanitation Panel <ArrowRight size={14} />
-                </button>
-                <div style={{ textAlign: 'center', fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
-                  [SECURED_AUTHENTICATION]
-                </div>
-              </div>
-            </div>
-          </MouseTiltCard>
+          {/* RIGHT COLUMN: 3D THREE.JS GLOBE */}
+          <div className="lg:col-span-5 flex flex-col items-center justify-center relative">
+            <InteractiveGlobe onRotationChange={setLonRotation} />
+          </div>
 
         </div>
 
-        {/* LEADERBOARD DATABASE HUD PANEL */}
-        <div className="hud-panel" style={{ 
-          maxWidth: '960px', 
-          margin: '0 auto', 
-          width: '100%',
-          border: '1px solid var(--border-glass)',
-          background: 'var(--bg-card)',
-          padding: '24px'
-        }}>
-          {/* HUD Corner Brackets */}
-          <div className="hud-border-bracket" style={{ top: '8px', left: '8px', borderLeftWidth: '2px', borderTopWidth: '2px' }}></div>
-          <div className="hud-border-bracket" style={{ top: '8px', right: '8px', borderRightWidth: '2px', borderTopWidth: '2px' }}></div>
-          <div className="hud-border-bracket" style={{ bottom: '8px', left: '8px', borderLeftWidth: '2px', borderBottomWidth: '2px' }}></div>
-          <div className="hud-border-bracket" style={{ bottom: '8px', right: '8px', borderRightWidth: '2px', borderBottomWidth: '2px' }}></div>
-
-          <div style={{ display: 'flex', justifyItems: 'center', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Globe size={18} color="#fbbf24" />
-              <span style={{ 
-                color: '#fbbf24', 
-                fontFamily: 'var(--font-display)', 
-                fontSize: '11px', 
-                textTransform: 'uppercase', 
-                letterSpacing: '1px', 
-                fontWeight: '700' 
-              }}>Database: Eco-Sentinel Rankings</span>
-            </div>
-            <span style={{ fontSize: '10px', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>[QUERY_LIMIT_3]</span>
-          </div>
+        {/* 4 FEATURE CAPABILITIES CARDS GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className="p-5 rounded-2xl bg-gray-900/60 border border-gray-800/80 hover:border-emerald-500/40 backdrop-blur-xl transition-all group">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-3 group-hover:scale-110 transition-transform">
+              🤖
+            </div>
+            <h4 className="text-sm font-bold text-white mb-1">AI Vision Diagnostic</h4>
+            <p className="text-xs text-gray-400 leading-relaxed">Automatically detects plastic, organic, hazardous, & e-waste severity levels.</p>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-gray-900/60 border border-gray-800/80 hover:border-cyan-500/40 backdrop-blur-xl transition-all group">
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mb-3 group-hover:scale-110 transition-transform">
+              🗺️
+            </div>
+            <h4 className="text-sm font-bold text-white mb-1">Geospatial Mapping</h4>
+            <p className="text-xs text-gray-400 leading-relaxed">Pin exact GPS coordinates on OpenStreetMap for rapid cleanup dispatch.</p>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-gray-900/60 border border-gray-800/80 hover:border-amber-500/40 backdrop-blur-xl transition-all group">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-3 group-hover:scale-110 transition-transform">
+              🏆
+            </div>
+            <h4 className="text-sm font-bold text-white mb-1">Gamified Rewards</h4>
+            <p className="text-xs text-gray-400 leading-relaxed">Earn 50 Eco-Points per verified cleanup and climb city leaderboards.</p>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-gray-900/60 border border-gray-800/80 hover:border-purple-500/40 backdrop-blur-xl transition-all group">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 mb-3 group-hover:scale-110 transition-transform">
+              👷
+            </div>
+            <h4 className="text-sm font-bold text-white mb-1">Sanitation Dispatch</h4>
+            <p className="text-xs text-gray-400 leading-relaxed">Crews navigate to target zones and upload verification photos.</p>
+          </div>
+
+        </div>
+
+        {/* ECO-SENTINEL LEADERBOARD SECTION */}
+        <div className="max-w-4xl mx-auto w-full p-6 rounded-2xl bg-gray-900/80 border border-gray-800 backdrop-blur-xl mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Globe size={18} className="text-amber-400" />
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono">🏆 Top Eco-Warrior Citizen Rankings</h3>
+            </div>
+            <span className="text-[10px] text-gray-400 font-mono">Live Leaderboard</span>
+          </div>
+
+          <div className="flex flex-col gap-2">
             {[
-              { rank: 1, name: 'Adarsh Nair', points: '1,250 pts', badge: 'Green Champion', status: 'SYS_ACTIVE' },
-              { rank: 2, name: 'Anjali Menon', points: '920 pts', badge: 'Eco Sentinel', status: 'SYS_ACTIVE' },
-              { rank: 3, name: 'Aravind Swamy', points: '780 pts', badge: 'Eco Cadet', status: 'SYS_STANDBY' }
+              { rank: 1, name: 'Adarsh Nair', points: '1,250 pts', badge: 'Green Champion' },
+              { rank: 2, name: 'Anjali Menon', points: '920 pts', badge: 'Eco Sentinel' },
+              { rank: 3, name: 'Aravind Swamy', points: '780 pts', badge: 'Eco Cadet' }
             ].map((leader) => (
-              <div key={leader.rank} style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '12px 18px',
-                background: 'var(--badge-bg)',
-                borderRadius: '6px',
-                border: '1px solid var(--border-glass)'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span style={{
-                    width: '24px',
-                    height: '24px',
-                    borderRadius: '50%',
-                    background: leader.rank === 1 ? 'rgba(251,191,36,0.1)' : leader.rank === 2 ? 'rgba(156,163,175,0.1)' : 'rgba(217,119,6,0.1)',
-                    color: leader.rank === 1 ? '#fbbf24' : leader.rank === 2 ? '#9ca3af' : '#d97706',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 'bold',
-                    fontSize: '12px',
-                    fontFamily: 'monospace'
-                  }}>
+              <div key={leader.rank} className="flex items-center justify-between p-3 rounded-xl bg-gray-950/60 border border-gray-800/60 hover:border-gray-700 transition-all">
+                <div className="flex items-center gap-3">
+                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-mono ${
+                    leader.rank === 1 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' :
+                    leader.rank === 2 ? 'bg-gray-400/20 text-gray-300 border border-gray-400/40' :
+                    'bg-amber-700/20 text-amber-600 border border-amber-700/40'
+                  }`}>
                     {leader.rank}
                   </span>
-                  <span style={{ fontWeight: '600', color: 'var(--text-primary)', fontSize: '13.5px', fontFamily: 'monospace' }}>{leader.name}</span>
+                  <span className="text-sm font-medium text-white font-mono">{leader.name}</span>
                 </div>
                 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <span style={{ 
-                    fontSize: '10px', 
-                    color: leader.badge === 'Green Champion' ? '#fbbf24' : leader.badge === 'Eco Sentinel' ? '#06b6d4' : '#10b981', 
-                    background: 'rgba(255,255,255,0.02)', 
-                    border: '1px solid rgba(255,255,255,0.03)',
-                    padding: '2px 8px', 
-                    borderRadius: '4px',
-                    fontWeight: '600',
-                    fontFamily: 'monospace'
-                  }}>
+                <div className="flex items-center gap-4">
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono">
                     {leader.badge}
                   </span>
-                  <span style={{ fontWeight: '800', fontSize: '14px', color: '#06b6d4', fontFamily: 'monospace' }}>{leader.points}</span>
-                  <span style={{ 
-                    fontSize: '9px', 
-                    color: leader.status === 'SYS_ACTIVE' ? '#10b981' : '#fbbf24', 
-                    fontFamily: 'monospace',
-                    opacity: 0.8
-                  }}>{leader.status}</span>
+                  <span className="text-sm font-bold text-cyan-300 font-mono">{leader.points}</span>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* BOTTOM HUD MODULES */}
-        <div className="grid-3" style={{ gap: '20px', marginTop: '10px' }}>
-          <div className="glass-panel" style={{ padding: '16px 20px', display: 'flex', gap: '12px', alignItems: 'center', background: 'var(--badge-bg)', border: '1px solid var(--border-glass)' }}>
-            <Zap size={18} color="#10b981" />
-            <div>
-              <h5 style={{ margin: 0, fontSize: '12.5px', color: 'var(--text-primary)', fontWeight: '700', fontFamily: 'monospace' }}>VISION DIAGNOSTIC v1.5</h5>
-              <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-secondary)' }}>Automated classification accuracy: 98.4%</p>
-            </div>
-          </div>
-
-          <div className="glass-panel" style={{ padding: '16px 20px', display: 'flex', gap: '12px', alignItems: 'center', background: 'var(--badge-bg)', border: '1px solid var(--border-glass)' }}>
-            <ShieldCheck size={18} color="#06b6d4" />
-            <div>
-              <h5 style={{ margin: 0, fontSize: '12.5px', color: 'var(--text-primary)', fontWeight: '700', fontFamily: 'monospace' }}>TACTICAL CREW ALIGN</h5>
-              <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-secondary)' }}>Response crew proximity routing enabled</p>
-            </div>
-          </div>
-
-          <div className="glass-panel" style={{ padding: '16px 20px', display: 'flex', gap: '12px', alignItems: 'center', background: 'var(--badge-bg)', border: '1px solid var(--border-glass)' }}>
-            <HeartHandshake size={18} color="#fbbf24" />
-            <div>
-              <h5 style={{ margin: 0, fontSize: '12.5px', color: 'var(--text-primary)', fontWeight: '700', fontFamily: 'monospace' }}>MUNICIPAL ESCROW</h5>
-              <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-secondary)' }}>Automated points and worker reward splitting</p>
-            </div>
-          </div>
-        </div>
-
       </div>
 
-      {/* BOTTOM CONSOLE INPUT FOOTER */}
-      <div style={{ 
-        width: '100%', 
-        borderTop: '1px solid var(--border-glass)', 
-        background: 'var(--nav-bg)', 
-        padding: '20px 24px', 
-        position: 'relative', 
-        zIndex: 10
-      }}>
-        <div style={{ maxWidth: '480px', margin: '0 auto', position: 'relative' }}>
-          <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#06b6d4', display: 'flex', alignItems: 'center' }}>
-            <Search size={18} />
-          </div>
+      {/* BOTTOM FOOTER & TERMINAL SEARCH BAR */}
+      <div className="w-full border-t border-gray-800/80 bg-gray-950/90 py-4 px-6 relative z-20">
+        <div className="max-w-md mx-auto relative">
+          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-cyan-400" />
           <input
             type="text"
-            placeholder="Enter console commands or diagnostic key (#)..."
+            placeholder="Type console command or admin key (#)..."
             value={searchQuery}
             onChange={handleSearchChange}
-            style={{
-              width: '100%',
-              padding: '12px 20px 12px 46px',
-              fontSize: '13px',
-              background: 'var(--input-bg)',
-              border: '1px solid var(--border-glass)',
-              borderRadius: '6px',
-              color: 'var(--text-primary)',
-              outline: 'none',
-              boxShadow: 'var(--shadow-glass)',
-              transition: 'all 0.3s',
-              fontFamily: 'monospace'
-            }}
-            className="form-input-search"
-            onFocus={(e) => e.target.style.borderColor = '#06b6d4'}
-            onBlur={(e) => e.target.style.borderColor = 'var(--border-glass)'}
+            className="w-full pl-10 pr-4 py-2 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 font-mono transition-all"
           />
-          {searchQuery && (
-            <span style={{
-              position: 'absolute',
-              right: '16px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              fontSize: '9px',
-              color: '#06b6d4',
-              background: 'rgba(6, 182, 212, 0.1)',
-              padding: '2px 6px',
-              borderRadius: '3px',
-              fontWeight: 'bold',
-              fontFamily: 'monospace'
-            }}>
-              QUERYING_NODE_
-            </span>
-          )}
         </div>
       </div>
 
       {/* SECURED ADMIN AUTHENTICATION OVERLAY */}
       {showAdminOverlay && (
-        <div className="admin-secret-modal">
-          <div className="admin-console-box" style={{ background: '#0a0e17', border: '1px solid rgba(255,74,90,0.3)', boxShadow: '0 20px 40px rgba(0,0,0,0.7)', borderRadius: '12px' }}>
+        <div className="fixed inset-0 bg-gray-950/80 backdrop-blur-xl z-[9999] flex items-center justify-center p-4">
+          <div className="bg-gray-900 border border-red-500/30 shadow-[0_0_50px_rgba(239,68,68,0.2)] rounded-2xl w-full max-w-md p-6 relative">
             
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '16px' }}>
-              <div className="terminal-header">
-                <div className="terminal-pulse-dot"></div>
-                <span style={{ color: '#fff', fontFamily: 'var(--font-display)' }}>Secured Admin Gateway</span>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
+                <span className="text-sm font-bold text-white font-display">Secured Admin Gateway</span>
               </div>
               <button
                 onClick={() => setShowAdminOverlay(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                  fontSize: '20px',
-                  lineHeight: '1',
-                  padding: '4px'
-                }}
-                title="Close Gateway"
+                className="text-gray-400 hover:text-white text-xl p-1"
               >
-                &times;
+                ✕
               </button>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px', background: 'rgba(255,74,90,0.05)', border: '1px dashed rgba(255,74,90,0.2)', padding: '12px', borderRadius: '8px', marginBottom: '24px' }}>
-              <ShieldAlert size={20} color="var(--color-danger)" style={{ flexShrink: 0 }} />
+            <div className="flex gap-3 bg-red-500/10 border border-red-500/20 p-3 rounded-xl mb-5 text-left">
+              <ShieldAlert size={20} className="text-red-400 shrink-0 mt-0.5" />
               <div>
-                <h5 style={{ fontSize: '13px', color: '#fff', fontWeight: '600', fontFamily: 'var(--font-display)' }}>AUTHORIZED ACCESS ONLY</h5>
-                <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px', lineHeight: '1.4' }}>
-                  This interface handles strategic municipal deployments. Entering unauthorized keys is logged.
+                <h5 className="text-xs font-bold text-white">RESTRICTED MUNICIPAL GATEWAY</h5>
+                <p className="text-[11px] text-gray-400 mt-0.5 leading-snug">
+                  Only authorized city administrators may authenticate here.
                 </p>
               </div>
             </div>
 
             {adminError && (
-              <div style={{
-                background: 'rgba(255, 74, 90, 0.1)',
-                border: '1px solid rgba(255, 74, 90, 0.2)',
-                borderRadius: '8px',
-                padding: '12px',
-                color: 'var(--color-danger)',
-                fontSize: '13px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                marginBottom: '20px'
-              }}>
+              <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-red-400 text-xs flex items-center gap-2 mb-4">
                 <AlertCircle size={16} />
                 <span>{adminError}</span>
               </div>
             )}
 
-            <form onSubmit={handleAdminSubmit}>
-              <div className="form-group">
-                <label className="form-label" style={{ color: 'var(--color-danger)', fontSize: '11px', fontFamily: 'var(--font-display)' }}>Admin Credentials (Email)</label>
+            <form onSubmit={handleAdminSubmit} className="space-y-4 text-left">
+              <div>
+                <label className="text-[11px] font-mono font-bold text-red-400 block mb-1">Admin Email</label>
                 <input
                   type="email"
-                  className="form-input"
+                  className="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-red-500 font-mono"
                   placeholder="admin@waste.com"
                   value={adminEmail}
                   onChange={(e) => setAdminEmail(e.target.value)}
-                  style={{ background: '#101622', borderBottomColor: 'rgba(255, 74, 90, 0.3)', borderRadius: '6px' }}
                   required
                 />
               </div>
 
-              <div className="form-group">
-                <label className="form-label" style={{ color: 'var(--color-danger)', fontSize: '11px', fontFamily: 'var(--font-display)' }}>Console Password</label>
+              <div>
+                <label className="text-[11px] font-mono font-bold text-red-400 block mb-1">Password</label>
                 <input
                   type="password"
-                  className="form-input"
+                  className="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-red-500 font-mono"
                   placeholder="••••••••"
                   value={adminPassword}
                   onChange={(e) => setAdminPassword(e.target.value)}
-                  style={{ background: '#101622', borderBottomColor: 'rgba(255, 74, 90, 0.3)', borderRadius: '6px' }}
                   required
                 />
               </div>
 
               <button
                 type="submit"
-                className="btn btn-danger"
-                style={{ width: '100%', marginTop: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontFamily: 'var(--font-display)', borderRadius: '8px' }}
+                className="w-full mt-2 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs tracking-wider uppercase font-display flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg"
                 disabled={adminLoading}
               >
-                <Terminal size={16} /> {adminLoading ? 'Decrypting...' : 'Initiate Secure Session'}
+                <Terminal size={16} /> {adminLoading ? 'Authenticating...' : 'Sign In as Administrator'}
               </button>
             </form>
           </div>
