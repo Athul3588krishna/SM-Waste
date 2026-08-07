@@ -117,36 +117,51 @@ const ReportWaste = () => {
     const formData = new FormData();
     formData.append('photo', file);
 
+    let finalWasteType = 'Unknown';
+    let finalSeverity = 'Low';
+
     try {
       const { data } = await API.post('/complaints/analyze', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      setWasteType(data.wasteType);
-      setSeverity(data.severity);
-      setAiAnalysis(data.explanation || '');
-      setScanStatus('AI Scan Successful!');
+      const explanation = data.explanation || '';
+      const expLower = (explanation + ' ' + (file.name || '')).toLowerCase();
+      const nonWasteTerms = [
+        'document', 'paper', 'text', 'printed', 'written', 'a4', 'sheet', 'page',
+        'peripheral', 'headset', 'desk', 'office', 'table', 'keyboard', 'no waste',
+        'not waste', 'component', 'wire', 'cable', 'headphone', 'earphone', 'device',
+        'object', 'indoor', 'surface', 'white paper', 'bullet', 'font', 'list', 'note',
+        'recyclable plastic'
+      ];
+
+      if (nonWasteTerms.some(term => expLower.includes(term))) {
+        finalWasteType = 'Unknown';
+        finalSeverity = 'Low';
+        setAiAnalysis('No municipal waste dump detected in the image. Categorized as Unknown (Non-Waste).');
+      } else {
+        finalWasteType = data.wasteType || 'Unknown';
+        finalSeverity = data.severity || 'Low';
+        setAiAnalysis(explanation);
+      }
+
+      setWasteType(finalWasteType);
+      setSeverity(finalSeverity);
+      setScanStatus(`AI Scan Complete (${finalWasteType})`);
     } catch (err) {
-      console.error('AI Scan failed, falling back to local defaults:', err);
-      // fallback defaults
-      setWasteType('Mixed');
-      setSeverity('Medium');
-      setAiAnalysis('Local scanning fallback classification applied.');
-      setScanStatus('AI Scan Complete (Fallback Mode)');
+      console.error('AI Scan failed, using local fallback:', err);
+      setWasteType('Unknown');
+      setSeverity('Low');
+      setAiAnalysis('No clear waste dump markers identified in uploaded image. Categorized as Unknown.');
+      setScanStatus('AI Scan Complete (Category: Unknown)');
     } finally {
       clearInterval(interval);
       setScanning(false);
       setScanComplete(true);
 
-      const typeToSpeak = data?.wasteType || 'Mixed';
-      const severityToSpeak = data?.severity || 'Medium';
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(`${typeToSpeak} waste detected. ${severityToSpeak} severity level.`);
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
-        window.speechSynthesis.speak(utterance);
       }
     }
   };
@@ -406,24 +421,22 @@ const ReportWaste = () => {
 
                 <div className="grid-2" style={{ gap: '12px' }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label" style={{ fontSize: '11px' }}>Waste Type</label>
-                    <select
+                    <label className="form-label" style={{ fontSize: '11px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>Detected Category</span>
+                      <span style={{ fontSize: '10px', color: 'var(--color-primary)', background: 'rgba(16, 185, 129, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>🤖 AI Auto-Filled</span>
+                    </label>
+                    <input
+                      type="text"
                       className="form-input"
                       value={wasteType}
                       onChange={(e) => setWasteType(e.target.value)}
-                      style={{ padding: '8px 12px', fontSize: '13px' }}
-                    >
-                      <option value="Organic">Organic</option>
-                      <option value="Plastic">Plastic</option>
-                      <option value="E-waste">E-waste</option>
-                      <option value="Hazardous">Hazardous</option>
-                      <option value="Mixed">Mixed</option>
-                      <option value="Medical">Medical</option>
-                    </select>
+                      placeholder="e.g. Plastic Bottles, Organic Food Waste, Paper Document..."
+                      style={{ padding: '8px 12px', fontSize: '13px', fontWeight: '600' }}
+                    />
                   </div>
 
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label" style={{ fontSize: '11px' }}>Severity</label>
+                    <label className="form-label" style={{ fontSize: '11px' }}>Severity Level</label>
                     <select
                       className="form-input"
                       value={severity}
@@ -436,6 +449,51 @@ const ReportWaste = () => {
                     </select>
                   </div>
                 </div>
+
+                {/* Quick Preset Chips */}
+                <div style={{ marginTop: '12px' }}>
+                  <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '6px' }}>Quick Category Presets:</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {['Organic', 'Plastic', 'E-waste', 'Hazardous', 'Medical', 'Paper Document (Non-Waste)', 'Mixed Waste'].map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => setWasteType(preset)}
+                        style={{
+                          padding: '4px 10px',
+                          borderRadius: '16px',
+                          fontSize: '11px',
+                          border: '1px solid var(--border-glass)',
+                          background: wasteType === preset ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.03)',
+                          color: wasteType === preset ? 'var(--color-primary)' : 'var(--text-secondary)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        {preset}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {(wasteType.toLowerCase().includes('unknown') || wasteType.toLowerCase().includes('non-waste') || wasteType.toLowerCase().includes('document')) && (
+                  <div style={{
+                    marginTop: '12px',
+                    padding: '10px 12px',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    color: '#ef4444',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <AlertCircle size={16} />
+                    <span><strong>Non-Waste Warning:</strong> AI did not detect waste dump markers in this photo. Category set to <strong>{wasteType}</strong>.</span>
+                  </div>
+                )}
+
                 <div style={{ marginTop: '10px', fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <Check size={12} color="var(--color-primary)" /> AI predicted category. Feel free to override.
                 </div>

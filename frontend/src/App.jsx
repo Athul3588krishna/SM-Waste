@@ -4,7 +4,6 @@ import { AnimatePresence } from 'framer-motion';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Navbar from './components/Navbar';
-import EcoBotWidget from './components/EcoBotWidget';
 import PageTransition from './components/PageTransition';
 import EcoCursor from './components/EcoCursor';
 import Login from './pages/Login';
@@ -56,6 +55,29 @@ const HomeDispatcher = () => {
 
 const AnimatedRoutes = () => {
   const location = useLocation();
+  const { user } = useContext(AuthContext);
+
+  // Support hash-based URL navigation (e.g., #admin, #worker, #citizen)
+  const hash = location.hash.toLowerCase();
+  if (hash === '#admin' || hash === '#/admin') {
+    if (user?.role === 'admin') {
+      return <PageTransition><AdminDashboard /></PageTransition>;
+    }
+    return <PageTransition><Login /></PageTransition>;
+  }
+  if (hash === '#worker' || hash === '#/worker') {
+    if (user?.role === 'worker') {
+      return <PageTransition><WorkerDashboard /></PageTransition>;
+    }
+    return <PageTransition><Login /></PageTransition>;
+  }
+  if (hash === '#citizen' || hash === '#/citizen') {
+    if (user?.role === 'citizen') {
+      return <PageTransition><CitizenDashboard /></PageTransition>;
+    }
+    return <PageTransition><Login /></PageTransition>;
+  }
+
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
@@ -63,6 +85,20 @@ const AnimatedRoutes = () => {
         <Route path="/" element={<PageTransition><Home /></PageTransition>} />
         <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
         <Route path="/register" element={<PageTransition><Register /></PageTransition>} />
+
+        {/* Direct Role Routes */}
+        <Route 
+          path="/admin" 
+          element={user?.role === 'admin' ? <PageTransition><AdminDashboard /></PageTransition> : <PageTransition><Login /></PageTransition>} 
+        />
+        <Route 
+          path="/worker" 
+          element={user?.role === 'worker' ? <PageTransition><WorkerDashboard /></PageTransition> : <PageTransition><Login /></PageTransition>} 
+        />
+        <Route 
+          path="/citizen" 
+          element={user?.role === 'citizen' ? <PageTransition><CitizenDashboard /></PageTransition> : <PageTransition><Login /></PageTransition>} 
+        />
 
         {/* Protected Workspace Dashboard */}
         <Route
@@ -129,7 +165,6 @@ const App = () => {
           <div style={{ flex: 1 }}>
             <AnimatedRoutes />
           </div>
-          <EcoBotWidget />
           <EcoCursor />
         </div>
       </BrowserRouter>

@@ -59,22 +59,29 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Redirect to dashboard if already logged in
-  useEffect(() => {
-    if (user) {
-      navigate('/dashboard');
-    }
-  }, [user, navigate]);
-
-  // Extract role: admin is only allowed when #admin is in the URL hash
+  // Extract role: admin is allowed when #admin is in URL hash or /admin path
   const queryParams = new URLSearchParams(location.search);
   let role = queryParams.get('role') || 'citizen';
   
-  if (location.hash === '#admin') {
+  const hash = location.hash.toLowerCase();
+  const path = location.pathname.toLowerCase();
+
+  if (hash === '#admin' || hash === '#/admin' || path === '/admin') {
     role = 'admin';
+  } else if (hash === '#worker' || hash === '#/worker' || path === '/worker') {
+    role = 'worker';
+  } else if (hash === '#citizen' || hash === '#/citizen' || path === '/citizen') {
+    role = 'citizen';
   } else if (role === 'admin') {
     role = 'citizen';
   }
+
+  // Redirect to dashboard ONLY if user is already logged in with the matching role
+  useEffect(() => {
+    if (user && user.role === role) {
+      navigate('/dashboard');
+    }
+  }, [user, role, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

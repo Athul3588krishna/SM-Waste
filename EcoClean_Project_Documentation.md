@@ -26,14 +26,14 @@ This is to certify that the project thesis entitled **"ECOCLEAN: SMART WASTE REP
 
 <br><br>
 
-**Mrs. Sruti Sudevan**  
-*Assistant Professor & HOD*  
+**Mrs. Sajeesh T**  
+*HOD*  
 *Department of Computer Applications*  
 *MEA Engineering College*  
 
 <br>
 
-**Ms. Prajina K**  
+**Ms. Sajeesh T**  
 *Assistant Professor & Project Guide*  
 *Department of Computer Applications*  
 *MEA Engineering College*  

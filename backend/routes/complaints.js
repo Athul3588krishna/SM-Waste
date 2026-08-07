@@ -6,73 +6,18 @@ const { upload, uploadImage } = require('../middleware/upload');
 
 function runFallbackScanner(originalName, fileSize) {
   const name = (originalName || 'image.jpg').toLowerCase();
-  let detectedType = 'Mixed';
-  let detectedSeverity = 'Medium';
-  let detectedExplanation = '';
 
-  // 1. Keyword check
-  if (name.includes('bottle') || name.includes('plastic') || name.includes('bag') || name.includes('pet')) {
-    detectedType = 'Plastic';
-    detectedSeverity = 'Medium';
-    detectedExplanation = `Local scanning identified plastic-related elements in the file "${originalName}".`;
-    return { wasteType: detectedType, severity: detectedSeverity, explanation: detectedExplanation };
-  } else if (name.includes('food') || name.includes('waste') || name.includes('rotting') || name.includes('organic') || name.includes('veg')) {
-    detectedType = 'Organic';
-    detectedSeverity = 'High';
-    detectedExplanation = `Local scanning identified organic-related elements in the file "${originalName}".`;
-    return { wasteType: detectedType, severity: detectedSeverity, explanation: detectedExplanation };
-  } else if (name.includes('battery') || name.includes('wire') || name.includes('phone') || name.includes('electronic') || name.includes('cable')) {
-    detectedType = 'E-waste';
-    detectedSeverity = 'Medium';
-    detectedExplanation = `Local scanning identified electronic-related elements in the file "${originalName}".`;
-    return { wasteType: detectedType, severity: detectedSeverity, explanation: detectedExplanation };
-  } else if (name.includes('paint') || name.includes('chemical') || name.includes('toxic') || name.includes('oil')) {
-    detectedType = 'Hazardous';
-    detectedSeverity = 'High';
-    detectedExplanation = `Local scanning identified hazardous-related elements in the file "${originalName}".`;
-    return { wasteType: detectedType, severity: detectedSeverity, explanation: detectedExplanation };
-  } else if (name.includes('medical') || name.includes('syringe') || name.includes('pill') || name.includes('tablet') || name.includes('mask') || name.includes('hospital') || name.includes('medicine') || name.includes('needle')) {
-    detectedType = 'Medical';
-    detectedSeverity = 'High';
-    detectedExplanation = `Local scanning identified clinical-related elements in the file "${originalName}".`;
-    return { wasteType: detectedType, severity: detectedSeverity, explanation: detectedExplanation };
+  // Keyword check for explicit waste dumps
+  if (name.includes('waste_dump') || name.includes('garbage_dump') || name.includes('plastic_waste') || name.includes('organic_waste')) {
+    if (name.includes('plastic')) return { wasteType: 'Plastic', severity: 'Medium', explanation: `Plastic waste dump identified in "${originalName}".` };
+    if (name.includes('organic')) return { wasteType: 'Organic', severity: 'High', explanation: `Organic waste dump identified in "${originalName}".` };
   }
 
-  // 2. Deterministic Hash-based Fallback using file size (highly unique for direct camera uploads)
-  const sizeSeed = fileSize || Math.floor(Math.random() * 1000000);
-  const index = sizeSeed % 5;
-  const choices = [
-    {
-      type: 'Organic',
-      severity: 'High',
-      explanation: 'Local visual processor detected compostable food waste, rotting leaves, and biodegradable scraps.'
-    },
-    {
-      type: 'Plastic',
-      severity: 'Medium',
-      explanation: 'Local visual processor detected synthetic polymer clusters, beverage container shapes, and packaging wraps.'
-    },
-    {
-      type: 'E-waste',
-      severity: 'Medium',
-      explanation: 'Local visual processor detected electronic circuit board pieces, electrical wire bundles, and scrap parts.'
-    },
-    {
-      type: 'Hazardous',
-      severity: 'High',
-      explanation: 'Local visual processor detected warning labels, spray cans, chemical bottles, or engine fluid traces.'
-    },
-    {
-      type: 'Medical',
-      severity: 'High',
-      explanation: 'Local visual processor detected disposal masks, bandages, diagnostic kits, or medicine blisters.'
-    }
-  ];
-
+  // DEFAULT ALL UNCLASSIFIED / PAPER / PHOTO UPLOADS TO UNKNOWN
   return {
-    wasteType: choices[index].type,
-    severity: choices[index].severity,
-    explanation: choices[index].explanation
+    wasteType: 'Unknown',
+    severity: 'Low',
+    explanation: `No municipal waste dump detected in image ("${originalName}"). Categorized as Unknown.`
   };
 }
 
@@ -95,16 +40,24 @@ router.post('/analyze', protect, upload.single('photo'), async (req, res) => {
       const base64Data = fileBuffer.toString('base64');
       const mimeType = req.file.mimetype;
 
-      // 2. Call Google Gemini API (Try multiple models for compatibility)
-      const prompt = `Analyze this image and classify it for municipal waste management. 
-      Select the most appropriate category and severity.
+      // 2. Call Google Gemini API
+      const prompt = `Analyze this image strictly for municipal waste management.
+      First, identify the MAIN SUBJECT of the image.
+      
+      STRICT NON-WASTE / DOCUMENT RULE:
+      - If the main subject of the image is a paper sheet, printed document, A4 paper, text page, notebook, book, computer screen, desk setup, selfie, face, car, clean room, pet, or indoor office item (even if a minor cable, pen, or wire is visible in the corner), YOU MUST CLASSIFY IT AS:
+        "wasteType": "Unknown", "severity": "Low", "explanation": "No municipal waste dump detected. The image appears to be a paper document or non-waste item."
+      
+      ONLY IF the image clearly depicts an actual uncollected waste dump, garbage pile, litter on the ground, or overflowing public trash bin, select one of:
+      "Organic", "Plastic", "E-waste", "Hazardous", "Medical", or "Mixed".
+      
       Output your response ONLY in raw JSON format matching this schema:
       {
-        "wasteType": "Organic" | "Plastic" | "E-waste" | "Hazardous" | "Mixed" | "Medical",
+        "wasteType": "Organic" | "Plastic" | "E-waste" | "Hazardous" | "Mixed" | "Medical" | "Unknown",
         "severity": "Low" | "Medium" | "High",
-        "explanation": "Brief 1-2 sentence explanation of the visual markers found in the image that support this classification"
+        "explanation": "1-2 sentence explanation of what was detected in the image"
       }
-      Do not include any markdown wrappers, codeblocks (like \`\`\`json), or additional text. Just output the raw JSON object.`;
+      Do not include markdown wrappers. Just output raw JSON.`;
 
       const modelsToTry = [
         'gemini-2.0-flash-lite',
@@ -169,10 +122,31 @@ router.post('/analyze', protect, upload.single('photo'), async (req, res) => {
 
       if (apiSuccess && result) {
         fs.unlinkSync(filePath);
+
+        let finalType = result.wasteType || 'Unknown';
+        let finalSeverity = result.severity || 'Low';
+        let finalExplanation = result.explanation || 'Visual analysis performed on uploaded image.';
+
+        // Safeguard: Check explanation text for document / paper / non-waste / desk indicators
+        const expLower = finalExplanation.toLowerCase();
+        const nonWasteTerms = [
+          'document', 'paper', 'text', 'printed', 'written', 'a4', 'sheet', 'page',
+          'peripheral', 'headset', 'desk', 'office', 'table', 'keyboard', 'no waste',
+          'not waste', 'component', 'wire', 'cable', 'headphone', 'earphone', 'device',
+          'object', 'indoor', 'surface', 'white paper', 'bullet', 'font', 'list', 'note',
+          'recyclable plastic'
+        ];
+
+        if (nonWasteTerms.some(term => expLower.includes(term))) {
+          finalType = 'Unknown';
+          finalSeverity = 'Low';
+          finalExplanation = 'No municipal waste dump detected in the image. Categorized as Unknown (Non-Waste).';
+        }
+
         return res.json({
-          wasteType: result.wasteType || 'Mixed',
-          severity: result.severity || 'Medium',
-          explanation: result.explanation || 'Visual analysis confirmed waste categorization.',
+          wasteType: finalType,
+          severity: finalSeverity,
+          explanation: finalExplanation,
           method: `Gemini AI Vision (${usedModel})`
         });
       } else {
