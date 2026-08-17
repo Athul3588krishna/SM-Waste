@@ -317,7 +317,7 @@ router.put('/complaints/:id/status', async (req, res) => {
       message,
     });
 
-    // Socket emission to citizen
+    // Socket emission to citizen and admin room
     const io = req.app.get('io');
     if (io) {
       io.to(`user_${complaint.citizen.toString()}`).emit('complaint_status_updated', {
@@ -326,6 +326,13 @@ router.put('/complaints/:id/status', async (req, res) => {
         complaintId: complaint._id,
         status,
       });
+      io.to('admin').emit('complaint_status_updated', {
+        title,
+        message,
+        complaintId: complaint._id,
+        status,
+      });
+      io.emit('complaint_updated', { complaintId: complaint._id, status });
     }
 
     res.json(complaint);
@@ -392,7 +399,7 @@ router.put('/complaints/:id/assign', async (req, res) => {
 
     await complaint.save();
 
-    // Socket emission to worker or team members
+    // Socket emission to worker, team, citizen, and global broadcast
     const io = req.app.get('io');
     if (io) {
       const title = assignedToType === 'individual' ? 'New Assignment' : 'New Team Assignment';
@@ -412,6 +419,16 @@ router.put('/complaints/:id/assign', async (req, res) => {
           });
         }
       }
+
+      // Notify citizen of assignment
+      io.to(`user_${complaint.citizen.toString()}`).emit('complaint_status_updated', {
+        title: 'Task Assigned to Crew 👷',
+        message: `Your reported dump "${complaint.title}" has been assigned to a sanitation crew.`,
+        complaintId: complaint._id,
+        status: 'assigned',
+      });
+
+      io.emit('complaint_updated', { complaintId: complaint._id, status: 'assigned' });
     }
 
     res.json(complaint);
@@ -612,11 +629,13 @@ router.put('/complaints/:id/verify-cleanup', async (req, res) => {
       text: emailText,
     });
 
-    // Socket emission to citizen & worker/team
+    // Socket emission to citizen & worker/team & global broadcast
     const io = req.app.get('io');
     if (io) {
+      const citizenIdStr = (complaint.citizen._id || complaint.citizen).toString();
+
       // Notify citizen
-      io.to(`user_${complaint.citizen._id.toString()}`).emit('complaint_completed', {
+      io.to(`user_${citizenIdStr}`).emit('complaint_completed', {
         title: 'Cleanup Resolved & Verified',
         message: `Great news! The garbage dump you reported "${complaint.title}" has been cleaned and verified. +50 Eco-Points awarded!`,
         points: 50,
@@ -640,6 +659,8 @@ router.put('/complaints/:id/verify-cleanup', async (req, res) => {
           });
         }
       }
+
+      io.emit('complaint_updated', { complaintId: complaint._id, status: 'completed' });
     }
 
     res.json({ message: 'Cleanup successfully verified!', complaint });

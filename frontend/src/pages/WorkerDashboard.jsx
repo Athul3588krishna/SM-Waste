@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import API from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { Hammer, MapPin, CheckSquare, Upload, AlertCircle, Calendar, Clock, Clipboard, Sparkles, Megaphone, DollarSign, ExternalLink } from 'lucide-react';
@@ -15,6 +16,7 @@ const customIcon = new L.Icon({
 
 const WorkerDashboard = () => {
   const { user, setUser } = useContext(AuthContext);
+  const { socket } = useSocket();
   const [complaints, setComplaints] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -60,9 +62,9 @@ const WorkerDashboard = () => {
     return R * c;
   };
 
-  const fetchWorkerData = async () => {
+  const fetchWorkerData = useCallback(async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       // Refresh worker details to fetch latest bonuses and online state
       const userRes = await API.get('/auth/me');
       setUser(userRes.data);
@@ -72,7 +74,11 @@ const WorkerDashboard = () => {
       if (tasksRes.data.length > 0) {
         // Select first active task if exists, else first task
         const active = tasksRes.data.find((t) => ['assigned', 'in_progress'].includes(t.status)) || tasksRes.data[0];
-        setSelectedTask(active);
+        setSelectedTask(prev => {
+          if (!prev) return active;
+          const updatedSelected = tasksRes.data.find((t) => t._id === prev._id);
+          return updatedSelected || active;
+        });
       }
 
       const announcementsRes = await API.get('/notifications/announcements');
@@ -80,13 +86,42 @@ const WorkerDashboard = () => {
     } catch (err) {
       console.error('Error fetching worker dashboard:', err);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
-  };
+  }, [setUser]);
 
   useEffect(() => {
-    fetchWorkerData();
-  }, []);
+    fetchWorkerData(true);
+
+    const interval = setInterval(() => {
+      fetchWorkerData(false);
+    }, 15000);
+
+    return () => clearInterval(interval);
+  }, [fetchWorkerData]);
+
+  // Real-time socket events auto-refresh for worker dashboard
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleRealtimeUpdate = () => {
+      fetchWorkerData(false);
+    };
+
+    socket.on('complaint_updated', handleRealtimeUpdate);
+    socket.on('new_task_assigned', handleRealtimeUpdate);
+    socket.on('complaint_completed', handleRealtimeUpdate);
+    socket.on('points_updated', handleRealtimeUpdate);
+    socket.on('new_announcement', handleRealtimeUpdate);
+
+    return () => {
+      socket.off('complaint_updated', handleRealtimeUpdate);
+      socket.off('new_task_assigned', handleRealtimeUpdate);
+      socket.off('complaint_completed', handleRealtimeUpdate);
+      socket.off('points_updated', handleRealtimeUpdate);
+      socket.off('new_announcement', handleRealtimeUpdate);
+    };
+  }, [socket, fetchWorkerData]);
 
   // Toggle availability (Online/Offline)
   const handleAvailabilityToggle = async () => {

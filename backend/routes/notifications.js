@@ -41,6 +41,31 @@ router.put('/:id/read', async (req, res) => {
   }
 });
 
+// @desc    Mark all user notifications as read
+// @route   PUT /api/notifications/read-all
+router.put('/read-all', async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { user: req.user._id, isRead: false },
+      { $set: { isRead: true } }
+    );
+    res.json({ message: 'All notifications marked as read' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Clear all user notifications
+// @route   DELETE /api/notifications/clear-all
+router.delete('/clear-all', async (req, res) => {
+  try {
+    await Notification.deleteMany({ user: req.user._id });
+    res.json({ message: 'All notifications cleared' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // @desc    Get targeted announcements based on user role
 // @route   GET /api/notifications/announcements
 router.get('/announcements', async (req, res) => {

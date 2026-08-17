@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import API from '../utils/api';
+import { useSocket } from '../context/SocketContext';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { Shield, Users, CheckCircle2, Clock, AlertTriangle, Play, Check, X, Clipboard, ExternalLink, Calendar, Plus, Edit, Trash2, Megaphone, CheckSquare } from 'lucide-react';
 
 const AdminDashboard = () => {
+  const { socket } = useSocket();
   const [activeTab, setActiveTab] = useState('complaints'); // 'complaints', 'staff', 'announcements'
   
   // Data lists
@@ -63,8 +65,9 @@ const AdminDashboard = () => {
   const [submittingAnnounce, setSubmittingAnnounce] = useState(false);
 
   // Fetch admin dashboard details
-  const fetchAdminData = async () => {
+  const fetchAdminData = useCallback(async (showLoading = true) => {
     try {
+      if (showLoading) setLoading(true);
       const complaintsRes = await API.get('/admin/complaints');
       setComplaints(complaintsRes.data);
 
@@ -79,13 +82,44 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error('Error fetching admin data:', error);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchAdminData();
-  }, []);
+    fetchAdminData(true);
+
+    const interval = setInterval(() => {
+      fetchAdminData(false);
+    }, 15000);
+
+    return () => clearInterval(interval);
+  }, [fetchAdminData]);
+
+  // Real-time socket events auto-refresh for admin dashboard
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleRealtimeUpdate = () => {
+      fetchAdminData(false);
+    };
+
+    socket.on('complaint_updated', handleRealtimeUpdate);
+    socket.on('new_complaint', handleRealtimeUpdate);
+    socket.on('task_in_progress', handleRealtimeUpdate);
+    socket.on('task_cleaned', handleRealtimeUpdate);
+    socket.on('complaint_completed', handleRealtimeUpdate);
+    socket.on('complaint_status_updated', handleRealtimeUpdate);
+
+    return () => {
+      socket.off('complaint_updated', handleRealtimeUpdate);
+      socket.off('new_complaint', handleRealtimeUpdate);
+      socket.off('task_in_progress', handleRealtimeUpdate);
+      socket.off('task_cleaned', handleRealtimeUpdate);
+      socket.off('complaint_completed', handleRealtimeUpdate);
+      socket.off('complaint_status_updated', handleRealtimeUpdate);
+    };
+  }, [socket, fetchAdminData]);
 
   // Update report status (Verify / Reject)
   const handleStatusChange = async (id, status) => {

@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import API from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 import { Award, PlusCircle, AlertCircle, Clock, MapPin, CheckCircle2, ChevronRight, Trophy, Megaphone, Calendar, Lock, Gift } from 'lucide-react';
 
 const ConfettiPopper = () => {
@@ -61,6 +62,7 @@ const ConfettiPopper = () => {
 
 const CitizenDashboard = () => {
   const { user, setUser } = useContext(AuthContext);
+  const { socket } = useSocket();
   const [complaints, setComplaints] = useState([]);
   const [leaderboard, setLeaderboard] = useState({ citizens: [], workers: [] });
   const [announcements, setAnnouncements] = useState([]);
@@ -74,35 +76,69 @@ const CitizenDashboard = () => {
   const [redeemingState, setRedeemingState] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
 
+  const fetchDashboardData = useCallback(async (showLoading = true) => {
+    try {
+      if (showLoading) setLoading(true);
+      // Refresh user context
+      const userRes = await API.get('/auth/me');
+      setUser(userRes.data);
+
+      // Fetch complaints
+      const complaintsRes = await API.get('/complaints/citizen');
+      setComplaints(complaintsRes.data);
+
+      // Fetch leaderboard
+      const leaderboardRes = await API.get('/auth/leaderboard');
+      setLeaderboard(leaderboardRes.data);
+
+      // Fetch announcements
+      const announcementsRes = await API.get('/notifications/announcements');
+      setAnnouncements(announcementsRes.data);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to load dashboard data. Please try again.');
+    } finally {
+      if (showLoading) setLoading(false);
+    }
+  }, [setUser]);
+
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        // Refresh user context
-        const userRes = await API.get('/auth/me');
-        setUser(userRes.data);
+    fetchDashboardData(true);
 
-        // Fetch complaints
-        const complaintsRes = await API.get('/complaints/citizen');
-        setComplaints(complaintsRes.data);
+    // Fallback polling interval every 15 seconds to ensure zero stale state
+    const interval = setInterval(() => {
+      fetchDashboardData(false);
+    }, 15000);
 
-        // Fetch leaderboard
-        const leaderboardRes = await API.get('/auth/leaderboard');
-        setLeaderboard(leaderboardRes.data);
+    return () => clearInterval(interval);
+  }, [fetchDashboardData]);
 
-        // Fetch announcements
-        const announcementsRes = await API.get('/notifications/announcements');
-        setAnnouncements(announcementsRes.data);
-      } catch (err) {
-        console.error(err);
-        setError('Failed to load dashboard data. Please try again.');
-      } finally {
-        setLoading(false);
-      }
+  // Real-time socket event listeners for instant auto-refresh
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleRealtimeUpdate = () => {
+      fetchDashboardData(false);
     };
 
-    fetchDashboardData();
-  }, []);
+    socket.on('complaint_updated', handleRealtimeUpdate);
+    socket.on('complaint_status_updated', handleRealtimeUpdate);
+    socket.on('task_in_progress', handleRealtimeUpdate);
+    socket.on('task_cleaned', handleRealtimeUpdate);
+    socket.on('complaint_completed', handleRealtimeUpdate);
+    socket.on('points_updated', handleRealtimeUpdate);
+    socket.on('new_announcement', handleRealtimeUpdate);
+
+    return () => {
+      socket.off('complaint_updated', handleRealtimeUpdate);
+      socket.off('complaint_status_updated', handleRealtimeUpdate);
+      socket.off('task_in_progress', handleRealtimeUpdate);
+      socket.off('task_cleaned', handleRealtimeUpdate);
+      socket.off('complaint_completed', handleRealtimeUpdate);
+      socket.off('points_updated', handleRealtimeUpdate);
+      socket.off('new_announcement', handleRealtimeUpdate);
+    };
+  }, [socket, fetchDashboardData]);
 
   const playSuccessSound = () => {
     try {

@@ -1,155 +1,61 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import API from '../utils/api';
-import { Trash2, LogOut, Award, Shield, Hammer, Bell, User, Check } from 'lucide-react';
+import { useSocket } from '../context/SocketContext';
+import { 
+  Trash2, LogOut, Award, Shield, Hammer, Bell, User, CheckCheck, 
+  Volume2, VolumeX, Radio, ExternalLink, X 
+} from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
-import io from 'socket.io-client';
 
 const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
+  const { 
+    isConnected, 
+    notifications, 
+    toasts, 
+    removeToast, 
+    markAsRead, 
+    markAllAsRead, 
+    clearNotifications,
+    soundEnabled,
+    setSoundEnabled,
+    desktopNotifEnabled,
+    setDesktopNotifEnabled
+  } = useSocket();
+
   const navigate = useNavigate();
-
-  // Notification states
-  const [notifications, setNotifications] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [activeToast, setActiveToast] = useState(null);
-
-  // Web Audio API beep synthesizer (100% code-based, no external assets needed)
-  const playNotificationSound = () => {
-    try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const playNote = (frequency, startTime, duration) => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(frequency, startTime);
-        gain.gain.setValueAtTime(0.08, startTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(startTime);
-        osc.stop(startTime + duration);
-      };
-      
-      const now = audioCtx.currentTime;
-      playNote(523.25, now, 0.15); // C5
-      playNote(659.25, now + 0.1, 0.25); // E5
-    } catch (err) {
-      console.error('Audio playback failed', err);
-    }
-  };
-
-  const fetchNotifications = async () => {
-    try {
-      if (!user) return;
-      const { data } = await API.get('/notifications');
-      setNotifications(data);
-    } catch (error) {
-      console.error('Error loading notifications:', error.message);
-    }
-  };
-
-  useEffect(() => {
-    let socket;
-    if (user) {
-      fetchNotifications();
-      
-      // Connect to Socket server
-      socket = io('http://localhost:5002');
-
-      // Join rooms
-      socket.emit('join', user._id);
-      socket.emit('join_role', user.role);
-
-      const handleSocketNotification = (data) => {
-        playNotificationSound();
-        setActiveToast({
-          title: data.title || 'New Update',
-          message: data.message || 'You have a new update.'
-        });
-
-        // Refresh list
-        fetchNotifications();
-
-        // Auto close after 6s
-        setTimeout(() => {
-          setActiveToast((curr) => {
-            if (curr && curr.message === data.message) return null;
-            return curr;
-          });
-        }, 6000);
-      };
-
-      // Listeners
-      socket.on('new_complaint', (data) => {
-        handleSocketNotification({
-          title: 'New Complaint Reported 📍',
-          message: `A new ${data.severity} severity ${data.wasteType} complaint was reported by ${data.citizenName || 'a citizen'}: "${data.title}"`
-        });
-      });
-
-      socket.on('new_task_assigned', (data) => {
-        handleSocketNotification({
-          title: data.title || 'New Task Assigned 👷',
-          message: data.message || 'You have been assigned a new cleanup task.'
-        });
-      });
-
-      socket.on('complaint_status_updated', (data) => {
-        handleSocketNotification({
-          title: data.title || 'Report Status Updated ⚙️',
-          message: data.message || 'Your reported complaint status has changed.'
-        });
-      });
-
-      socket.on('task_cleaned', (data) => {
-        handleSocketNotification({
-          title: 'Task Cleaned 🧹',
-          message: data.message || 'A worker has completed cleaning and uploaded verification photos.'
-        });
-      });
-
-      socket.on('complaint_completed', (data) => {
-        handleSocketNotification({
-          title: 'Task Completed & Verified 🎉',
-          message: data.message || 'Your report was successfully verified and points awarded!'
-        });
-      });
-
-      socket.on('points_updated', (data) => {
-        handleSocketNotification({
-          title: data.title || 'Points Awarded 🏆',
-          message: data.message || 'You have received points for your contribution.'
-        });
-      });
-
-      socket.on('new_announcement', (data) => {
-        handleSocketNotification({
-          title: 'Municipal Notice 📢',
-          message: `"${data.title}": ${data.content}`
-        });
-      });
-
-      return () => {
-        if (socket) socket.disconnect();
-      };
-    }
-  }, [user]);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
-  const handleMarkAsRead = async (id) => {
-    try {
-      await API.put(`/notifications/${id}/read`);
-      setNotifications((prev) =>
-        prev.map((n) => (n._id === id ? { ...n, isRead: true } : n))
-      );
-    } catch (error) {
-      console.error(error);
+  const formatTimeAgo = (dateString) => {
+    if (!dateString) return 'Just now';
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now - date) / 1000);
+
+    if (seconds < 60) return 'Just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  };
+
+  const handleNotificationClick = (notification) => {
+    if (!notification.isRead) {
+      markAsRead(notification._id);
+    }
+    setShowDropdown(false);
+    // If complaintId or details exist, navigate to detail page
+    if (notification.complaint || notification.complaintId) {
+      const cId = notification.complaint || notification.complaintId;
+      navigate(`/complaint/${cId}`);
     }
   };
 
@@ -230,8 +136,8 @@ const Navbar = () => {
       alignItems: 'center',
       justifyContent: 'space-between'
     }}>
-      {/* Brand Logo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      {/* Brand Logo & Connection Badge */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <div style={{
           background: 'var(--color-primary)',
           padding: '6px',
@@ -248,13 +154,41 @@ const Navbar = () => {
             EcoClean
           </span>
         </Link>
+
+        {/* Live Socket Connection Status Badge */}
+        <div 
+          title={isConnected ? 'Real-Time Socket Connected' : 'Socket Reconnecting...'} 
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+            padding: '3px 8px',
+            borderRadius: '12px',
+            background: isConnected ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+            border: `1px solid ${isConnected ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+            fontSize: '10px',
+            fontWeight: '700',
+            color: isConnected ? '#10b981' : '#ef4444',
+            letterSpacing: '0.5px'
+          }}
+        >
+          <span style={{
+            width: '6px',
+            height: '6px',
+            borderRadius: '50%',
+            background: isConnected ? '#10b981' : '#ef4444',
+            boxShadow: isConnected ? '0 0 8px #10b981' : 'none',
+            display: 'inline-block'
+          }}></span>
+          <span>{isConnected ? 'LIVE' : 'OFFLINE'}</span>
+        </div>
       </div>
 
       {/* Navigation Links */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
         {user.role === 'citizen' && (
           <>
-            <Link to="/" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: '500', fontSize: '14px' }}>
+            <Link to="/dashboard" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: '500', fontSize: '14px' }}>
               Dashboard
             </Link>
             <Link to="/report" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: '500', fontSize: '14px' }}>
@@ -299,7 +233,7 @@ const Navbar = () => {
           </div>
         )}
 
-        {/* Notifications Icon with Dropdown */}
+        {/* Notifications Icon with Interactive Drawer */}
         <div style={{ position: 'relative' }}>
           <button
             onClick={() => setShowDropdown(!showDropdown)}
@@ -312,8 +246,10 @@ const Navbar = () => {
               color: unreadCount > 0 ? 'var(--color-primary)' : 'var(--text-secondary)',
               position: 'relative',
               display: 'flex',
-              alignItems: 'center'
+              alignItems: 'center',
+              transition: 'all 0.2s'
             }}
+            title="Notifications"
           >
             <Bell size={16} />
             {unreadCount > 0 && (
@@ -326,14 +262,14 @@ const Navbar = () => {
                 fontSize: '9px',
                 fontWeight: '700',
                 borderRadius: '50%',
-                width: '14px',
-                height: '14px',
+                width: '15px',
+                height: '15px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 boxShadow: 'var(--shadow-neon)'
               }}>
-                {unreadCount}
+                {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
           </button>
@@ -343,45 +279,147 @@ const Navbar = () => {
             <div style={{
               position: 'absolute',
               right: 0,
-              top: '40px',
-              width: '320px',
+              top: '44px',
+              width: '350px',
               background: 'var(--modal-bg)',
               border: '1px solid var(--border-glass)',
-              borderRadius: '12px',
-              boxShadow: 'var(--shadow-glass)',
+              borderRadius: '14px',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
               zIndex: 200,
-              overflow: 'hidden'
+              overflow: 'hidden',
+              backdropFilter: 'blur(20px)'
             }}>
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-glass)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '13px', fontWeight: '700' }}>In-App Notifications</span>
-                {unreadCount > 0 && <span style={{ fontSize: '10px', color: 'var(--color-primary)' }}>{unreadCount} new</span>}
+              {/* Drawer Header & Tools */}
+              <div style={{ 
+                padding: '12px 16px', 
+                borderBottom: '1px solid var(--border-glass)', 
+                display: 'flex', 
+                justify: 'space-between', 
+                alignItems: 'center',
+                background: 'rgba(255,255,255,0.02)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                    Real-Time Activity
+                  </span>
+                  {unreadCount > 0 && (
+                    <span style={{ 
+                      fontSize: '10px', 
+                      background: 'rgba(16, 185, 129, 0.2)', 
+                      color: 'var(--color-primary)',
+                      padding: '2px 8px',
+                      borderRadius: '10px',
+                      fontWeight: '700'
+                    }}>
+                      {unreadCount} unread
+                    </span>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  {/* Mute/Unmute Audio Toggle */}
+                  <button 
+                    onClick={() => setSoundEnabled(!soundEnabled)}
+                    title={soundEnabled ? 'Mute Notification Sounds' : 'Unmute Notification Sounds'}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: soundEnabled ? 'var(--color-primary)' : 'var(--text-muted)',
+                      cursor: 'pointer',
+                      padding: '4px',
+                      borderRadius: '4px',
+                      display: 'flex'
+                    }}
+                  >
+                    {soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}
+                  </button>
+
+                  {/* Mark All Read */}
+                  {unreadCount > 0 && (
+                    <button 
+                      onClick={markAllAsRead}
+                      title="Mark all as read"
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--text-secondary)',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        borderRadius: '4px',
+                        display: 'flex'
+                      }}
+                    >
+                      <CheckCheck size={15} />
+                    </button>
+                  )}
+
+                  {/* Clear All */}
+                  {notifications.length > 0 && (
+                    <button 
+                      onClick={clearNotifications}
+                      title="Clear all notifications"
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--text-secondary)',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        borderRadius: '4px',
+                        display: 'flex'
+                      }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
               </div>
 
-              <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
+              {/* Notification List */}
+              <div style={{ maxHeight: '320px', overflowY: 'auto' }}>
                 {(!Array.isArray(notifications) || notifications.length === 0) ? (
-                  <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
-                    No notifications yet.
+                  <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+                    <Bell size={24} style={{ opacity: 0.3, marginBottom: '8px' }} />
+                    <p style={{ margin: 0 }}>No status notifications yet.</p>
                   </div>
                 ) : (
                   notifications.map((n) => (
                     <div
                       key={n._id}
-                      onClick={() => !n.isRead && handleMarkAsRead(n._id)}
+                      onClick={() => handleNotificationClick(n)}
                       style={{
                         padding: '12px 16px',
-                        borderBottom: '1px solid rgba(255,255,255,0.02)',
-                        background: n.isRead ? 'transparent' : 'rgba(16, 185, 129, 0.03)',
-                        cursor: n.isRead ? 'default' : 'pointer',
-                        transition: 'background 0.2s'
+                        borderBottom: '1px solid rgba(255,255,255,0.03)',
+                        background: n.isRead ? 'transparent' : 'rgba(16, 185, 129, 0.04)',
+                        cursor: 'pointer',
+                        transition: 'background 0.2s',
+                        position: 'relative'
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '8px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: '600', color: n.isRead ? 'var(--text-secondary)' : 'var(--text-primary)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                        <span style={{ 
+                          fontSize: '12px', 
+                          fontWeight: n.isRead ? '600' : '700', 
+                          color: n.isRead ? 'var(--text-secondary)' : 'var(--text-primary)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}>
+                          {!n.isRead && (
+                            <span style={{ 
+                              width: '6px', 
+                              height: '6px', 
+                              background: 'var(--color-primary)', 
+                              borderRadius: '50%', 
+                              display: 'inline-block' 
+                            }} />
+                          )}
                           {n.title}
                         </span>
-                        {!n.isRead && <span style={{ width: '6px', height: '6px', background: 'var(--color-primary)', borderRadius: '50%', flexShrink: 0, marginTop: '4px' }}></span>}
+                        <span style={{ fontSize: '10px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                          {formatTimeAgo(n.createdAt)}
+                        </span>
                       </div>
-                      <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                      <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', lineHeight: '1.4', margin: '4px 0 0 0' }}>
                         {n.message}
                       </p>
                     </div>
@@ -392,7 +430,7 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* User profile and logout actions */}
+        {/* User Profile and Logout */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ textAlign: 'right' }}>
             <Link to="/profile" style={{ textDecoration: 'none' }} title="Edit Profile">
@@ -421,57 +459,94 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Toast Alert Banner */}
-      {activeToast && (
-        <>
-          <style>{`
-            @keyframes slideInToast {
-              from { transform: translateY(100px) scale(0.9); opacity: 0; }
-              to { transform: translateY(0) scale(1); opacity: 1; }
-            }
-          `}</style>
-          <div style={{
-            position: 'fixed',
-            bottom: '24px',
-            right: '24px',
-            background: 'rgba(10, 14, 23, 0.95)',
-            border: '1px solid var(--color-primary)',
-            borderRadius: '12px',
-            padding: '16px',
-            boxShadow: '0 8px 32px 0 rgba(139, 92, 246, 0.25)',
-            zIndex: 1000,
-            width: '320px',
-            backdropFilter: 'blur(16px)',
-            animation: 'slideInToast 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '6px'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '12px', fontWeight: '800', color: 'var(--color-primary)' }}>
-                {activeToast.title}
-              </span>
-              <button 
-                onClick={() => setActiveToast(null)} 
-                style={{ 
-                  background: 'none', 
-                  border: 'none', 
-                  color: 'var(--text-secondary)', 
-                  cursor: 'pointer', 
-                  fontSize: '16px',
-                  lineHeight: 1,
-                  padding: '0 4px'
+      {/* Floating Stacked Toast Notifications */}
+      {toasts && toasts.length > 0 && (
+        <div style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          zIndex: 1000,
+          display: 'flex',
+          flexDirection: 'column-reverse',
+          gap: '10px',
+          pointerEvents: 'none'
+        }}>
+          {toasts.map((toast) => {
+            const isSuccess = toast.type === 'success';
+            const isWarning = toast.type === 'warning';
+            const isAnnouncement = toast.type === 'announcement';
+
+            const borderColor = isSuccess ? '#10b981' : isWarning ? '#f59e0b' : isAnnouncement ? '#8b5cf6' : 'var(--color-primary)';
+            const shadowColor = isSuccess ? 'rgba(16, 185, 129, 0.25)' : isWarning ? 'rgba(245, 158, 11, 0.25)' : 'rgba(139, 92, 246, 0.25)';
+
+            return (
+              <div
+                key={toast.id}
+                onClick={() => {
+                  if (toast.complaintId) {
+                    navigate(`/complaint/${toast.complaintId}`);
+                    removeToast(toast.id);
+                  }
+                }}
+                style={{
+                  pointerEvents: 'auto',
+                  background: 'rgba(10, 14, 23, 0.96)',
+                  border: `1px solid ${borderColor}`,
+                  borderRadius: '12px',
+                  padding: '14px 16px',
+                  boxShadow: `0 8px 30px ${shadowColor}`,
+                  width: '320px',
+                  backdropFilter: 'blur(16px)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  cursor: toast.complaintId ? 'pointer' : 'default',
+                  transition: 'transform 0.2s ease, opacity 0.2s ease',
+                  animation: 'slideInToast 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
                 }}
               >
-                ×
-              </button>
-            </div>
-            <p style={{ fontSize: '11px', color: 'var(--text-primary)', margin: 0, lineHeight: '1.4' }}>
-              {activeToast.message}
-            </p>
-          </div>
-        </>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '12px', fontWeight: '800', color: borderColor, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {toast.title}
+                  </span>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeToast(toast.id);
+                    }} 
+                    style={{ 
+                      background: 'none', 
+                      border: 'none', 
+                      color: 'var(--text-secondary)', 
+                      cursor: 'pointer', 
+                      padding: '2px'
+                    }}
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+
+                <p style={{ fontSize: '11px', color: 'var(--text-primary)', margin: 0, lineHeight: '1.4' }}>
+                  {toast.message}
+                </p>
+
+                {toast.complaintId && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: borderColor, fontWeight: '700', marginTop: '2px' }}>
+                    <span>View details</span> <ExternalLink size={10} />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       )}
+
+      <style>{`
+        @keyframes slideInToast {
+          from { transform: translateY(50px) scale(0.92); opacity: 0; }
+          to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+      `}</style>
     </nav>
   );
 };

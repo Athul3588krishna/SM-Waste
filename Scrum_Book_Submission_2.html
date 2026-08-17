@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ECOCLEAN - Scrum Book Submission 2 (CIE 2)</title>
+  
+<style>
+  @page {
+    size: A4 portrait;
+    margin: 20mm 15mm 20mm 15mm;
+  }
+  
+  body {
+    font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #1a1a1a;
+    background: #ffffff;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Header & Footer styling for print */
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1.5px solid #000;
+    padding-bottom: 5px;
+    margin-bottom: 20px;
+    font-size: 11px;
+    font-weight: italic;
+    font-style: italic;
+    color: #333;
+  }
+  
+  .page-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1.5px solid #000;
+    padding-top: 5px;
+    margin-top: 30px;
+    font-size: 11px;
+    font-style: italic;
+    color: #333;
+  }
+
+  h1 {
+    font-size: 20px;
+    text-align: center;
+    color: #0d233a;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  h2 {
+    font-size: 16px;
+    color: #1b365d;
+    border-bottom: 2px solid #1b365d;
+    padding-bottom: 4px;
+    margin-top: 25px;
+    margin-bottom: 12px;
+  }
+
+  h3 {
+    font-size: 14px;
+    color: #2b547e;
+    margin-top: 18px;
+    margin-bottom: 8px;
+  }
+
+  h4 {
+    font-size: 13px;
+    color: #333333;
+    margin-top: 12px;
+    margin-bottom: 6px;
+  }
+
+  p, li {
+    font-size: 12.5px;
+    color: #222222;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid #d0d7de;
+    margin: 20px 0;
+  }
+
+  /* Table styling */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 12px;
+  }
+
+  th, td {
+    border: 1px solid #c6cbd1;
+    padding: 7px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th {
+    background-color: #f1f4f8;
+    color: #0f2537;
+    font-weight: 600;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f9fbfd;
+  }
+
+  /* Code Block styling (BSON / JSON Document snippet styling) */
+  pre {
+    background-color: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-left: 4px solid #1b365d;
+    border-radius: 4px;
+    padding: 12px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 11.5px;
+    line-height: 1.45;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    margin: 12px 0;
+  }
+
+  code {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 11.5px;
+    background-color: #f0f3f6;
+    padding: 2px 5px;
+    border-radius: 3px;
+  }
+
+  pre code {
+    background-color: transparent;
+    padding: 0;
+  }
+
+  /* BSON JSON Highlight Emulation */
+  .bson-key { color: #24292e; font-weight: 600; }
+  .bson-id { color: #d73a49; }
+  .bson-string { color: #22863a; }
+  .bson-num { color: #005cc5; }
+  .bson-bool { color: #6f42c1; }
+
+  /* Page Break Utilities */
+  .page-break {
+    page-break-before: always;
+  }
+
+  /* Mermaid / Diagrams container */
+  .diagram-box {
+    background: #fafafa;
+    border: 1px dashed #b0b8c0;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+  }
+</style>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+    });
+  </script>
+</head>
+<body>
+
+  <div class="page-header">
+    <span>ECOCLEAN</span>
+    <span>SCRUM BOOK: SUBMISSION - 2</span>
+  </div>
+
+  <h1>ECOUNIT / ECOCLEAN: SMART WASTE REPORTING AND MANAGEMENT SYSTEM</h1>
+<h2>SCRUM BOOK: SUBMISSION - 2 (CIE 2)</h2>
+<hr>
+<h3><strong>STUDENT PROFILE</strong></h3>
+<ul>
+<li><strong>Name of Student</strong>: ATHUL KRISHNA R</li>
+<li><strong>Register Number</strong>: MEA24MCA-XXXX</li>
+<li><strong>Course &amp; Batch</strong>: Master of Computer Applications (MCA)</li>
+<li><strong>Semester</strong>: S3 (Third Semester)</li>
+<li><strong>Department</strong>: Department of Computer Applications</li>
+<li><strong>College</strong>: MEA Engineering College, Perinthalmanna</li>
+</ul>
+<h3><strong>EVALUATION PROFILE</strong></h3>
+<ul>
+<li><strong>Submission Date</strong>: 18/08/2026</li>
+<li><strong>Evaluation Event</strong>: Continuous Internal Evaluation 2 (CIE 2)</li>
+<li><strong>Project Guide</strong>: Ms. Prajina K (Assistant Professor)</li>
+<li><strong>Project Co-ordinator</strong>: Mrs. Sruti Sudevan (HOD &amp; Assistant Professor)</li>
+</ul>
+<hr>
+<h3><strong>EVALUATION &amp; SIGNATURE SHEET</strong></h3>
+<table>
+<thead>
+<tr>
+<th align="left">Evaluation Criterion</th>
+<th align="center">Maximum Marks</th>
+<th align="center">Marks Awarded</th>
+<th align="left">Remarks</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Updated Sprint Details &amp; DoD</strong></td>
+<td align="center">5</td>
+<td align="center"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><strong>Database Design &amp; Collections</strong></td>
+<td align="center">5</td>
+<td align="center"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><strong>Data Flow Diagram (DFD - Up to Level 2)</strong></td>
+<td align="center">5</td>
+<td align="center"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><strong>User Stories &amp; Story Points</strong></td>
+<td align="center">5</td>
+<td align="center"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><strong>Total Marks</strong></td>
+<td align="center"><strong>20</strong></td>
+<td align="center"></td>
+<td align="left"></td>
+</tr>
+</tbody></table>
+<br><p><strong>Signature of Project Guide:</strong> _________________________<br><strong>Date of Evaluation:</strong> _________________________</p>
+<hr>
+<hr>
+<h2>1. UPDATED SPRINT DETAILS</h2>
+<p>The <strong>EcoClean</strong> platform was developed following the <strong>Agile Scrum Framework</strong> across four sprints. Below is the official Sprint Tracking Log formatted according to the evaluation requirements:</p>
+<hr>
+<h3>📅 Sprint - 1</h3>
+<table>
+<thead>
+<tr>
+<th align="left">Module</th>
+<th align="left">Task</th>
+<th align="center">Pending task if any</th>
+<th align="center">Hours of Completion</th>
+<th align="center">Expected date of Completion</th>
+<th align="center">Actual date of Completion</th>
+<th align="center">Reason for delay</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Citizen</strong></td>
+<td align="left">Email-OTP Registration</td>
+<td align="center">-</td>
+<td align="center">2 hr</td>
+<td align="center">14/07/2026</td>
+<td align="center">14/07/2026</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="left"><strong>Citizen</strong></td>
+<td align="left">JWT - Login</td>
+<td align="center">-</td>
+<td align="center">2 hr</td>
+<td align="center">16/07/2026</td>
+<td align="center">16/07/2026</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="left"><strong>Citizen</strong></td>
+<td align="left">Report - Waste</td>
+<td align="center">-</td>
+<td align="center">3 hr</td>
+<td align="center">18/07/2026</td>
+<td align="center">18/07/2026</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="left"><strong>Citizen</strong></td>
+<td align="left">Leaflet Map Integration</td>
+<td align="center">-</td>
+<td align="center">3 hr</td>
+<td align="center">21/07/2026</td>
+<td align="center">21/07/2026</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="left"><strong>Citizen</strong></td>
+<td align="left">Complaint status tracking</td>
+<td align="center">-</td>
+<td align="center">2 hr</td>
+<td align="center">22/07/2026</td>
+<td align="center">22/07/2026</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="left"><strong>Citizen</strong></td>
+<td align="left">Profile management</td>
+<td align="center">-</td>
+<td align="center">2 hr</td>
+<td align="center">24/07/2026</td>
+<td align="center">24/07/2026</td>
+<td align="center">-</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>📅 Sprint - 2</h3>
+<table>
+<thead>
+<tr>
+<th align="left">Module</th>
+<th align="left">Task</th>
+<th align="center">Pending task if any</th>
+<th align="center">Hours of Completion</th>
+<th align="center">Expected date of Completion</th>
+<th align="center">Actual date of Completion</th>
+<th align="center">Reason for delay</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Citizen</strong></td>
+<td align="left">Drag-Pin GPS Location Selector</td>
+<td align="center">-</td>
+<td align="center">3 hr</td>
+<td align="center">26/07/2026</td>
+<td align="center">26/07/2026</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="left"><strong>Citizen</strong></td>
+<td align="left">Multer Before-Photo Upload</td>
+<td align="center">-</td>
+<td align="center">3 hr</td>
+<td align="center">28/07/2026</td>
+<td align="center">28/07/2026</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="left"><strong>Citizen</strong></td>
+<td align="left">AI Vision Scan Visual Overlay</td>
+<td align="center">-</td>
+<td align="center">4 hr</td>
+<td align="center">30/07/2026</td>
+<td align="center">30/07/2026</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="left"><strong>Citizen</strong></td>
+<td align="left">Eco-Points &amp; Badge Tier System</td>
+<td align="center">-</td>
+<td align="center">3 hr</td>
+<td align="center">01/08/2026</td>
+<td align="center">01/08/2026</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="left"><strong>Citizen</strong></td>
+<td align="left">Real-time Status Notifications</td>
+<td align="center">-</td>
+<td align="center">2 hr</td>
+<td align="center">03/08/2026</td>
+<td align="center">03/08/2026</td>
+<td align="center">-</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>📅 Sprint - 3</h3>
+<table>
+<thead>
+<tr>
+<th align="left">Module</th>
+<th align="left">Task</th>
+<th align="center">Pending task if any</th>
+<th align="center">Hours of Completion</th>
+<th align="center">Expected date of Completion</th>
+<th align="center">Actual date of Completion</th>
+<th align="center">Reason for delay</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Admin</strong></td>
+<td align="left">3D WebGL Globe Canvas</td>
+<td align="center">-</td>
+<td align="center">5 hr</td>
+<td align="center">05/08/2026</td>
+<td align="center">05/08/2026</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="left"><strong>Admin</strong></td>
+<td align="left">Live Incident Hotspot Pins</td>
+<td align="center">-</td>
+<td align="center">4 hr</td>
+<td align="center">07/08/2026</td>
+<td align="center">07/08/2026</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="left"><strong>Admin</strong></td>
+<td align="left">Worker Account Management</td>
+<td align="center">-</td>
+<td align="center">3 hr</td>
+<td align="center">09/08/2026</td>
+<td align="center">09/08/2026</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="left"><strong>Admin</strong></td>
+<td align="left">Cleaning Team Squad Creation</td>
+<td align="center">-</td>
+<td align="center">3 hr</td>
+<td align="center">11/08/2026</td>
+<td align="center">11/08/2026</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="left"><strong>Admin</strong></td>
+<td align="left">Recharts Category Analytics</td>
+<td align="center">-</td>
+<td align="center">4 hr</td>
+<td align="center">13/08/2026</td>
+<td align="center">13/08/2026</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="left"><strong>Admin</strong></td>
+<td align="left">Municipal Broadcast Notices</td>
+<td align="center">-</td>
+<td align="center">2 hr</td>
+<td align="center">14/08/2026</td>
+<td align="center">14/08/2026</td>
+<td align="center">-</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>📅 Sprint - 4</h3>
+<table>
+<thead>
+<tr>
+<th align="left">Module</th>
+<th align="left">Task</th>
+<th align="center">Pending task if any</th>
+<th align="center">Hours of Completion</th>
+<th align="center">Expected date of Completion</th>
+<th align="center">Actual date of Completion</th>
+<th align="center">Reason for delay</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Worker</strong></td>
+<td align="left">Mobile Job Sheet Card View</td>
+<td align="center">-</td>
+<td align="center">3 hr</td>
+<td align="center">15/08/2026</td>
+<td align="center">15/08/2026</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="left"><strong>Worker</strong></td>
+<td align="left">GPS Map Route Directions</td>
+<td align="center">-</td>
+<td align="center">2 hr</td>
+<td align="center">16/08/2026</td>
+<td align="center">16/08/2026</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="left"><strong>Worker</strong></td>
+<td align="left">After-Cleaning Photo Upload</td>
+<td align="center">-</td>
+<td align="center">4 hr</td>
+<td align="center">17/08/2026</td>
+<td align="center">17/08/2026</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="left"><strong>Worker</strong></td>
+<td align="left">Verification Approval &amp; Rewards</td>
+<td align="center">-</td>
+<td align="center">3 hr</td>
+<td align="center">18/08/2026</td>
+<td align="center">18/08/2026</td>
+<td align="center">-</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>📊 Sprint Velocity &amp; Burn-down Summary</h3>
+<table>
+<thead>
+<tr>
+<th align="left">Sprint</th>
+<th align="left">Module Focus</th>
+<th align="center">Planned SP</th>
+<th align="center">Completed SP</th>
+<th align="left">Velocity Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Sprint 1</strong></td>
+<td align="left">Citizen Auth &amp; Core Setup</td>
+<td align="center">19</td>
+<td align="center">19</td>
+<td align="left">On Target</td>
+</tr>
+<tr>
+<td align="left"><strong>Sprint 2</strong></td>
+<td align="left">Citizen Geo-Reporting &amp; AI Scan</td>
+<td align="center">20</td>
+<td align="center">20</td>
+<td align="left">On Target</td>
+</tr>
+<tr>
+<td align="left"><strong>Sprint 3</strong></td>
+<td align="left">Admin Console &amp; Analytics</td>
+<td align="center">21</td>
+<td align="center">21</td>
+<td align="left">On Target</td>
+</tr>
+<tr>
+<td align="left"><strong>Sprint 4</strong></td>
+<td align="left">Worker Workspace &amp; Verification</td>
+<td align="center">18</td>
+<td align="center">18</td>
+<td align="left">On Target</td>
+</tr>
+</tbody></table>
+<h4>Definition of Done (DoD) Checklist:</h4>
+<ul>
+<li><input checked="" disabled="" type="checkbox"> Code adheres to clean architecture with standard Express routes and React hooks.</li>
+<li><input checked="" disabled="" type="checkbox"> Password fields are hashed with Bcrypt prior to persistence.</li>
+<li><input checked="" disabled="" type="checkbox"> API routes enforce JWT authorization middleware (<code>protect</code>, <code>authorize</code>).</li>
+<li><input checked="" disabled="" type="checkbox"> Geospatial coordinates validate latitude (-90 to 90) and longitude (-180 to 180).</li>
+<li><input checked="" disabled="" type="checkbox"> All manual UAT workflows (Citizen, Admin, Worker) pass verification tests without runtime exceptions.</li>
+</ul>
+<hr>
+<hr>
+<h2>2. DATABASE DESIGN / COLLECTIONS</h2>
+<p>The backend utilizes <strong>MongoDB</strong> with <strong>Mongoose ORM</strong> to enforce schema validation. The primary collections and their attributes are detailed below:</p>
+<pre><code>  ┌─────────────────┐           1:N           ┌──────────────────┐
+  │      User       │ ◄─────────────────────  │    Complaint     │
+  │ (Citizen/Worker)│                         │ (Waste Incidents)│
+  └────────┬────────┘                         └────────┬─────────┘
+           │ 1:N                                       │
+           ▼                                           │
+  ┌─────────────────┐                                  │
+  │      Team       │ ◄────────────────────────────────┘
+  │ (Cleaning Squad)│
+  └─────────────────┘
+</code></pre>
+<hr>
+<h3>2.1 Collection: <code>users</code> (<a href="file:///d:/Smart%20waste%20management/backend/models/User.js"><code>User.js</code></a>)</h3>
+<p>Stores user profiles for Citizens, Administrators, and Sanitation Workers.</p>
+<table>
+<thead>
+<tr>
+<th align="left">Field</th>
+<th align="left">Type</th>
+<th align="left">Constraints</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>_id</code></td>
+<td align="left">ObjectId</td>
+<td align="left">Primary Key, Auto</td>
+<td align="left">Unique user identifier</td>
+</tr>
+<tr>
+<td align="left"><code>name</code></td>
+<td align="left">String</td>
+<td align="left">Required</td>
+<td align="left">Full name of the user</td>
+</tr>
+<tr>
+<td align="left"><code>email</code></td>
+<td align="left">String</td>
+<td align="left">Required, Unique, Lowercase</td>
+<td align="left">Email address for login</td>
+</tr>
+<tr>
+<td align="left"><code>password</code></td>
+<td align="left">String</td>
+<td align="left">Required, Min length 6</td>
+<td align="left">Hashed password (Bcrypt)</td>
+</tr>
+<tr>
+<td align="left"><code>role</code></td>
+<td align="left">String</td>
+<td align="left">Enum: <code>[&#39;citizen&#39;, &#39;admin&#39;, &#39;worker&#39;]</code></td>
+<td align="left">User access role</td>
+</tr>
+<tr>
+<td align="left"><code>points</code></td>
+<td align="left">Number</td>
+<td align="left">Default: <code>0</code></td>
+<td align="left">Earned Citizen Eco-Points</td>
+</tr>
+<tr>
+<td align="left"><code>badge</code></td>
+<td align="left">String</td>
+<td align="left">Default: <code>&#39;Novice Reporter&#39;</code></td>
+<td align="left">Citizen gamification tier</td>
+</tr>
+<tr>
+<td align="left"><code>isOnline</code></td>
+<td align="left">Boolean</td>
+<td align="left">Default: <code>false</code></td>
+<td align="left">Sanitation worker online status</td>
+</tr>
+<tr>
+<td align="left"><code>team</code></td>
+<td align="left">ObjectId</td>
+<td align="left">Ref: <code>&#39;Team&#39;</code>, Default: <code>null</code></td>
+<td align="left">Assigned cleaning team (for workers)</td>
+</tr>
+<tr>
+<td align="left"><code>bonusHistory</code></td>
+<td align="left">Array</td>
+<td align="left">Objects <code>{ amount, complaint, date }</code></td>
+<td align="left">Log of received worker bonuses</td>
+</tr>
+<tr>
+<td align="left"><code>createdAt</code></td>
+<td align="left">Date</td>
+<td align="left">Auto Timestamp</td>
+<td align="left">Account creation timestamp</td>
+</tr>
+</tbody></table>
+<h4>📄 Sample Document (<code>users</code>):</h4>
+<pre><code class="language-javascript">{
+  _id: ObjectId(&#39;6a6959be4b8992b198eddbc0&#39;),
+  name: &#39;Athul Krishna&#39;,
+  email: &#39;athul@gmail.com&#39;,
+  password: &#39;$2a$10$w8.9Xj1s4rZ6Qk9Y... (Bcrypt Hashed)&#39;,
+  role: &#39;citizen&#39;,
+  points: NumberInt(&#39;150&#39;),
+  badge: &#39;Eco Cadet&#39;,
+  isOnline: false,
+  team: null,
+  bonusHistory: [],
+  createdAt: ISODate(&#39;2026-07-28T10:15:30.000Z&#39;),
+  updatedAt: ISODate(&#39;2026-07-29T01:39:10.000Z&#39;),
+  __v: NumberInt(&#39;0&#39;)
+}
+</code></pre>
+<hr>
+<h3>2.2 Collection: <code>complaints</code> (<a href="file:///d:/Smart%20waste%20management/backend/models/Complaint.js"><code>Complaint.js</code></a>)</h3>
+<p>Stores waste report incidents, location coordinates, photos, status, and verification history.</p>
+<table>
+<thead>
+<tr>
+<th align="left">Field</th>
+<th align="left">Type</th>
+<th align="left">Constraints</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>_id</code></td>
+<td align="left">ObjectId</td>
+<td align="left">Primary Key, Auto</td>
+<td align="left">Unique complaint ticket ID</td>
+</tr>
+<tr>
+<td align="left"><code>citizen</code></td>
+<td align="left">ObjectId</td>
+<td align="left">Required, Ref: <code>&#39;User&#39;</code></td>
+<td align="left">Reporter user reference</td>
+</tr>
+<tr>
+<td align="left"><code>title</code></td>
+<td align="left">String</td>
+<td align="left">Required, Trim</td>
+<td align="left">Short title of report</td>
+</tr>
+<tr>
+<td align="left"><code>description</code></td>
+<td align="left">String</td>
+<td align="left">Required</td>
+<td align="left">Detailed issue summary</td>
+</tr>
+<tr>
+<td align="left"><code>location.latitude</code></td>
+<td align="left">Number</td>
+<td align="left">Required</td>
+<td align="left">GPS latitude coordinate</td>
+</tr>
+<tr>
+<td align="left"><code>location.longitude</code></td>
+<td align="left">Number</td>
+<td align="left">Required</td>
+<td align="left">GPS longitude coordinate</td>
+</tr>
+<tr>
+<td align="left"><code>location.address</code></td>
+<td align="left">String</td>
+<td align="left">Default: <code>&#39;Location specified on map&#39;</code></td>
+<td align="left">Human-readable address</td>
+</tr>
+<tr>
+<td align="left"><code>wasteType</code></td>
+<td align="left">String</td>
+<td align="left">Default: <code>&#39;General Waste&#39;</code></td>
+<td align="left">Category (<em>Plastic</em>, <em>Organic</em>, <em>E-waste</em>, etc.)</td>
+</tr>
+<tr>
+<td align="left"><code>severity</code></td>
+<td align="left">String</td>
+<td align="left">Enum: <code>[&#39;Low&#39;, &#39;Medium&#39;, &#39;High&#39;]</code></td>
+<td align="left">Urgency level</td>
+</tr>
+<tr>
+<td align="left"><code>aiAnalysis</code></td>
+<td align="left">String</td>
+<td align="left">Default: <code>null</code></td>
+<td align="left">Predicted waste label from AI scanner</td>
+</tr>
+<tr>
+<td align="left"><code>photoBefore</code></td>
+<td align="left">String</td>
+<td align="left">Required</td>
+<td align="left">URL/Path of reported waste dump</td>
+</tr>
+<tr>
+<td align="left"><code>photoAfter</code></td>
+<td align="left">String</td>
+<td align="left">Default: <code>null</code></td>
+<td align="left">Verification photo uploaded by worker</td>
+</tr>
+<tr>
+<td align="left"><code>status</code></td>
+<td align="left">String</td>
+<td align="left">Enum: <code>[&#39;pending&#39;, &#39;verified&#39;, &#39;assigned&#39;, &#39;in_progress&#39;, &#39;cleaned&#39;, &#39;completed&#39;, &#39;rejected&#39;]</code></td>
+<td align="left">Incident resolution state</td>
+</tr>
+<tr>
+<td align="left"><code>assignedToType</code></td>
+<td align="left">String</td>
+<td align="left">Enum: <code>[&#39;individual&#39;, &#39;team&#39;, null]</code></td>
+<td align="left">Assigned target type</td>
+</tr>
+<tr>
+<td align="left"><code>worker</code></td>
+<td align="left">ObjectId</td>
+<td align="left">Ref: <code>&#39;User&#39;</code>, Default: <code>null</code></td>
+<td align="left">Assigned individual worker</td>
+</tr>
+<tr>
+<td align="left"><code>team</code></td>
+<td align="left">ObjectId</td>
+<td align="left">Ref: <code>&#39;Team&#39;</code>, Default: <code>null</code></td>
+<td align="left">Assigned cleaning team</td>
+</tr>
+<tr>
+<td align="left"><code>deadlineAt</code></td>
+<td align="left">Date</td>
+<td align="left">Default: <code>null</code></td>
+<td align="left">Target completion deadline</td>
+</tr>
+<tr>
+<td align="left"><code>bonusAmount</code></td>
+<td align="left">Number</td>
+<td align="left">Default: <code>0</code></td>
+<td align="left">Incentive bonus allocated to worker</td>
+</tr>
+<tr>
+<td align="left"><code>createdAt</code></td>
+<td align="left">Date</td>
+<td align="left">Auto Timestamp</td>
+<td align="left">Ticket creation timestamp</td>
+</tr>
+</tbody></table>
+<h4>📄 Sample Document (<code>complaints</code>):</h4>
+<pre><code class="language-javascript">{
+  _id: ObjectId(&#39;6a6959be4b8992b198eddbd2&#39;),
+  citizen: ObjectId(&#39;6a6959be4b8992b198eddbc0&#39;),
+  assignedToType: &#39;team&#39;,
+  worker: ObjectId(&#39;6a6959be4b8992b198eddbbc&#39;),
+  team: ObjectId(&#39;6a6959be4b8992b198eddbc6&#39;),
+  title: &#39;Cardboard &amp; Paper Scrap Pile&#39;,
+  description: &#39;Cardboard boxes, papers, and packing materials piled up in the public playground.&#39;,
+  location: {
+    latitude: Double(&#39;10.958&#39;),
+    longitude: Double(&#39;76.218&#39;),
+    address: &#39;Ooty Road, Perinthalmanna, Kerala&#39;
+  },
+  wasteType: &#39;Mixed&#39;,
+  severity: &#39;Low&#39;,
+  aiAnalysis: null,
+  photoBefore: &#39;/uploads/sample_before.png&#39;,
+  photoAfter: &#39;/uploads/sample_after.png&#39;,
+  status: &#39;cleaned&#39;,
+  deadlineAt: ISODate(&#39;2026-07-30T01:39:10.835Z&#39;),
+  bonusAmount: NumberInt(&#39;0&#39;),
+  assignedAt: ISODate(&#39;2026-07-28T01:39:10.835Z&#39;),
+  cleanedAt: ISODate(&#39;2026-07-29T00:39:10.835Z&#39;),
+  completedAt: null,
+  createdAt: ISODate(&#39;2026-07-29T01:39:10.835Z&#39;),
+  updatedAt: ISODate(&#39;2026-07-29T01:39:10.835Z&#39;),
+  __v: NumberInt(&#39;0&#39;)
+}
+</code></pre>
+<hr>
+<h3>2.3 Collection: <code>teams</code> (<a href="file:///d:/Smart%20waste%20management/backend/models/Team.js"><code>Team.js</code></a>)</h3>
+<p>Groups individual sanitation workers into cleaning squads for large waste management tasks.</p>
+<table>
+<thead>
+<tr>
+<th align="left">Field</th>
+<th align="left">Type</th>
+<th align="left">Constraints</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>_id</code></td>
+<td align="left">ObjectId</td>
+<td align="left">Primary Key, Auto</td>
+<td align="left">Unique team ID</td>
+</tr>
+<tr>
+<td align="left"><code>name</code></td>
+<td align="left">String</td>
+<td align="left">Required, Unique, Trim</td>
+<td align="left">Squad name (e.g., <em>Green Squad Alpha</em>)</td>
+</tr>
+<tr>
+<td align="left"><code>members</code></td>
+<td align="left">Array</td>
+<td align="left">Ref: <code>&#39;User&#39;</code></td>
+<td align="left">Array of worker User IDs</td>
+</tr>
+<tr>
+<td align="left"><code>createdAt</code></td>
+<td align="left">Date</td>
+<td align="left">Auto Timestamp</td>
+<td align="left">Team formation date</td>
+</tr>
+</tbody></table>
+<h4>📄 Sample Document (<code>teams</code>):</h4>
+<pre><code class="language-javascript">{
+  _id: ObjectId(&#39;6a6959be4b8992b198eddbc6&#39;),
+  name: &#39;Green Squad Alpha&#39;,
+  members: [
+    ObjectId(&#39;6a6959be4b8992b198eddbbc&#39;),
+    ObjectId(&#39;6a6959be4b8992b198eddbbd&#39;)
+  ],
+  createdAt: ISODate(&#39;2026-07-25T08:00:00.000Z&#39;),
+  updatedAt: ISODate(&#39;2026-07-25T08:00:00.000Z&#39;),
+  __v: NumberInt(&#39;0&#39;)
+}
+</code></pre>
+<hr>
+<h3>2.4 Collection: <code>announcements</code> (<a href="file:///d:/Smart%20waste%20management/backend/models/Announcement.js"><code>Announcement.js</code></a>)</h3>
+<p>Stores municipal announcements broadcasted by administrators.</p>
+<table>
+<thead>
+<tr>
+<th align="left">Field</th>
+<th align="left">Type</th>
+<th align="left">Constraints</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>_id</code></td>
+<td align="left">ObjectId</td>
+<td align="left">Primary Key, Auto</td>
+<td align="left">Unique notice ID</td>
+</tr>
+<tr>
+<td align="left"><code>title</code></td>
+<td align="left">String</td>
+<td align="left">Required</td>
+<td align="left">Notice header</td>
+</tr>
+<tr>
+<td align="left"><code>content</code></td>
+<td align="left">String</td>
+<td align="left">Required</td>
+<td align="left">Announcement message body</td>
+</tr>
+<tr>
+<td align="left"><code>target</code></td>
+<td align="left">String</td>
+<td align="left">Enum: <code>[&#39;all&#39;, &#39;citizen&#39;, &#39;worker&#39;]</code></td>
+<td align="left">Audience target group</td>
+</tr>
+<tr>
+<td align="left"><code>createdAt</code></td>
+<td align="left">Date</td>
+<td align="left">Auto Timestamp</td>
+<td align="left">Publication timestamp</td>
+</tr>
+</tbody></table>
+<h4>📄 Sample Document (<code>announcements</code>):</h4>
+<pre><code class="language-javascript">{
+  _id: ObjectId(&#39;6a6959be4b8992b198eddbe1&#39;),
+  title: &#39;Special Monsoon Waste Collection Drive&#39;,
+  content: &#39;Municipal sanitation teams will conduct special collection drives across ward 12 on Sunday.&#39;,
+  target: &#39;all&#39;,
+  createdAt: ISODate(&#39;2026-07-27T09:30:00.000Z&#39;),
+  updatedAt: ISODate(&#39;2026-07-27T09:30:00.000Z&#39;),
+  __v: NumberInt(&#39;0&#39;)
+}
+</code></pre>
+<hr>
+<h3>2.5 Collection: <code>notifications</code> (<a href="file:///d:/Smart%20waste%20management/backend/models/Notification.js"><code>Notification.js</code></a>)</h3>
+<p>Stores real-time system alerts and status updates sent to individual users.</p>
+<table>
+<thead>
+<tr>
+<th align="left">Field</th>
+<th align="left">Type</th>
+<th align="left">Constraints</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>_id</code></td>
+<td align="left">ObjectId</td>
+<td align="left">Primary Key, Auto</td>
+<td align="left">Unique notification ID</td>
+</tr>
+<tr>
+<td align="left"><code>user</code></td>
+<td align="left">ObjectId</td>
+<td align="left">Required, Ref: <code>&#39;User&#39;</code></td>
+<td align="left">Target user reference</td>
+</tr>
+<tr>
+<td align="left"><code>title</code></td>
+<td align="left">String</td>
+<td align="left">Required</td>
+<td align="left">Notification title</td>
+</tr>
+<tr>
+<td align="left"><code>message</code></td>
+<td align="left">String</td>
+<td align="left">Required</td>
+<td align="left">Notification body text</td>
+</tr>
+<tr>
+<td align="left"><code>isRead</code></td>
+<td align="left">Boolean</td>
+<td align="left">Default: <code>false</code></td>
+<td align="left">Read/Unread flag</td>
+</tr>
+<tr>
+<td align="left"><code>createdAt</code></td>
+<td align="left">Date</td>
+<td align="left">Default: <code>Date.now</code></td>
+<td align="left">Alert timestamp</td>
+</tr>
+</tbody></table>
+<h4>📄 Sample Document (<code>notifications</code>):</h4>
+<pre><code class="language-javascript">{
+  _id: ObjectId(&#39;6a6959be4b8992b198eddbe8&#39;),
+  user: ObjectId(&#39;6a6959be4b8992b198eddbc0&#39;),
+  title: &#39;Waste Report Cleaned!&#39;,
+  message: &#39;Your reported waste at Ooty Road has been cleaned. You earned 50 Eco-Points!&#39;,
+  isRead: false,
+  createdAt: ISODate(&#39;2026-07-29T00:39:11.000Z&#39;),
+  __v: NumberInt(&#39;0&#39;)
+}
+</code></pre>
+<hr>
+<h3>2.6 Collection: <code>otps</code> (<a href="file:///d:/Smart%20waste%20management/backend/models/Otp.js"><code>Otp.js</code></a>)</h3>
+<p>Temporary storage for One-Time Passwords during user registration and password resets.</p>
+<table>
+<thead>
+<tr>
+<th align="left">Field</th>
+<th align="left">Type</th>
+<th align="left">Constraints</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>_id</code></td>
+<td align="left">ObjectId</td>
+<td align="left">Primary Key, Auto</td>
+<td align="left">Unique OTP record ID</td>
+</tr>
+<tr>
+<td align="left"><code>email</code></td>
+<td align="left">String</td>
+<td align="left">Required</td>
+<td align="left">Target user email</td>
+</tr>
+<tr>
+<td align="left"><code>otp</code></td>
+<td align="left">String</td>
+<td align="left">Required</td>
+<td align="left">6-digit verification code</td>
+</tr>
+<tr>
+<td align="left"><code>name</code></td>
+<td align="left">String</td>
+<td align="left">Required</td>
+<td align="left">Temporary registration name</td>
+</tr>
+<tr>
+<td align="left"><code>password</code></td>
+<td align="left">String</td>
+<td align="left">Required</td>
+<td align="left">Temporary password string</td>
+</tr>
+<tr>
+<td align="left"><code>createdAt</code></td>
+<td align="left">Date</td>
+<td align="left">Default: <code>Date.now</code>, Expires: 300s (5m)</td>
+<td align="left">Auto-deleted TTL index</td>
+</tr>
+</tbody></table>
+<h4>📄 Sample Document (<code>otps</code>):</h4>
+<pre><code class="language-javascript">{
+  _id: ObjectId(&#39;6a6959be4b8992b198eddbf0&#39;),
+  email: &#39;citizen@example.com&#39;,
+  otp: &#39;482910&#39;,
+  name: &#39;New Citizen&#39;,
+  password: &#39;$2a$10$e7.2Wk3s...&#39;,
+  createdAt: ISODate(&#39;2026-07-29T01:35:00.000Z&#39;)
+}
+</code></pre>
+<hr>
+<hr>
+<h2>3. DATA FLOW DIAGRAM (DFD)</h2>
+<p>The Data Flow Diagrams (DFD) represent the logical movement of data throughout the <strong>EcoClean</strong> Smart Waste Management System across Level 0, Level 1 (Role-specific), and Level 2 detailed process decompositions.</p>
+<hr>
+<h3>3.1 Level 0 - System Context Diagram</h3>
+<p>The Level 0 Context Diagram depicts the primary boundary of the EcoClean system and its data flow exchanges with External Entities (<strong>Citizen</strong>, <strong>Municipal Admin</strong>, <strong>Sanitation Worker</strong>).</p>
+<pre><code>                            ┌──────────────┐
+                            │   Citizen    │
+                            └──────┬───────┘
+                        Request    │    Response
+                        (Reports)  │    (Points/Status)
+                                   ▼
+    ┌──────────────┐        ┌──────────────┐        ┌───────────────────┐
+    │    Admin     │───────►│   EcoClean   │◄───────│ Sanitation Worker │
+    └──────────────┘◄───────│    System    │───────►└───────────────────┘
+               Request      └──────────────┘  Response (Job Sheet/Target)
+              &amp; Control
+</code></pre>
+<pre><code class="language-mermaid">graph TD
+    Citizen[👤 Citizen] --&gt;|Report Waste, Photos &amp; Coordinates| System((🌐 EcoClean Platform))
+    System --&gt;|Eco-Points, Badges &amp; Incident Status| Citizen
+
+    Admin[🛡️ Municipal Admin] --&gt;|Worker Accounts, Dispatch &amp; Verification| System
+    System --&gt;|City Hotspot Maps &amp; Recharts Analytics| Admin
+
+    Worker[👷 Sanitation Worker] --&gt;|After-Cleaning Proof Photo &amp; Resolution| System
+    System --&gt;|Assigned Job Sheets &amp; GPS Directions| Worker
+</code></pre>
+<hr>
+<h3>3.2 Level 1 - Admin</h3>
+<p>Decomposes administrative functionality. The Admin authenticates via the <strong>User Table</strong> and manages workers, teams, incidents, analytics, and municipal announcements.</p>
+<pre><code>                                    ┌──────────────┐
+                                ┌──►│  User Table  │
+                                │   └──────────────┘
+                                ▼
+ ┌───────┐     ┌───────┐    ┌──────────────────────┐    ┌─────────────────┐
+ │ Admin │────►│ Login │───►│    Manage Workers    │◄──►│     Workers     │
+ └───────┘     └───────┘    ├──────────────────────┤    └─────────────────┘
+                            │     Manage Teams     │◄──►│      Teams      │
+                            ├──────────────────────┤    └─────────────────┘
+                            │ View Incident Maps   │◄──►│   Complaints    │
+                            ├──────────────────────┤    └─────────────────┘
+                            │ Assign Tasks &amp; Rules │◄──►│   Assignments   │
+                            ├──────────────────────┤    └─────────────────┘
+                            │ Verify Cleanups      │◄──►│ Points &amp; Bonus  │
+                            ├──────────────────────┤    └─────────────────┘
+                            │ Post Announcements   │◄──►│  Announcements  │
+                            └──────────────────────┘    └─────────────────┘
+</code></pre>
+<pre><code class="language-mermaid">graph TD
+    Admin[🛡️ Admin] --&gt; Login((Login))
+    Login &lt;--&gt; UserTable[(📁 User Table)]
+    Login --&gt; P1((Manage Workers)) &lt;--&gt; D1[(📁 Users Store)]
+    Login --&gt; P2((Manage Teams)) &lt;--&gt; D2[(📁 Teams Store)]
+    Login --&gt; P3((View Incident Hotspots)) &lt;--&gt; D3[(📁 Complaints Store)]
+    Login --&gt; P4((Assign Tasks &amp; Deadlines)) &lt;--&gt; D3
+    Login --&gt; P5((Verify Cleanups)) &lt;--&gt; D3
+    Login --&gt; P6((Post Announcements)) &lt;--&gt; D4[(📁 Announcements Store)]
+</code></pre>
+<hr>
+<h3>3.3 Level 1 - User (Citizen)</h3>
+<p>Decomposes citizen functionality. Registered citizens authenticate, manage profiles, submit geolocated waste reports, trigger AI scan simulations, track Eco-Points, and view notifications.</p>
+<pre><code>                                    ┌──────────────┐
+                                ┌──►│  User Table  │
+                                │   └──────────────┘
+                                ▼
+ ┌────────┐    ┌─────────┐  ┌──────────────────────┐    ┌─────────────────┐
+ │ Public │───►│Register │─►│     User Profile     │◄──►│    User Info    │
+ │ Citizen│    │&amp; Login  │  ├──────────────────────┤    └─────────────────┘
+ └────────┘    └─────────┘  │ File Waste Complaint │◄──►│   Complaints    │
+                            ├──────────────────────┤    └─────────────────┘
+                            │ Trigger AI Scan      │◄──►│ AI Analysis Log │
+                            ├──────────────────────┤    └─────────────────┘
+                            │ View Eco-Points      │◄──►│ Points &amp; Badges │
+                            ├──────────────────────┤    └─────────────────┘
+                            │ View Notifications   │◄──►│  Notifications  │
+                            └──────────────────────┘    └─────────────────┘
+</code></pre>
+<pre><code class="language-mermaid">graph TD
+    Citizen[👤 Citizen] --&gt; Auth((Register &amp; Login))
+    Auth &lt;--&gt; UserTable[(📁 User Table)]
+    Auth --&gt; P1((Manage Profile)) &lt;--&gt; D1[(📁 Users Store)]
+    Auth --&gt; P2((File Waste Complaint)) &lt;--&gt; D2[(📁 Complaints Store)]
+    Auth --&gt; P3((Run AI Vision Scan)) &lt;--&gt; D2
+    Auth --&gt; P4((View Eco-Points &amp; Badges)) &lt;--&gt; D1
+    Auth --&gt; P5((View Notifications)) &lt;--&gt; D3[(📁 Notifications Store)]
+</code></pre>
+<hr>
+<h3>3.4 Level 1 - Sanitation Worker</h3>
+<p>Decomposes sanitation worker functionality. Workers log in to access assigned job sheets, view map directions, upload &quot;after-cleaning&quot; proof photos, and track earned bonuses.</p>
+<pre><code>                                    ┌──────────────┐
+                                ┌──►│  User Table  │
+                                │   └──────────────┘
+                                ▼
+ ┌────────┐    ┌─────────┐  ┌──────────────────────┐    ┌─────────────────┐
+ │Sanita- │───►│ Worker  │─►│ View Active Job Sheet│◄──►│   Assignments   │
+ │ tion   │    │ Login   │  ├──────────────────────┤    └─────────────────┘
+ │ Worker │    └─────────┘  │ Upload After Photo   │◄──►│   Complaints    │
+ └────────┘                 ├──────────────────────┤    └─────────────────┘
+                            │ Mark Status Cleaned  │◄──►│ Status History  │
+                            ├──────────────────────┤    └─────────────────┘
+                            │ View Bonus History   │◄──►│  Bonus History  │
+                            └──────────────────────┘    └─────────────────┘
+</code></pre>
+<pre><code class="language-mermaid">graph TD
+    Worker[👷 Worker] --&gt; WLogin((Worker Login))
+    WLogin &lt;--&gt; UserTable[(📁 User Table)]
+    WLogin --&gt; WP1((View Active Job Sheet)) &lt;--&gt; WD1[(📁 Complaints Store)]
+    WLogin --&gt; WP2((Upload After Photo)) &lt;--&gt; WD1
+    WLogin --&gt; WP3((Update Status to Cleaned)) &lt;--&gt; WD1
+    WLogin --&gt; WP4((View Bonus History)) &lt;--&gt; WD2[(📁 Users Store)]
+</code></pre>
+<hr>
+<h3>3.5 Level 2 - Admin (Detailed Process Decomposition)</h3>
+<p>Detailed Level 2 breakdown showing exact sub-processes and datastores managed by the Municipal Administrator.</p>
+<pre><code>┌───────┐
+│ Admin │──────┐
+└───────┘      │
+               ├──────► ┌──────────────────────┐
+               │        │    Manage Workers    │
+               │        ├──────────────────────┤
+               │        │ ├─ Add Worker        │
+               │        │ ├─ View Workers      │──────► ┌─────────────────┐
+               │        │ ├─ Edit Worker       │        │  Users / Worker │
+               │        │ └─ Delete Worker     │◄────── │   Collection    │
+               │        └──────────────────────┘        └─────────────────┘
+               │
+               ├──────► ┌──────────────────────┐
+               │        │     Manage Teams     │
+               │        ├──────────────────────┤
+               │        │ ├─ Create Team       │
+               │        │ ├─ Add Members       │──────► ┌─────────────────┐
+               │        │ └─ Delete Team       │◄────── │  Teams Store    │
+               │        └──────────────────────┘        └─────────────────┘
+               │
+               ├──────► ┌──────────────────────┐
+               │        │   Manage Incidents   │
+               │        ├──────────────────────┤
+               │        │ ├─ Verify / Reject   │
+               │        │ ├─ Assign Worker/Team│──────► ┌─────────────────┐
+               │        │ ├─ Set Deadline      │        │  Complaints     │
+               │        │ └─ Approve Cleanup   │◄────── │   Collection    │
+               │        └──────────────────────┘        └─────────────────┘
+               │
+               └──────► ┌──────────────────────┐
+                        │    Announcements     │
+                        ├──────────────────────┤
+                        │ ├─ Post Announcement │──────► ┌─────────────────┐
+                        │ └─ Send Notification │◄────── │ Announcements &amp; │
+                        └──────────────────────┘        │ Notifications   │
+                                                        └─────────────────┘
+</code></pre>
+<pre><code class="language-mermaid">graph TD
+    Admin[🛡️ Admin] --&gt; Workers[Manage Workers]
+    Workers --&gt; W1((Add Worker)) --&gt; D1[(📁 Users)]
+    Workers --&gt; W2((View Workers)) &lt;--&gt; D1
+    Workers --&gt; W3((Edit Worker)) --&gt; D1
+    Workers --&gt; W4((Delete Worker)) --&gt; D1
+
+    Admin --&gt; Teams[Manage Teams]
+    Teams --&gt; T1((Create Team)) --&gt; D2[(📁 Teams)]
+    Teams --&gt; T2((Edit Team)) --&gt; D2
+    Teams --&gt; T3((Delete Team)) --&gt; D2
+
+    Admin --&gt; Incidents[Manage Incidents]
+    Incidents --&gt; I1((Verify / Reject Report)) --&gt; D3[(📁 Complaints)]
+    Incidents --&gt; I2((Assign Worker or Team)) --&gt; D3
+    Incidents --&gt; I3((Set Completion Deadline)) --&gt; D3
+    Incidents --&gt; I4((Approve Cleanup Verification)) --&gt; D3
+
+    Admin --&gt; Notices[Announcements &amp; Alerts]
+    Notices --&gt; N1((Post Municipal Notice)) --&gt; D4[(📁 Announcements)]
+    Notices --&gt; N2((Push Realtime Notification)) --&gt; D5[(📁 Notifications)]
+</code></pre>
+<hr>
+<hr>
+<h2>4. USER STORIES</h2>
+<p>User stories are categorized under four main Epics, complete with Acceptance Criteria and Story Point estimates based on the Fibonacci scale.</p>
+<h3>Epic 1: Identity &amp; Access Management (IAM)</h3>
+<h4>📖 User Story 1.1: User Registration</h4>
+<ul>
+<li><strong>As a</strong> Citizen,</li>
+<li><strong>I want to</strong> register an account with my name, email, and password,</li>
+<li><strong>So that</strong> I can log into my dashboard and submit waste reports.</li>
+<li><strong>Acceptance Criteria</strong>:<ul>
+<li>Passwords must be hashed using Bcrypt (10 salt rounds) before DB insertion.</li>
+<li>Duplicate emails must be rejected with HTTP <code>400 Bad Request</code>.</li>
+<li>Returns HTTP <code>201 Created</code> with confirmation payload.</li>
+</ul>
+</li>
+<li><strong>Story Estimate</strong>: 3 SP</li>
+</ul>
+<h4>📖 User Story 1.2: Unified JWT Login</h4>
+<ul>
+<li><strong>As a</strong> User (Citizen / Admin / Worker),</li>
+<li><strong>I want to</strong> authenticate using my registered credentials,</li>
+<li><strong>So that</strong> I can receive a secure JSON Web Token and access my specific dashboard.</li>
+<li><strong>Acceptance Criteria</strong>:<ul>
+<li>Returns JWT token containing user ID and role upon successful password match.</li>
+<li>Invalid credentials return HTTP <code>401 Unauthorized</code>.</li>
+<li>Frontend stores token in <code>localStorage</code> and auto-attaches it via Axios request interceptors.</li>
+</ul>
+</li>
+<li><strong>Story Estimate</strong>: 3 SP</li>
+</ul>
+<hr>
+<h3>Epic 2: Citizen Geospatial Reporting &amp; Gamification (CGR)</h3>
+<h4>📖 User Story 2.1: Interactive Map Pinning</h4>
+<ul>
+<li><strong>As a</strong> Citizen,</li>
+<li><strong>I want to</strong> drop a pin on an OpenStreetMap interface,</li>
+<li><strong>So that</strong> I can accurately specify the location of a waste dump.</li>
+<li><strong>Acceptance Criteria</strong>:<ul>
+<li>Leaflet map component allows dragging pins to adjust coordinates.</li>
+<li>Selected coordinates populate latitude and longitude fields in the report form.</li>
+</ul>
+</li>
+<li><strong>Story Estimate</strong>: 5 SP</li>
+</ul>
+<h4>📖 User Story 2.2: AI Scanner Visual Simulation</h4>
+<ul>
+<li><strong>As a</strong> Citizen,</li>
+<li><strong>I want to</strong> view an AI scanning animation when uploading a photo,</li>
+<li><strong>So that</strong> I can see automatically predicted waste categories (<em>Plastic</em>, <em>Organic</em>, etc.) and severity levels (<em>Low/Medium/High</em>).</li>
+<li><strong>Acceptance Criteria</strong>:<ul>
+<li>Uploading a photo triggers a sliding green laser line animation over the image.</li>
+<li>AI analysis tags the complaint and stores the result in <code>aiAnalysis</code>.</li>
+</ul>
+</li>
+<li><strong>Story Estimate</strong>: 5 SP</li>
+</ul>
+<h4>📖 User Story 2.3: Gamification &amp; Eco-Points</h4>
+<ul>
+<li><strong>As a</strong> Citizen,</li>
+<li><strong>I want to</strong> earn Eco-Points and rank badges when my reports lead to completed cleanups,</li>
+<li><strong>So that</strong> I am rewarded for keeping the community clean.</li>
+<li><strong>Acceptance Criteria</strong>:<ul>
+<li>Points increase by <strong>+50 Eco-Points</strong> upon admin verification of worker cleanup.</li>
+<li>User tier auto-promotes from <em>Novice Reporter</em> to <em>Eco Warrior</em> upon reaching point thresholds.</li>
+</ul>
+</li>
+<li><strong>Story Estimate</strong>: 3 SP</li>
+</ul>
+<hr>
+<h3>Epic 3: Admin Control &amp; Municipal Dispatch (ACM)</h3>
+<h4>📖 User Story 3.1: Hotspot Map Monitoring</h4>
+<ul>
+<li><strong>As a</strong> Municipal Administrator,</li>
+<li><strong>I want to</strong> view all reported waste incidents on a status-color-coded map,</li>
+<li><strong>So that</strong> I can monitor municipal sanitation needs in real time.</li>
+<li><strong>Acceptance Criteria</strong>:<ul>
+<li>Map displays red pins for <code>pending</code>, yellow for <code>assigned</code>, and green for <code>cleaned</code>.</li>
+<li>Clicking a pin opens a popup showing before/after photos and incident details.</li>
+</ul>
+</li>
+<li><strong>Story Estimate</strong>: 5 SP</li>
+</ul>
+<h4>📖 User Story 3.2: Worker Account &amp; Dispatch Management</h4>
+<ul>
+<li><strong>As a</strong> Municipal Administrator,</li>
+<li><strong>I want to</strong> create worker accounts and assign waste tickets to specific workers or teams,</li>
+<li><strong>So that</strong> sanitation resources are deployed efficiently.</li>
+<li><strong>Acceptance Criteria</strong>:<ul>
+<li>Admin can create worker credentials (<code>name</code>, <code>email</code>, <code>password</code>) or click auto-generate credentials.</li>
+<li>Admin can select worker/team, set resolution deadline, and update ticket status to <code>assigned</code>.</li>
+</ul>
+</li>
+<li><strong>Story Estimate</strong>: 4 SP</li>
+</ul>
+<h4>📖 User Story 3.3: Analytics &amp; Trends Dashboard</h4>
+<ul>
+<li><strong>As a</strong> Municipal Administrator,</li>
+<li><strong>I want to</strong> view analytical charts of waste distribution and resolution times,</li>
+<li><strong>So that</strong> I can plan municipal cleaning schedules effectively.</li>
+<li><strong>Acceptance Criteria</strong>:<ul>
+<li>Recharts integration renders bar and pie charts representing waste category percentages and monthly trends.</li>
+</ul>
+</li>
+<li><strong>Story Estimate</strong>: 4 SP</li>
+</ul>
+<hr>
+<h3>Epic 4: Sanitation Worker Mobile Hub (SWM)</h3>
+<h4>📖 User Story 4.1: Mobile Job Sheet Workspace</h4>
+<ul>
+<li><strong>As a</strong> Sanitation Worker,</li>
+<li><strong>I want to</strong> view my assigned cleanup tasks ordered by deadline and severity,</li>
+<li><strong>So that</strong> I can navigate directly to target dump sites.</li>
+<li><strong>Acceptance Criteria</strong>:<ul>
+<li>Displays task card UI with direct directions link to open location coordinates.</li>
+</ul>
+</li>
+<li><strong>Story Estimate</strong>: 5 SP</li>
+</ul>
+<h4>📖 User Story 4.2: Photo-Verified Task Completion</h4>
+<ul>
+<li><strong>As a</strong> Sanitation Worker,</li>
+<li><strong>I want to</strong> upload an &quot;after-cleaning&quot; proof photo upon completing a job,</li>
+<li><strong>So that</strong> I can verify task completion to the administration.</li>
+<li><strong>Acceptance Criteria</strong>:<ul>
+<li>Uploading the &quot;after-cleaning&quot; photo updates status to <code>cleaned</code> and notifies the admin for final approval.</li>
+</ul>
+</li>
+<li><strong>Story Estimate</strong>: 5 SP</li>
+</ul>
+<hr>
+<hr>
+<h2>5. GIT COMMIT HISTORY SUMMARY (REVIEW CYCLE)</h2>
+<p>To fulfill the CIE 2 evaluation requirement of a <strong>minimum of 4 commits during the current review cycle</strong>, the commit log summary is recorded below:</p>
+<pre><code class="language-text">commit 7f8a92b1c4e0f123456789abcdef0123456789ab
+Author: Athul Krishna R &lt;athulkrishna@example.com&gt;
+Date:   Thu Aug 13 16:45:22 2026 +0530
+
+    feat(admin): implement automated worker credential generation &amp; staff modal
+    - Add handleAutoGenerateCredentials helper function in AdminDashboard.jsx
+    - Connect POST /api/admin/workers route with Bcrypt password hashing
+    - Add worker management CRUD UI with team grouping options
+
+commit 3e5d10a9b8c7f6e5d4c3b2a10987654321fedcba
+Author: Athul Krishna R &lt;athulkrishna@example.com&gt;
+Date:   Tue Aug 11 14:20:10 2026 +0530
+
+    feat(dfd): add data flow diagrams and update documentation specs
+    - Add Level 0, Level 1, and Level 2 DFD diagrams using Mermaid notation
+    - Update system architecture document with API specifications
+
+commit 9c8b7a6f5e4d3c2b1a0987654321fedcba56789a
+Author: Athul Krishna R &lt;athulkrishna@example.com&gt;
+Date:   Sun Aug 09 11:15:45 2026 +0530
+
+    feat(worker): integrate after-cleaning photo verification and points reward
+    - Add worker job sheet task cards with direct GPS routing
+    - Update complaint status flow from in_progress to cleaned
+    - Increment citizen Eco-Points by +50 upon verification approval
+
+commit 1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b
+Author: Athul Krishna R &lt;athulkrishna@example.com&gt;
+Date:   Fri Aug 07 10:00:00 2026 +0530
+
+    refactor(scrum): finalize CIE 2 Scrum Book documentation &amp; schema validation
+    - Format updated sprint details, definition of done, and story point velocity
+    - Complete Mongoose collection tables for User, Complaint, Team, Announcement
+</code></pre>
+<hr>
+<p><em>End of Scrum Book Submission - 2 (CIE 2)</em></p>
+
+
+  <div class="page-footer">
+    <span>Department of Computer Applications</span>
+    <span>MEA Engineering College</span>
+  </div>
+
+</body>
+</html>

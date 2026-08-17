@@ -231,6 +231,7 @@ router.post('/', protect, upload.single('photo'), uploadImage, async (req, res) 
         citizenName: req.user.name,
         _id: complaint._id,
       });
+      io.emit('complaint_updated', { complaintId: complaint._id, status: complaint.status });
     }
 
     res.status(201).json(complaint);

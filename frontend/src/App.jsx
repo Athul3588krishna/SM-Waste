@@ -2,6 +2,7 @@ import React, { useContext } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { AuthProvider, AuthContext } from './context/AuthContext';
+import { SocketProvider } from './context/SocketContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Navbar from './components/Navbar';
 import PageTransition from './components/PageTransition';
@@ -159,16 +160,18 @@ const App = () => {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <BrowserRouter>
-        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-          <Navbar />
-          <div style={{ flex: 1 }}>
-            <AnimatedRoutes />
-          </div>
-          <EcoCursor />
-        </div>
-      </BrowserRouter>
-    </AuthProvider>
+        <SocketProvider>
+          <BrowserRouter>
+            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+              <Navbar />
+              <div style={{ flex: 1 }}>
+                <AnimatedRoutes />
+              </div>
+              <EcoCursor />
+            </div>
+          </BrowserRouter>
+        </SocketProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 };

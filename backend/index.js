@@ -58,12 +58,25 @@ const io = new Server(server, {
 app.set('io', io);
 
 io.on('connection', (socket) => {
+  console.log(`[Socket.io] Client connected: ${socket.id}`);
+
   socket.on('join', (userId) => {
-    socket.join(`user_${userId}`);
+    if (userId) {
+      const room = `user_${userId.toString()}`;
+      socket.join(room);
+      console.log(`[Socket.io] Socket ${socket.id} joined room ${room}`);
+    }
   });
 
   socket.on('join_role', (role) => {
-    socket.join(role);
+    if (role) {
+      socket.join(role);
+      console.log(`[Socket.io] Socket ${socket.id} joined role room ${role}`);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log(`[Socket.io] Client disconnected: ${socket.id}`);
   });
 });
 

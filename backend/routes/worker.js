@@ -85,6 +85,26 @@ router.put('/complaints/:id/accept', async (req, res) => {
     complaint.worker = req.user._id;
     await complaint.save();
 
+    // Socket emission to admin and citizen
+    const io = req.app.get('io');
+    if (io) {
+      const title = 'Task In Progress 🛠️';
+      const message = `Sanitation worker ${req.user.name} has started working on "${complaint.title}".`;
+      
+      // Notify admin
+      io.to('admin').emit('task_in_progress', { title, message, complaintId: complaint._id, status: 'in_progress', workerName: req.user.name });
+
+      // Notify citizen
+      io.to(`user_${complaint.citizen.toString()}`).emit('complaint_status_updated', {
+        title: 'Cleanup Started',
+        message: `Sanitation crew is on site and working on "${complaint.title}".`,
+        complaintId: complaint._id,
+        status: 'in_progress'
+      });
+
+      io.emit('complaint_updated', { complaintId: complaint._id, status: 'in_progress' });
+    }
+
     res.json({ message: 'Task accepted successfully', complaint });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -137,6 +157,8 @@ router.put('/complaints/:id/clean', upload.single('photo'), uploadImage, async (
         complaintId: complaint._id,
         status: 'cleaned'
       });
+
+      io.emit('complaint_updated', { complaintId: complaint._id, status: 'cleaned' });
     }
 
     res.json({ message: 'Task marked as cleaned. Awaiting administrator verification.', complaint });
