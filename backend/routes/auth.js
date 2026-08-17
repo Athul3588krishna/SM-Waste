@@ -20,6 +20,20 @@ router.post('/register', async (req, res) => {
   const { name, email, password, phone } = req.body;
 
   try {
+    // Validate Email format
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!email || !emailRegex.test(email.trim())) {
+      return res.status(400).json({ message: 'Please enter a valid email address (e.g. name@example.com)' });
+    }
+
+    // Validate Password (min 6 chars, no spaces)
+    if (!password || password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+    }
+    if (/\s/.test(password)) {
+      return res.status(400).json({ message: 'Password cannot contain spaces' });
+    }
+
     // Validate 10-digit mobile number if provided
     if (phone) {
       const phoneRegex = /^[6-9]\d{9}$/;
@@ -28,7 +42,8 @@ router.post('/register', async (req, res) => {
       }
     }
 
-    const userExists = await User.findOne({ email });
+    const cleanEmail = email.trim().toLowerCase();
+    const userExists = await User.findOne({ email: cleanEmail });
 
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
@@ -38,10 +53,10 @@ router.post('/register', async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Save to pending OTP collection (expiring in 5 minutes)
-    await Otp.deleteMany({ email }); // clean previous attempts
+    await Otp.deleteMany({ email: cleanEmail }); // clean previous attempts
     await Otp.create({
       name,
-      email,
+      email: cleanEmail,
       password,
       phone,
       otp,

@@ -31,9 +31,26 @@ const Register = () => {
     e.preventDefault();
     setError('');
 
+    // Client side email format validation
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!email || !emailRegex.test(email.trim())) {
+      setError('Please enter a valid email address (e.g. user@example.com)');
+      return;
+    }
+
     // Client side 10-digit mobile validation
     if (phone && !/^[6-9]\d{9}$/.test(phone)) {
       setError('Please enter a valid 10-digit Indian mobile number (e.g. 9876543210)');
+      return;
+    }
+
+    // Client side password validation
+    if (!password || password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+    if (/\s/.test(password)) {
+      setError('Password cannot contain spaces');
       return;
     }
 
