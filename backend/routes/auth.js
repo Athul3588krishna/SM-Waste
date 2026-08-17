@@ -98,7 +98,8 @@ router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({ email }).select('+password');
+    const cleanEmail = email ? email.toLowerCase().trim() : '';
+    const user = await User.findOne({ email: cleanEmail }).select('+password');
 
     if (user && (await user.matchPassword(password))) {
       res.json({
@@ -244,7 +245,8 @@ router.post('/forgot-password', async (req, res) => {
   const { email } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    const cleanEmail = email ? email.toLowerCase().trim() : '';
+    const user = await User.findOne({ email: cleanEmail });
     if (!user) {
       return res.status(404).json({ message: 'No user registered with this email address' });
     }
@@ -253,9 +255,9 @@ router.post('/forgot-password', async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Clean previous attempts and save to Otp collection
-    await Otp.deleteMany({ email });
+    await Otp.deleteMany({ email: cleanEmail });
     await Otp.create({
-      email,
+      email: cleanEmail,
       otp,
       name: user.name,
       password: 'RESET_PASSWORD_DUMMY'
@@ -281,12 +283,13 @@ router.post('/reset-password', async (req, res) => {
   const { email, otp, newPassword } = req.body;
 
   try {
-    const otpRecord = await Otp.findOne({ email, otp });
+    const cleanEmail = email ? email.toLowerCase().trim() : '';
+    const otpRecord = await Otp.findOne({ email: cleanEmail, otp });
     if (!otpRecord) {
       return res.status(400).json({ message: 'Invalid or expired OTP code' });
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: cleanEmail });
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -296,7 +299,7 @@ router.post('/reset-password', async (req, res) => {
     await user.save();
 
     // Delete OTP record
-    await Otp.deleteMany({ email });
+    await Otp.deleteMany({ email: cleanEmail });
 
     res.json({ message: 'Password updated successfully. You can now log in.' });
   } catch (error) {

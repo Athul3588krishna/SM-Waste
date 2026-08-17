@@ -18,4 +18,20 @@ API.interceptors.request.use(
   }
 );
 
+// Response interceptor to handle 401 Unauthorized (stale/invalid tokens)
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      console.warn('Unauthorized request, clearing token...');
+      localStorage.removeItem('token');
+      // Redirect to login if not already on login page
+      if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default API;
