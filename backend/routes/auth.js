@@ -17,9 +17,17 @@ const generateToken = (id) => {
 // @route   POST /api/auth/register
 // @access  Public
 router.post('/register', async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, phone } = req.body;
 
   try {
+    // Validate 10-digit mobile number if provided
+    if (phone) {
+      const phoneRegex = /^[6-9]\d{9}$/;
+      if (!phoneRegex.test(phone)) {
+        return res.status(400).json({ message: 'Mobile number must be a valid 10-digit number starting with 6, 7, 8, or 9' });
+      }
+    }
+
     const userExists = await User.findOne({ email });
 
     if (userExists) {
@@ -35,6 +43,7 @@ router.post('/register', async (req, res) => {
       name,
       email,
       password,
+      phone,
       otp,
     });
 
@@ -69,6 +78,7 @@ router.post('/verify-otp', async (req, res) => {
       name: otpRecord.name,
       email: otpRecord.email,
       password: otpRecord.password,
+      phone: otpRecord.phone,
       role: 'citizen',
       points: 0,
       badge: 'Novice Reporter',

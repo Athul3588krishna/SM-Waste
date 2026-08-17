@@ -7,6 +7,7 @@ import { UserPlus, AlertCircle } from 'lucide-react';
 const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loadingSubmit, setLoadingSubmit] = useState(false);
@@ -29,10 +30,17 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    // Client side 10-digit mobile validation
+    if (phone && !/^[6-9]\d{9}$/.test(phone)) {
+      setError('Please enter a valid 10-digit Indian mobile number (e.g. 9876543210)');
+      return;
+    }
+
     setLoadingSubmit(true);
 
     try {
-      await API.post('/auth/register', { name, email, password });
+      await API.post('/auth/register', { name, email, phone, password });
       setOtpSent(true);
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
@@ -130,6 +138,21 @@ const Register = () => {
                 placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Mobile Number (10 digits)</label>
+              <input
+                type="tel"
+                className="form-input"
+                placeholder="9876543210"
+                maxLength={10}
+                pattern="[6-9][0-9]{9}"
+                title="Please enter a valid 10-digit Indian mobile number"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                 required
               />
             </div>

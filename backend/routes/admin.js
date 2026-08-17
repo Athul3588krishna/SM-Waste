@@ -27,9 +27,16 @@ const getBadge = (points) => {
 // @desc    Create a new worker account
 // @route   POST /api/admin/workers
 router.post('/workers', async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, phone } = req.body;
 
   try {
+    if (phone) {
+      const phoneRegex = /^[6-9]\d{9}$/;
+      if (!phoneRegex.test(phone)) {
+        return res.status(400).json({ message: 'Worker mobile number must be a valid 10-digit number' });
+      }
+    }
+
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: 'User with this email already exists' });
@@ -39,6 +46,7 @@ router.post('/workers', async (req, res) => {
       name,
       email,
       password,
+      phone,
       role: 'worker',
       isOnline: false,
     });
