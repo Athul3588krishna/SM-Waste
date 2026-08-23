@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import API from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
+import { useLanguage } from '../context/LanguageContext';
 import { compressImage } from '../utils/imageCompressor';
 import EcoCreditCard from '../components/EcoCreditCard';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';

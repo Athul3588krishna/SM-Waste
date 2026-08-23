@@ -5,6 +5,7 @@ import { compressImage } from '../utils/imageCompressor';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { ArrowLeft, Upload, Camera, AlertCircle, Sparkles, Navigation, Check } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 // Setup standard Leaflet Marker Icon to avoid Vite packaging failures
 const customIcon = new L.Icon({
@@ -17,6 +18,7 @@ const customIcon = new L.Icon({
 
 const ReportWaste = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   
   // Form states
   const [title, setTitle] = useState('');
@@ -226,8 +228,8 @@ const ReportWaste = () => {
           <ArrowLeft size={18} />
         </button>
         <div>
-          <h1 style={{ fontSize: '24px', color: 'var(--text-primary)' }}>Report Garbage Dump</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Pin the location and upload a photo to notify authorities.</p>
+          <h1 style={{ fontSize: '24px', color: 'var(--text-primary)' }}>{t('reportTitle', 'Report Garbage Spot')}</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>{t('reportSubtitle', 'Select precise coordinates on the geospatial map and scan waste image with AI.')}</p>
         </div>
       </div>
 

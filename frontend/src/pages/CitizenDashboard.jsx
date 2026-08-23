@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import API from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
+import { useLanguage } from '../context/LanguageContext';
 import EcoCreditCard from '../components/EcoCreditCard';
 import { Award, PlusCircle, AlertCircle, Clock, MapPin, CheckCircle2, ChevronRight, Trophy, Megaphone, Calendar, Lock, Gift } from 'lucide-react';
 
@@ -600,7 +601,26 @@ const CitizenDashboard = () => {
                           </div>
                         </div>
                         
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          {['completed', 'resolved', 'cleaned'].includes(complaint.status) && (
+                            <span 
+                              style={{ 
+                                fontSize: '11px', 
+                                padding: '3px 8px', 
+                                borderRadius: '6px', 
+                                background: 'rgba(16, 185, 129, 0.15)', 
+                                border: '1px solid rgba(16, 185, 129, 0.3)', 
+                                color: '#10b981', 
+                                fontWeight: '700',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}
+                              title="Complaint Resolved - Receipt Ready"
+                            >
+                              📄 Receipt
+                            </span>
+                          )}
                           <span className={`badge-status ${getBadgeClass(complaint.status)}`} style={{ fontSize: '11px', padding: '2px 10px' }}>
                             {getStatusIcon(complaint.status)}
                             {complaint.status.replace('_', ' ')}

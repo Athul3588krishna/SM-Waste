@@ -140,24 +140,28 @@ const ComplaintDetail = () => {
           </div>
         </div>
 
-        {/* Printable Receipt Action */}
-        <button
-          onClick={() => setShowPrintModal(true)}
-          className="btn"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: 'rgba(16, 185, 129, 0.12)',
-            color: 'var(--color-primary)',
-            border: '1px solid rgba(16, 185, 129, 0.3)',
-            fontSize: '13px',
-            fontWeight: '600'
-          }}
-        >
-          <Printer size={16} />
-          Print Official Receipt
-        </button>
+        {/* Printable Receipt Action - Only visible when complaint is resolved/completed */}
+        {['completed', 'resolved', 'cleaned'].includes(complaint.status) && (
+          <button
+            onClick={() => setShowPrintModal(true)}
+            className="btn"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: 'rgba(16, 185, 129, 0.15)',
+              color: '#10b981',
+              border: '1px solid rgba(16, 185, 129, 0.4)',
+              fontSize: '13px',
+              fontWeight: '700',
+              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)',
+              cursor: 'pointer'
+            }}
+          >
+            <Printer size={16} />
+            Download Official Receipt
+          </button>
+        )}
       </div>
 
       <div className="grid-3-1" style={{ gap: '30px' }}>

@@ -18,9 +18,11 @@ import {
   Activity
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useLanguage } from '../context/LanguageContext';
 
 const Home = () => {
   const { user } = useContext(AuthContext);
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const handleActionClick = (path) => {
@@ -84,7 +86,7 @@ const Home = () => {
             marginBottom: '1.5rem'
           }}>
             <Sparkles size={16} />
-            <span>Smart Municipal Waste Management System</span>
+            <span>{t('tagline', 'Smart Municipal Waste Management System')}</span>
           </div>
 
           <h1 style={{
@@ -97,7 +99,7 @@ const Home = () => {
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent'
           }}>
-            AI Powered Smart Waste Management Portal
+            {t('heroTitle', 'AI Powered Smart Waste Management Portal')}
           </h1>
 
           <p style={{
@@ -107,7 +109,7 @@ const Home = () => {
             margin: '0 auto 2.5rem',
             lineHeight: 1.6
           }}>
-            Report uncollected waste instantly, track cleanup operations in real-time, and earn rewards for keeping your neighborhood clean.
+            {t('heroDesc', 'Report uncollected waste instantly, track cleanup operations in real-time, and earn rewards for keeping your neighborhood clean.')}
           </p>
 
           {/* Action Buttons */}
