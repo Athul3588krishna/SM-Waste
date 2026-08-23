@@ -1,0 +1,220 @@
+// Internationalization (i18n) Translation Dictionary for EcoClean Smart Waste Management
+export const translations = {
+  en: {
+    // Brand & Navigation
+    brandName: "EcoClean",
+    tagline: "Next-Gen AI Powered Smart Waste Management",
+    home: "Home",
+    dashboard: "Dashboard",
+    reportWaste: "Report Waste",
+    leaderboard: "Leaderboard",
+    citizenPortal: "Citizen Portal",
+    workerAccess: "Worker Access",
+    adminPortal: "Admin Portal",
+    sanitationWorker: "Sanitation Worker",
+    logout: "Log Out",
+    points: "pts",
+    live: "LIVE",
+    offline: "OFFLINE",
+
+    // Common Buttons & Actions
+    submit: "Submit",
+    cancel: "Cancel",
+    save: "Save",
+    loading: "Loading...",
+    login: "Log In",
+    register: "Register",
+    viewDetails: "View Details",
+    backToDashboard: "Back to Dashboard",
+    download: "Download",
+    filter: "Filter",
+    all: "All",
+
+    // Status Badges
+    statusPending: "Pending",
+    statusAssigned: "Assigned",
+    statusInProgress: "In Progress",
+    statusCompleted: "Completed",
+    statusRejected: "Rejected",
+
+    // Citizen Dashboard
+    citizenWelcome: "Citizen Portal",
+    citizenSubtitle: "Report waste incidents, track real-time resolution timeline, and earn Eco-Points.",
+    myComplaints: "My Waste Reports",
+    ecoCreditCardTitle: "CITIZEN ECO-CARD",
+    rankNovice: "NOVICE REPORTER",
+    rankWarrior: "ECO WARRIOR",
+    rankLegend: "ECO LEGEND",
+    cardHolder: "CARD HOLDER",
+    expires: "EXPIRES",
+    ecoPointsBalance: "Eco-Points Balance",
+    redeemRewards: "Redeem Rewards",
+    activeIncidents: "Active Reports",
+    totalEarned: "Total Earned",
+    resolvedCases: "Resolved Cases",
+    complaintHistory: "Complaint History & Timeline",
+    noComplaintsYet: "No waste complaints filed yet.",
+    reportNewWaste: "Report New Dump Site",
+
+    // Rewards & Leaderboard
+    rewardsTab: "Eco-Rewards Store",
+    leaderboardTab: "Community Leaderboard",
+    topCitizens: "Top Citizen Reporters",
+    topWorkers: "Top Sanitation Workers",
+    redeemButton: "Redeem Now",
+    voucherCode: "Voucher Code",
+    busPassVoucher: "City Bus Pass (50% Off)",
+    propertyTaxVoucher: "Municipal Tax Discount Voucher",
+    storeVoucher: "Supermarket Eco Discount",
+
+    // Waste Reporting & AI Scanner
+    reportTitle: "Report Garbage Spot",
+    reportSubtitle: "Select precise coordinates on the geospatial map and scan waste image with AI.",
+    wastePhoto: "Upload Waste Incident Photo",
+    aiScanResult: "AI Predictive Analysis",
+    predictedCategory: "Predicted Category",
+    predictedSeverity: "Severity Level",
+    locationAddress: "Location / Landmark",
+    descriptionLabel: "Description & Details",
+    selectCategory: "Select Waste Category",
+    organic: "Organic Waste",
+    plastic: "Plastic Waste",
+    hazardous: "Hazardous / Bio-Waste",
+    ewaste: "E-Waste / Electronics",
+    mixed: "Mixed Municipal Waste",
+
+    // Worker Dashboard
+    workerTitle: "Field Sanitation Worker Hub",
+    assignedJobs: "Assigned Cleanup Duties",
+    verifyCleanup: "Verify Cleanup",
+    uploadProofPhoto: "Upload After-Cleaning Proof Photo",
+    markCompleted: "Mark Cleanup Completed",
+    noJobsAssigned: "No cleanup jobs currently assigned.",
+
+    // Admin Dashboard
+    adminTitle: "Municipal Control Console",
+    totalComplaints: "Total Incidents",
+    unassignedComplaints: "Pending Dispatch",
+    assignWorker: "Assign Sanitation Worker",
+    dispatchedTo: "Assigned To",
+    selectWorker: "Select Worker...",
+    actionVerify: "Verify & Approve",
+    actionReject: "Reject Complaint",
+    analyticsOverview: "Municipal Waste Analytics",
+
+    // Home Page
+    heroTitle: "Smart Municipal Waste Reporting",
+    heroDesc: "Join thousands of citizens making our city cleaner. Report garbage spots, earn eco-rewards, and track sanitation dispatch in real time.",
+    getStarted: "Get Started Now",
+    exploreGlobe: "Explore 3D Incident Globe"
+  },
+
+  ml: {
+    // Brand & Navigation
+    brandName: "EcoClean",
+    tagline: "AI അധിഷ്ഠിത സ്മാർട്ട് വേസ്റ്റ് മാനേജ്‌മെന്റ് പോർട്ടൽ",
+    home: "പ്രധാനം",
+    dashboard: "ഡാഷ്‌ബോർഡ്",
+    reportWaste: "മാലിന്യം റിപ്പോർട്ട് ചെയ്യുക",
+    leaderboard: "ലീഡർബോർഡ്",
+    citizenPortal: "പൗരന്മാരുടെ പോർട്ടൽ",
+    workerAccess: "വർക്കർ ലോഗിൻ",
+    adminPortal: "അഡ്മിൻ പോർട്ടൽ",
+    sanitationWorker: "ശുചിത്വ തൊഴിലാളി",
+    logout: "ലോഗ് ഔട്ട്",
+    points: "പോയിന്റുകൾ",
+    live: "ലൈവ്",
+    offline: "ഓഫ്‌ലൈൻ",
+
+    // Common Buttons & Actions
+    submit: "സമർപ്പിക്കുക",
+    cancel: "റദ്ദാക്കുക",
+    save: "സേവ് ചെയ്യുക",
+    loading: "പ്രോസസ്സ് ചെയ്യുന്നു...",
+    login: "ലോഗിൻ",
+    register: "രജിസ്റ്റർ ചെയ്യുക",
+    viewDetails: "വിശദാംശങ്ങൾ കാണുക",
+    backToDashboard: "ഡാഷ്‌ബോർഡിലേക്ക് മടങ്ങുക",
+    download: "ഡൗൺലോഡ്",
+    filter: "ഫിൽട്ടർ",
+    all: "എല്ലാം",
+
+    // Status Badges
+    statusPending: "സ്വീകരിച്ചു (Pending)",
+    statusAssigned: "വർക്കറെ ചുമതലപ്പെടുത്തി",
+    statusInProgress: "ക്ലീനിംഗ് പുരോഗമിക്കുന്നു",
+    statusCompleted: "ക്ലീനിംഗ് പൂർത്തിയായി",
+    statusRejected: "നിരസിച്ചു",
+
+    // Citizen Dashboard
+    citizenWelcome: "പൗരന്മാരുടെ ഡാഷ്‌ബോർഡ്",
+    citizenSubtitle: "മാലിന്യങ്ങൾ റിപ്പോർട്ട് ചെയ്യുക, പരിഹാരം ലൈവായി ട്രാക്ക് ചെയ്യുക, Eco-Points നേടുക.",
+    myComplaints: "എന്റെ വേസ്റ്റ് റിപ്പോർട്ടുകൾ",
+    ecoCreditCardTitle: "സിറ്റിസൺ ഇക്കോ-കാർഡ്",
+    rankNovice: "നോവീസ് റിപ്പോർട്ടർ",
+    rankWarrior: "ഇക്കോ വോറിയർ",
+    rankLegend: "ഇക്കോ ലെജൻഡ്",
+    cardHolder: "കാർഡ് ഉടമ",
+    expires: "കാലാവധി",
+    ecoPointsBalance: "ഇക്കോ-പോയിന്റ്സ് ബാലൻസ്",
+    redeemRewards: "റിവാർഡുകൾ എടുക്കുക",
+    activeIncidents: "നിലവിലെ റിപ്പോർട്ടുകൾ",
+    totalEarned: "ആകെ നേടിയ പോയിന്റ്സ്",
+    resolvedCases: "പരിഹരിച്ച പരാതികൾ",
+    complaintHistory: "പരാതികളുടെ ചരിത്രവും ടൈംലൈനും",
+    noComplaintsYet: "ഇതുവരെ പരാതികളൊന്നും നൽകിയിട്ടില്ല.",
+    reportNewWaste: "പുതിയ മാലിന്യ കേന്ദ്രം റിപ്പോർട്ട് ചെയ്യുക",
+
+    // Rewards & Leaderboard
+    rewardsTab: "ഇക്കോ-റിവാർഡ് സ്റ്റോർ",
+    leaderboardTab: "കമ്മ്യൂണിറ്റി ലീഡർബോർഡ്",
+    topCitizens: "മികച്ച സിറ്റിസൺ റിപ്പോർട്ടർമാർ",
+    topWorkers: "മികച്ച ശുചിത്വ തൊഴിലാളികൾ",
+    redeemButton: "റിവാർഡ് എടുക്കുക",
+    voucherCode: "വൗച്ചർ കോഡ്",
+    busPassVoucher: "സിറ്റി ബസ് പാസ് (50% ഇളവ്)",
+    propertyTaxVoucher: "മുനിസിപ്പൽ നികുതി ഇളവ് വൗച്ചർ",
+    storeVoucher: "സൂപ്പർമാർക്കറ്റ് ഡിസ്കൗണ്ട് വൗച്ചർ",
+
+    // Waste Reporting & AI Scanner
+    reportTitle: "മാലിന്യ കേന്ദ്രം റിപ്പോർട്ട് ചെയ്യുക",
+    reportSubtitle: "മാപ്പിൽ കൃത്യമായ സ്ഥാനം അടയാളപ്പെടുത്തി ഫോട്ടോ അപ്‌ലോഡ് ചെയ്യുക.",
+    wastePhoto: "മാലിന്യത്തിന്റെ ഫോട്ടോ അപ്‌ലോഡ് ചെയ്യുക",
+    aiScanResult: "AI പ്രെഡിക്റ്റീവ് സ്കാനിംഗ്",
+    predictedCategory: "തിരിച്ചറിഞ്ഞ വേസ്റ്റ് തരം",
+    predictedSeverity: "തീവ്രത (Severity Level)",
+    locationAddress: "സ്ഥലം / പ്രധാന അടയാളം",
+    descriptionLabel: "വിശദാംശങ്ങൾ",
+    selectCategory: "വേസ്റ്റ് തരം തിരഞ്ഞെടുക്കുക",
+    organic: "ജൈവ മാലിന്യം (Organic)",
+    plastic: "പ്ലാസ്റ്റിക് (Plastic)",
+    hazardous: "അപകടകരമായ / ബയോ വേസ്റ്റ്",
+    ewaste: "ഇ-വേസ്റ്റ് / ഇലക്ട്രോണിക്സ്",
+    mixed: "മിക്സഡ് മാലിന്യം",
+
+    // Worker Dashboard
+    workerTitle: "ശുചിത്വ തൊഴിലാളി ഹബ്ബ്",
+    assignedJobs: "ഏറ്റെടുത്ത ക്ലീനിംഗ് ജോലികൾ",
+    verifyCleanup: "ക്ലീനിംഗ് സ്ഥിരീകരിക്കുക",
+    uploadProofPhoto: "ക്ലീൻ ചെയ്ത ശേഷമുള്ള ഫോട്ടോ അപ്‌ലോഡ് ചെയ്യുക",
+    markCompleted: "പൂർത്തിയായതായി അടയാളപ്പെടുത്തുക",
+    noJobsAssigned: "നിലവിൽ ജോലികളൊന്നും അസൈൻ ചെയ്തിട്ടില്ല.",
+
+    // Admin Dashboard
+    adminTitle: "മുനിസിപ്പൽ കൺട്രോൾ കൺസോൾ",
+    totalComplaints: "ആകെ പരാതികൾ",
+    unassignedComplaints: "വർക്കറെ അസൈൻ ചെയ്യാനുള്ളവ",
+    assignWorker: "വർക്കറെ ചുമതലപ്പെടുത്തുക",
+    dispatchedTo: "ചുമതലപ്പെടുത്തിയത്",
+    selectWorker: "വർക്കറെ തിരഞ്ഞെടുക്കുക...",
+    actionVerify: "അംഗീകരിക്കുക",
+    actionReject: "നിരസിക്കുക",
+    analyticsOverview: "മാലിന്യ മാനേജ്‌മെന്റ് അനലിറ്റിക്‌സ്",
+
+    // Home Page
+    heroTitle: "സ്മാർട്ട് മുനിസിപ്പൽ വേസ്റ്റ് റിപ്പോർട്ടിംഗ്",
+    heroDesc: "നമ്മുടെ നഗരം സുന്ദരവും ശുചിത്വമുള്ളതുമാക്കാൻ അണിചേരൂ. മാലിന്യങ്ങൾ റിപ്പോർട്ട് ചെയ്യൂ, ഇക്കോ-റിവാർഡുകൾ സ്വന്തമാക്കൂ.",
+    getStarted: "ഇപ്പോൾ ആരംഭിക്കാം",
+    exploreGlobe: "3D ഗ്ലോബ് കാണുക"
+  }
+};

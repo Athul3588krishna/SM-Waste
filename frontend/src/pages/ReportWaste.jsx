@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../utils/api';
+import { compressImage } from '../utils/imageCompressor';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { ArrowLeft, Upload, Camera, AlertCircle, Sparkles, Navigation, Check } from 'lucide-react';
@@ -88,15 +89,20 @@ const ReportWaste = () => {
 
   // Simulate AI waste scanner
   const handlePhotoChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const rawFile = e.target.files[0];
+    if (!rawFile) return;
 
-    setPhoto(file);
-    setPhotoPreview(URL.createObjectURL(file));
     setError('');
     setScanning(true);
     setScanComplete(false);
     setAiAnalysis('');
+    setScanStatus('Compressing image buffer...');
+
+    // Compress raw camera image to max 1200px / ~200KB for instant upload
+    const file = await compressImage(rawFile);
+
+    setPhoto(file);
+    setPhotoPreview(URL.createObjectURL(file));
     setScanStatus('Optimizing image buffer...');
 
     const statuses = [
@@ -112,7 +118,7 @@ const ReportWaste = () => {
         idx++;
         setScanStatus(statuses[idx]);
       }
-    }, 600);
+    }, 200);
 
     const formData = new FormData();
     formData.append('photo', file);

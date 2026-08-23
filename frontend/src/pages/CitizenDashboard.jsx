@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import API from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
+import EcoCreditCard from '../components/EcoCreditCard';
 import { Award, PlusCircle, AlertCircle, Clock, MapPin, CheckCircle2, ChevronRight, Trophy, Megaphone, Calendar, Lock, Gift } from 'lucide-react';
 
 const ConfettiPopper = () => {
@@ -614,8 +615,44 @@ const CitizenDashboard = () => {
             </div>
           ) : (
             <div>
-              <div style={{ background: 'rgba(16, 185, 129, 0.04)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '10px', padding: '14px', marginBottom: '24px', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                🎉 You have <strong style={{ color: 'var(--color-primary)' }}>{user?.points || 0} Eco-Points</strong> available! Spend your points to redeem discount vouchers for municipal services and utility taxes.
+              {/* Realistic 3D Glassmorphic Eco Credit Card Header */}
+              <div style={{
+                marginBottom: '28px',
+                padding: '24px',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid var(--border-glass)',
+                borderRadius: '16px',
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '24px',
+                alignItems: 'center'
+              }}>
+                <EcoCreditCard
+                  holderName={user?.name || 'CITIZEN'}
+                  cardNumber={`4582 ${user?._id ? user._id.slice(-4).padStart(4, '0') : '8910'} 3412 ${user?.points || 0}`}
+                  expiryDate="12/28"
+                  balanceText={`${user?.points || 0} PTS`}
+                  cardType="CITIZEN ECO-CARD"
+                  rankBadge={user?.badge || 'ECO CADET'}
+                  theme="emerald"
+                />
+
+                <div style={{ flex: 1, minWidth: '240px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid var(--color-primary)', borderRadius: '20px', padding: '4px 12px', width: 'fit-content' }}>
+                    <Gift size={14} color="var(--color-primary)" />
+                    <span style={{ fontSize: '11px', color: 'var(--color-primary)', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                      Official Municipal Eco-Wallet
+                    </span>
+                  </div>
+
+                  <h3 style={{ fontSize: '20px', color: 'var(--text-primary)', margin: 0 }}>
+                    Digital Eco-Reward Credit Card
+                  </h3>
+
+                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5', margin: 0 }}>
+                    Your digital Eco-Card accumulates rewards for every verified garbage dump clean-up report you submit. Spend your available <strong style={{ color: 'var(--color-primary)' }}>{user?.points || 0} Eco-Points</strong> to redeem official municipal tax discounts and utility coupons below.
+                  </p>
+                </div>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

@@ -7,9 +7,12 @@ import {
   Volume2, VolumeX, Radio, ExternalLink, X 
 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
+import LanguageToggle from './LanguageToggle';
+import { useLanguage } from '../context/LanguageContext';
 
 const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
+  const { t } = useLanguage();
   const { 
     isConnected, 
     notifications, 
@@ -88,7 +91,7 @@ const Navbar = () => {
           </div>
           <Link to="/" style={{ textDecoration: 'none' }}>
             <span style={{ fontSize: '18px', fontWeight: '800', letterSpacing: '-0.5px' }} className="text-gradient">
-              EcoClean
+              {t('brandName', 'EcoClean')}
             </span>
           </Link>
         </div>
@@ -96,25 +99,26 @@ const Navbar = () => {
         {/* Navigation Links for Guest */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <Link to="/" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: '500', fontSize: '14px' }}>
-            Home
+            {t('home', 'Home')}
           </Link>
           <a href="#leaderboard" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: '500', fontSize: '14px' }} onClick={(e) => {
             e.preventDefault();
             const el = document.querySelector('.glass-panel');
             if (el) el.scrollIntoView({ behavior: 'smooth' });
           }}>
-            Leaderboard
+            {t('leaderboard', 'Leaderboard')}
           </a>
         </div>
 
         {/* Guest Action Buttons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <LanguageToggle />
           <ThemeToggle />
           <Link to="/login?role=citizen" className="btn btn-outline" style={{ padding: '8px 16px', fontSize: '13px' }}>
-            Citizen Portal
+            {t('citizenPortal', 'Citizen Portal')}
           </Link>
           <Link to="/login?role=worker" className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '13px' }}>
-            Worker Access
+            {t('workerAccess', 'Worker Access')}
           </Link>
         </div>
       </nav>
@@ -180,7 +184,7 @@ const Navbar = () => {
             boxShadow: isConnected ? '0 0 8px #10b981' : 'none',
             display: 'inline-block'
           }}></span>
-          <span>{isConnected ? 'LIVE' : 'OFFLINE'}</span>
+          <span>{isConnected ? t('live', 'LIVE') : t('offline', 'OFFLINE')}</span>
         </div>
       </div>
 
@@ -189,29 +193,30 @@ const Navbar = () => {
         {user.role === 'citizen' && (
           <>
             <Link to="/dashboard" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: '500', fontSize: '14px' }}>
-              Dashboard
+              {t('dashboard', 'Dashboard')}
             </Link>
             <Link to="/report" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: '500', fontSize: '14px' }}>
-              Report Waste
+              {t('reportWaste', 'Report Waste')}
             </Link>
           </>
         )}
 
         {user.role === 'admin' && (
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--color-secondary)', fontSize: '13px', fontWeight: '600', textTransform: 'uppercase' }}>
-            <Shield size={13} /> Admin Portal
+            <Shield size={13} /> {t('adminPortal', 'Admin Portal')}
           </span>
         )}
 
         {user.role === 'worker' && (
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--color-secondary)', fontSize: '13px', fontWeight: '600', textTransform: 'uppercase' }}>
-            <Hammer size={13} /> Sanitation Worker
+            <Hammer size={13} /> {t('sanitationWorker', 'Sanitation Worker')}
           </span>
         )}
       </div>
 
       {/* Profile & Notifications Actions */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <LanguageToggle />
         <ThemeToggle />
 
         {user.role === 'citizen' && (

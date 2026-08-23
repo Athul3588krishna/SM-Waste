@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import API from '../utils/api';
 import { useSocket } from '../context/SocketContext';
+import EcoCreditCard from '../components/EcoCreditCard';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
@@ -91,7 +92,7 @@ const AdminDashboard = () => {
 
     const interval = setInterval(() => {
       fetchAdminData(false);
-    }, 15000);
+    }, 60000); // Auto-refresh every 1 minute (60 seconds)
 
     return () => clearInterval(interval);
   }, [fetchAdminData]);
@@ -938,8 +939,9 @@ const AdminDashboard = () => {
                 <h3 style={{ fontSize: '16px', color: 'var(--text-primary)', margin: 0 }}>📊 Waste Classification Distribution</h3>
                 <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{!stats?.wasteTypeDistribution?.length ? '* Demonstrative Data' : 'Live Data'}</span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {(stats?.wasteTypeDistribution && stats.wasteTypeDistribution.length > 0
+              
+              {(() => {
+                const wasteData = stats?.wasteTypeDistribution && stats.wasteTypeDistribution.length > 0
                   ? stats.wasteTypeDistribution
                   : [
                       { name: 'Plastic', value: 18 },
@@ -948,128 +950,55 @@ const AdminDashboard = () => {
                       { name: 'Hazardous', value: 5 },
                       { name: 'Medical', value: 4 },
                       { name: 'Mixed', value: 10 }
-                    ]
-                ).map((item, idx) => {
-                  const maxVal = Math.max(...(stats?.wasteTypeDistribution || [
-                    { value: 18 }, { value: 12 }, { value: 8 }, { value: 5 }, { value: 4 }, { value: 10 }
-                  ]).map(x => x.value));
-                  const percentage = Math.round((item.value / (stats?.totalComplaints || 57)) * 100) || 0;
-                  const barColors = [
-                    'linear-gradient(90deg, #10b981, #3b82f6)',
-                    'linear-gradient(90deg, #3b82f6, #6366f1)',
-                    'linear-gradient(90deg, #f59e0b, #ef4444)',
-                    'linear-gradient(90deg, #ec4899, #8b5cf6)',
-                    'linear-gradient(90deg, #ef4444, #f59e0b)',
-                    'linear-gradient(90deg, #6b7280, #9ca3af)'
-                  ];
-                  return (
-                    <div key={idx}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px' }}>
-                        <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>{item.name}</span>
-                        <span style={{ color: 'var(--text-primary)' }}>{item.value} reports ({percentage}%)</span>
-                      </div>
-                      <div style={{ background: 'rgba(255,255,255,0.03)', height: '8px', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border-glass)' }}>
-                        <div style={{
-                          background: barColors[idx % barColors.length],
-                          height: '100%',
-                          width: `${Math.min((item.value / (maxVal || 1)) * 100, 100)}%`,
-                          borderRadius: '4px',
-                          transition: 'width 0.8s ease-in-out'
-                        }} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    ];
+
+                return (
+                  <div style={{ width: '100%', height: '220px' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={wasteData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <XAxis dataKey="name" stroke="#9ca3af" fontSize={11} tickLine={false} />
+                        <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} />
+                        <Tooltip contentStyle={{ background: '#111827', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff', fontSize: '12px' }} />
+                        <Bar dataKey="value" name="Reports" fill="#10b981" radius={[6, 6, 0, 0]} isAnimationActive={false} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                );
+              })()}
             </div>
 
-            {/* Monthly Cleanup Trends SVG Graph */}
+            {/* Monthly Cleanup Trends Line Chart */}
             <div className="glass-panel" style={{ padding: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <h3 style={{ fontSize: '16px', color: 'var(--text-primary)', margin: 0 }}>📈 Incident Reporting Trends</h3>
                 <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{!stats?.monthlyTrends?.length ? '* Demonstrative Data' : 'Live Data'}</span>
               </div>
               
-              {/* SVG Line Graph */}
-              <div style={{ background: 'rgba(0,0,0,0.1)', borderRadius: '8px', padding: '10px', border: '1px solid var(--border-glass)' }}>
-                {(() => {
-                  const trends = stats?.monthlyTrends && stats.monthlyTrends.length > 0
-                    ? stats.monthlyTrends
-                    : [
-                        { name: 'Jan', count: 6 },
-                        { name: 'Feb', count: 14 },
-                        { name: 'Mar', count: 9 },
-                        { name: 'Apr', count: 24 },
-                        { name: 'May', count: 18 },
-                        { name: 'Jun', count: 35 }
-                      ];
-                  const maxCount = Math.max(...trends.map(t => t.count), 1);
-                  const width = 400;
-                  const height = 180;
-                  const paddingX = 40;
-                  const paddingY = 25;
-                  const chartW = width - paddingX * 2;
-                  const chartH = height - paddingY * 2;
-                  const stepX = trends.length > 1 ? chartW / (trends.length - 1) : chartW;
+              {(() => {
+                const trends = stats?.monthlyTrends && stats.monthlyTrends.length > 0
+                  ? stats.monthlyTrends
+                  : [
+                      { name: 'Jan', count: 6 },
+                      { name: 'Feb', count: 14 },
+                      { name: 'Mar', count: 9 },
+                      { name: 'Apr', count: 24 },
+                      { name: 'May', count: 18 },
+                      { name: 'Jun', count: 35 }
+                    ];
 
-                  const coordinates = trends.map((t, i) => {
-                    const x = paddingX + i * stepX;
-                    const y = height - paddingY - (t.count / maxCount) * chartH;
-                    return { x, y, name: t.name, count: t.count };
-                  });
-
-                  const pathD = coordinates.map((pt, i) => `${i === 0 ? 'M' : 'L'} ${pt.x} ${pt.y}`).join(' ');
-
-                  return (
-                    <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: 'auto' }}>
-                      {/* Grid Lines */}
-                      {[0, 0.25, 0.5, 0.75, 1].map((ratio, gridIdx) => {
-                        const y = paddingY + gridIdx * (chartH / 4);
-                        const val = Math.round(maxCount - ratio * maxCount);
-                        return (
-                          <g key={gridIdx}>
-                            <line x1={paddingX} y1={y} x2={width - paddingX} y2={y} stroke="rgba(255,255,255,0.05)" strokeDasharray="3,3" />
-                            <text x={paddingX - 10} y={y + 4} fill="var(--text-muted)" fontSize="9" textAnchor="end">{val}</text>
-                          </g>
-                        );
-                      })}
-
-                      {/* Line Path */}
-                      <path
-                        d={pathD}
-                        fill="none"
-                        stroke="var(--color-primary)"
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                        style={{ filter: 'drop-shadow(0 0 6px rgba(16, 185, 129, 0.4))' }}
-                      />
-
-                      {/* Connection Dots */}
-                      {coordinates.map((pt, idx) => (
-                        <g key={idx}>
-                          <circle
-                            cx={pt.x}
-                            cy={pt.y}
-                            r="5"
-                            fill="#000"
-                            stroke="var(--color-primary)"
-                            strokeWidth="2.5"
-                            style={{ cursor: 'pointer' }}
-                          />
-                          {/* Hover count preview */}
-                          <text x={pt.x} y={pt.y - 10} fill="var(--text-primary)" fontSize="9" fontWeight="bold" textAnchor="middle">
-                            {pt.count}
-                          </text>
-                          {/* X Axis Labels */}
-                          <text x={pt.x} y={height - 8} fill="var(--text-muted)" fontSize="9" textAnchor="middle">
-                            {pt.name}
-                          </text>
-                        </g>
-                      ))}
-                    </svg>
-                  );
-                })()}
-              </div>
+                return (
+                  <div style={{ width: '100%', height: '220px' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={trends} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
+                        <XAxis dataKey="name" stroke="#9ca3af" fontSize={11} tickLine={false} />
+                        <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} />
+                        <Tooltip contentStyle={{ background: '#111827', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff', fontSize: '12px' }} />
+                        <Line type="monotone" dataKey="count" name="Incidents" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981' }} activeDot={{ r: 6 }} isAnimationActive={false} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                );
+              })()}
             </div>
 
           </div>
@@ -1080,18 +1009,21 @@ const AdminDashboard = () => {
               🏆 Sanitation Workers Performance Leaderboard
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '15px' }}>
-              {(stats?.workerStats && stats.workerStats.length > 0
-                ? stats.workerStats
-                : [
-                    { name: 'Anil Kumar', completedCount: 16 },
-                    { name: 'Suresh Pillai', completedCount: 11 },
-                    { name: 'Radha Mohan', completedCount: 8 },
-                    { name: 'Vinod Nair', completedCount: 6 }
-                  ]
-              ).map((w, idx) => {
+              {(() => {
+                const workersList = (stats?.workerPerformance && stats.workerPerformance.length > 0)
+                  ? stats.workerPerformance
+                  : (stats?.workerStats && stats.workerStats.length > 0)
+                  ? stats.workerStats
+                  : [
+                      { name: 'Anil Kumar', completedCount: 16 },
+                      { name: 'Suresh Pillai', completedCount: 11 },
+                      { name: 'Radha Mohan', completedCount: 8 },
+                      { name: 'Vinod Nair', completedCount: 6 }
+                    ];
+
                 const medals = ['🥇', '🥈', '🥉', '👷'];
-                return (
-                  <div key={idx} style={{
+                return workersList.map((w, idx) => (
+                  <div key={w._id || w.name || idx} style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
@@ -1112,8 +1044,8 @@ const AdminDashboard = () => {
                       {w.completedCount} Cleanups
                     </span>
                   </div>
-                );
-              })}
+                ));
+              })()}
             </div>
           </div>
 
@@ -1289,50 +1221,17 @@ const AdminDashboard = () => {
             {/* STEP 1: CARD DETAILS FORM */}
             {paymentStep === 'card' && (
               <div>
-                {/* Virtual Card Preview */}
-                <div style={{
-                  background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '16px',
-                  padding: '20px',
-                  color: '#fff',
-                  marginBottom: '20px',
-                  boxShadow: '0 8px 16px rgba(0,0,0,0.3)',
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}>
-                  <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.05)', filter: 'blur(30px)' }}></div>
-                  
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                    <span style={{ fontSize: '11px', fontWeight: 'bold', letterSpacing: '1px', opacity: 0.6 }}>CITY COUNCIL CO-FUND</span>
-                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-secondary)' }}>VISA</span>
-                  </div>
-
-                  <div style={{ width: '36px', height: '26px', background: 'linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%)', borderRadius: '6px', marginBottom: '16px', position: 'relative' }}>
-                    <div style={{ position: 'absolute', top: 0, left: '10px', bottom: 0, width: '1px', background: 'rgba(0,0,0,0.1)' }}></div>
-                    <div style={{ position: 'absolute', left: 0, right: 0, top: '8px', height: '1px', background: 'rgba(0,0,0,0.1)' }}></div>
-                  </div>
-
-                  <div style={{ fontSize: '18px', letterSpacing: '2.5px', marginBottom: '16px', fontFamily: 'monospace' }}>
-                    {cardNumber || '•••• •••• •••• ••••'}
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                    <div>
-                      <div style={{ fontSize: '8px', opacity: 0.5, textTransform: 'uppercase', marginBottom: '2px' }}>Card Holder</div>
-                      <div style={{ fontSize: '12px', fontWeight: '600', letterSpacing: '0.5px' }}>{cardHolder || 'ADMIN'}</div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '16px' }}>
-                      <div>
-                        <div style={{ fontSize: '8px', opacity: 0.5, textTransform: 'uppercase', marginBottom: '2px' }}>Expires</div>
-                        <div style={{ fontSize: '12px', fontWeight: '600' }}>{cardExpiry || 'MM/YY'}</div>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: '8px', opacity: 0.5, textTransform: 'uppercase', marginBottom: '2px' }}>CVV</div>
-                        <div style={{ fontSize: '12px', fontWeight: '600' }}>{cardCvv || '•••'}</div>
-                      </div>
-                    </div>
-                  </div>
+                {/* Modern 3D Glassmorphic Payout Credit Card Preview */}
+                <div style={{ marginBottom: '20px' }}>
+                  <EcoCreditCard
+                    holderName={cardHolder || 'CITY COUNCIL ADMIN'}
+                    cardNumber={cardNumber || '4582 9104 3381 2049'}
+                    expiryDate={cardExpiry || '12/28'}
+                    balanceText={`$${bonusAmount}.00`}
+                    cardType="MUNICIPAL PAYOUT VISA"
+                    rankBadge={verifyingComplaint?.assignedToType === 'team' ? 'TEAM PAYROLL' : 'WORKER PAYOUT'}
+                    theme="gold"
+                  />
                 </div>
 
                 {/* Amount display */}

@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import API from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
+import { compressImage } from '../utils/imageCompressor';
+import EcoCreditCard from '../components/EcoCreditCard';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { Hammer, MapPin, CheckSquare, Upload, AlertCircle, Calendar, Clock, Clipboard, Sparkles, Megaphone, DollarSign, ExternalLink } from 'lucide-react';
@@ -148,10 +150,11 @@ const WorkerDashboard = () => {
     }
   };
 
-  // File picker upload
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
+  // File picker upload with automatic canvas compression
+  const handleFileChange = async (e) => {
+    const rawFile = e.target.files[0];
+    if (rawFile) {
+      const file = await compressImage(rawFile);
       setPhoto(file);
       setPhotoPreview(URL.createObjectURL(file));
       setError('');
@@ -261,22 +264,48 @@ const WorkerDashboard = () => {
           </div>
         </div>
 
-        {/* Bonus overview banner */}
-        <div className="flex-between" style={{
-          padding: '16px 20px',
-          background: 'rgba(16, 185, 129, 0.03)',
-          border: '1px solid rgba(16, 185, 129, 0.15)',
-          borderRadius: '12px',
+        {/* Bonus Payout Credit Card Banner */}
+        <div style={{
+          padding: '24px',
+          background: 'rgba(255, 255, 255, 0.02)',
+          border: '1px solid var(--border-glass)',
+          borderRadius: '16px',
+          display: 'flex',
           flexWrap: 'wrap',
-          gap: '12px'
+          gap: '24px',
+          alignItems: 'center',
+          justifyContent: 'space-between'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <DollarSign size={20} color="var(--color-primary)" />
-            <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Cumulative Performance Bonuses earned (Dummy):</span>
+          <EcoCreditCard
+            holderName={user?.name || 'SANITATION WORKER'}
+            cardNumber={`5412 ${user?._id ? user._id.slice(-4).padStart(4, '0') : '9104'} 8820 ${totalBonuses}`}
+            expiryDate="12/28"
+            balanceText={`$${totalBonuses}`}
+            cardType="WORKER PAYOUT CARD"
+            rankBadge={user?.team ? 'TEAM CREW' : 'FIELD WORKER'}
+            theme="cyan"
+          />
+
+          <div style={{ flex: 1, minWidth: '240px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(0, 210, 255, 0.1)', border: '1px solid var(--color-secondary)', borderRadius: '20px', padding: '4px 12px', width: 'fit-content' }}>
+              <DollarSign size={14} color="var(--color-secondary)" />
+              <span style={{ fontSize: '11px', color: 'var(--color-secondary)', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                Municipal Worker Payroll Wallet
+              </span>
+            </div>
+
+            <h3 style={{ fontSize: '20px', color: 'var(--text-primary)', margin: 0 }}>
+              Performance Bonus Debit Card
+            </h3>
+
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5', margin: 0 }}>
+              Official municipal sanitation payroll card. Cumulative bonuses earned from verified cleanup tasks are automatically deposited here.
+            </p>
+
+            <div style={{ marginTop: '6px', fontSize: '22px', fontWeight: '800', color: 'var(--color-secondary)' }}>
+              Total Earnings: ${totalBonuses}
+            </div>
           </div>
-          <span style={{ fontSize: '20px', fontWeight: '800', color: 'var(--color-primary)' }}>
-            ${totalBonuses}
-          </span>
         </div>
       </div>
 

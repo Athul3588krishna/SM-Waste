@@ -306,14 +306,98 @@ const Login = () => {
 
         {currentPortal.footer}
 
+        {/* Quick Demo Credentials Bar for Presentation & Evaluation */}
+        <div style={{
+          marginTop: '20px',
+          paddingTop: '16px',
+          borderTop: '1px dashed var(--border-glass)'
+        }}>
+          <div style={{
+            fontSize: '11px',
+            letterSpacing: '0.5px',
+            color: 'var(--text-muted)',
+            marginBottom: '10px',
+            textAlign: 'center',
+            fontWeight: '700',
+            textTransform: 'uppercase'
+          }}>
+            ⚡ Quick Demo Logins (Evaluation 1)
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('admin@waste.com');
+                setPassword('admin123');
+                navigate('/login?role=admin');
+              }}
+              className="btn"
+              style={{
+                padding: '8px 4px',
+                fontSize: '11px',
+                background: 'rgba(255, 74, 90, 0.12)',
+                color: '#FF4A5A',
+                border: '1px solid rgba(255, 74, 90, 0.3)',
+                borderRadius: '8px',
+                fontWeight: '600'
+              }}
+              title="Autofill Admin Credentials"
+            >
+              🛡️ Admin
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('worker1@waste.com');
+                setPassword('worker123');
+                navigate('/login?role=worker');
+              }}
+              className="btn"
+              style={{
+                padding: '8px 4px',
+                fontSize: '11px',
+                background: 'rgba(0, 210, 255, 0.12)',
+                color: '#00D2FF',
+                border: '1px solid rgba(0, 210, 255, 0.3)',
+                borderRadius: '8px',
+                fontWeight: '600'
+              }}
+              title="Autofill Worker Credentials"
+            >
+              👷 Worker
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('citizen@waste.com');
+                setPassword('citizen123');
+                navigate('/login?role=citizen');
+              }}
+              className="btn"
+              style={{
+                padding: '8px 4px',
+                fontSize: '11px',
+                background: 'rgba(16, 185, 129, 0.12)',
+                color: '#10B981',
+                border: '1px solid rgba(16, 185, 129, 0.3)',
+                borderRadius: '8px',
+                fontWeight: '600'
+              }}
+              title="Autofill Citizen Credentials"
+            >
+              👤 Citizen
+            </button>
+          </div>
+        </div>
+
         {/* Portal Quick Switcher (If not Admin) */}
         {role !== 'admin' && (
           <div style={{
             display: 'flex',
             justifyContent: 'center',
             gap: '15px',
-            marginTop: '24px',
-            paddingTop: '16px',
+            marginTop: '20px',
+            paddingTop: '14px',
             borderTop: '1px solid var(--border-glass)',
             fontSize: '12px'
           }}>

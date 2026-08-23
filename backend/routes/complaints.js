@@ -60,11 +60,10 @@ router.post('/analyze', protect, upload.single('photo'), async (req, res) => {
       Do not include markdown wrappers. Just output raw JSON.`;
 
       const modelsToTry = [
-        'gemini-2.0-flash-lite',
-        'gemini-3.1-flash-lite',
-        'gemini-3.5-flash',
-        'gemini-flash-latest',
-        'gemini-2.0-flash'
+        'gemini-2.5-flash',
+        'gemini-1.5-flash',
+        'gemini-2.0-flash',
+        'gemini-flash-latest'
       ];
 
       let apiSuccess = false;
@@ -79,6 +78,7 @@ router.post('/analyze', protect, upload.single('photo'), async (req, res) => {
             headers: {
               'Content-Type': 'application/json'
             },
+            signal: AbortSignal.timeout(3500),
             body: JSON.stringify({
               contents: [
                 {

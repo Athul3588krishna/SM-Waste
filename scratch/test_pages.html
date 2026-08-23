@@ -1,0 +1,10 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+@page { size: A4 portrait; margin: 0; }
+*, *:before, *:after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; background: white; font-size: 12pt; }
+.page { width: 210mm; height: 296.8mm; padding: 25mm 20mm 25mm 25mm; position: relative; page-break-after: always; break-after: page; overflow: hidden; }
+.page:last-child { page-break-after: auto; break-after: auto; }
+.header { position: absolute; top: 12mm; left: 25mm; right: 20mm; display: flex; justify-content: space-between; font-size: 11pt; font-style: italic; border-bottom: 1px solid #000; padding-bottom: 3px; }
+.footer { position: absolute; bottom: 12mm; left: 25mm; right: 20mm; display: flex; justify-content: space-between; font-size: 11pt; font-style: italic; border-top: 1px solid #000; padding-top: 3px; }
+.content { margin-top: 5mm; }
+</style></head><body><div class="page"><div class="header"><span>EcoClean System</span><span>1</span></div><div class="content"><h1>Page 1 Content</h1><p>This is a test of page 1.</p></div><div class="footer"><span>Department of Computer Applications</span><span>MEA Engineering College</span></div></div><div class="page"><div class="header"><span>EcoClean System</span><span>2</span></div><div class="content"><h1>Page 2 Content</h1><p>This is a test of page 2.</p></div><div class="footer"><span>Department of Computer Applications</span><span>MEA Engineering College</span></div></div></body></html>

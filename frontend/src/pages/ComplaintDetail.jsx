@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import API from '../utils/api';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
-import { ArrowLeft, Clock, ShieldCheck, Hammer, CheckCircle2, AlertTriangle, MapPin, Calendar, Sparkles } from 'lucide-react';
+import { ArrowLeft, Clock, ShieldCheck, Hammer, CheckCircle2, AlertTriangle, MapPin, Calendar, Sparkles, Printer, X, FileText } from 'lucide-react';
 
 const customIcon = new L.Icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -17,6 +17,7 @@ const ComplaintDetail = () => {
   const navigate = useNavigate();
   const [complaint, setComplaint] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showPrintModal, setShowPrintModal] = useState(false);
 
   useEffect(() => {
     const fetchComplaintDetail = async () => {
@@ -119,23 +120,44 @@ const ComplaintDetail = () => {
     <div style={{ padding: '30px 24px', maxWidth: '1100px', margin: '0 auto' }}>
       
       {/* Back Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-        <button onClick={() => navigate(-1)} style={{
-          background: 'rgba(255,255,255,0.03)',
-          border: '1px solid var(--border-glass)',
-          borderRadius: '8px',
-          padding: '8px',
-          cursor: 'pointer',
-          color: 'var(--text-secondary)'
-        }}>
-          <ArrowLeft size={18} />
-        </button>
-        <div>
-          <span className={`badge-status ${getBadgeClass(complaint.status)}`}>
-            {complaint.status.replace('_', ' ')}
-          </span>
-          <h1 style={{ fontSize: '24px', color: 'var(--text-primary)', marginTop: '6px' }}>{complaint.title}</h1>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button onClick={() => navigate(-1)} style={{
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid var(--border-glass)',
+            borderRadius: '8px',
+            padding: '8px',
+            cursor: 'pointer',
+            color: 'var(--text-secondary)'
+          }}>
+            <ArrowLeft size={18} />
+          </button>
+          <div>
+            <span className={`badge-status ${getBadgeClass(complaint.status)}`}>
+              {complaint.status.replace('_', ' ')}
+            </span>
+            <h1 style={{ fontSize: '24px', color: 'var(--text-primary)', marginTop: '6px' }}>{complaint.title}</h1>
+          </div>
         </div>
+
+        {/* Printable Receipt Action */}
+        <button
+          onClick={() => setShowPrintModal(true)}
+          className="btn"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: 'rgba(16, 185, 129, 0.12)',
+            color: 'var(--color-primary)',
+            border: '1px solid rgba(16, 185, 129, 0.3)',
+            fontSize: '13px',
+            fontWeight: '600'
+          }}
+        >
+          <Printer size={16} />
+          Print Official Receipt
+        </button>
       </div>
 
       <div className="grid-3-1" style={{ gap: '30px' }}>
@@ -311,8 +333,8 @@ const ComplaintDetail = () => {
             <div className="map-container" style={{ flex: 1, margin: 0 }}>
               <MapContainer center={[complaint.location.latitude, complaint.location.longitude]} zoom={14} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
                 <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url={'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'}
                 />
                 <Marker position={[complaint.location.latitude, complaint.location.longitude]} icon={customIcon}>
                   <Popup>{complaint.title}</Popup>
@@ -328,6 +350,199 @@ const ComplaintDetail = () => {
         </div>
 
       </div>
+
+      {/* Printable Receipt Modal Overlay */}
+      {showPrintModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0, 0, 0, 0.85)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 9999,
+          padding: '20px',
+          overflowY: 'auto'
+        }}>
+          <div style={{
+            background: '#ffffff',
+            color: '#1e293b',
+            width: '100%',
+            maxWidth: '750px',
+            borderRadius: '12px',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+            padding: '36px',
+            position: 'relative',
+            fontFamily: 'Arial, sans-serif'
+          }} id="printable-receipt-card">
+
+            {/* Actions Bar (Hidden on print) */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '24px',
+              borderBottom: '2px solid #e2e8f0',
+              paddingBottom: '16px'
+            }} className="no-print">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold', color: '#0f172a' }}>
+                <FileText size={20} color="#10b981" />
+                <span>Incident Resolution Receipt Preview</span>
+              </div>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => window.print()}
+                  style={{
+                    background: '#10b981',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '8px 16px',
+                    fontSize: '13px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <Printer size={16} /> Print / Save PDF
+                </button>
+                <button
+                  onClick={() => setShowPrintModal(false)}
+                  style={{
+                    background: '#f1f5f9',
+                    color: '#64748b',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '8px 12px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Receipt Document Header */}
+            <div style={{ textAlign: 'center', marginBottom: '24px', borderBottom: '3px double #10b981', paddingBottom: '16px' }}>
+              <div style={{ fontSize: '24px', fontWeight: '900', color: '#064e3b', letterSpacing: '1px' }}>
+                🌐 ECOCLEAN MUNICIPAL SANITATION PORTAL
+              </div>
+              <div style={{ fontSize: '13px', color: '#047857', fontWeight: 'bold', marginTop: '4px' }}>
+                OFFICIAL CIVIC INCIDENT RESOLUTION RECEIPT &amp; TICKET AUDIT
+              </div>
+              <div style={{ fontSize: '11px', color: '#64748b', marginTop: '6px' }}>
+                TICKET REF: <strong>#EC-{complaint._id.slice(-8).toUpperCase()}</strong> | ISSUED DATE: {new Date().toLocaleDateString()}
+              </div>
+            </div>
+
+            {/* Grid Information */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px', background: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <div>
+                <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Incident Title</div>
+                <div style={{ fontSize: '15px', fontWeight: 'bold', color: '#0f172a', marginTop: '2px' }}>{complaint.title}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Current Status</div>
+                <div style={{ fontSize: '14px', fontWeight: 'bold', color: complaint.status === 'completed' ? '#047857' : '#d97706', marginTop: '2px' }}>
+                  ● {complaint.status.toUpperCase().replace('_', ' ')}
+                </div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Reporter Name &amp; Rank</div>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: '#334155', marginTop: '2px' }}>
+                  {complaint.citizen?.name || 'Anonymous Citizen'} ({complaint.citizen?.badge || 'Civic Member'})
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Eco-Reward Points</div>
+                <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#047857', marginTop: '2px' }}>
+                  +50 Eco-Points Awarded
+                </div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Waste Category &amp; Severity</div>
+                <div style={{ fontSize: '13px', color: '#334155', marginTop: '2px' }}>
+                  {complaint.wasteType} | <strong>{complaint.severity} Severity</strong>
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Assigned Sanitation Unit</div>
+                <div style={{ fontSize: '13px', color: '#334155', marginTop: '2px' }}>
+                  {complaint.team ? `👥 ${complaint.team.name}` : complaint.worker ? `👷 ${complaint.worker.name}` : 'Municipal Crew'}
+                </div>
+              </div>
+
+              <div style={{ gridColumn: 'span 2' }}>
+                <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Geotagged Address</div>
+                <div style={{ fontSize: '12px', color: '#334155', marginTop: '2px' }}>
+                  📍 {complaint.location.address} (Lat: {complaint.location.latitude.toFixed(4)}, Lng: {complaint.location.longitude.toFixed(4)})
+                </div>
+              </div>
+            </div>
+
+            {/* Before / After Photos Verification Showcase */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ fontSize: '12px', color: '#0f172a', fontWeight: 'bold', marginBottom: '8px', textTransform: 'uppercase' }}>
+                📷 Cleaning Verification Proof Evidence
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <div style={{ fontSize: '10px', color: '#dc2626', fontWeight: 'bold', marginBottom: '4px' }}>BEFORE (REPORTED DUMP)</div>
+                  <img
+                    src={complaint.photoBefore.startsWith('http') ? complaint.photoBefore : `http://localhost:5002${complaint.photoBefore}`}
+                    alt="Before Dump"
+                    style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                  />
+                </div>
+                <div>
+                  <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: 'bold', marginBottom: '4px' }}>AFTER (CLEANED SITE)</div>
+                  {complaint.photoAfter ? (
+                    <img
+                      src={complaint.photoAfter.startsWith('http') ? complaint.photoAfter : `http://localhost:5002${complaint.photoAfter}`}
+                      alt="After Cleanup"
+                      style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '6px', border: '2px solid #16a34a' }}
+                    />
+                  ) : (
+                    <div style={{ height: '140px', background: '#f1f5f9', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: '#94a3b8', fontStyle: 'italic' }}>
+                      Cleanup photo pending verification
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Municipal Stamp Seal */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed #cbd5e1', paddingTop: '16px' }}>
+              <div style={{ fontSize: '11px', color: '#64748b' }}>
+                <span>Official Record of Municipal Waste Management System.</span>
+                <br />
+                <span>Generated electronically via EcoClean Smart Platform.</span>
+              </div>
+              <div style={{
+                border: '2px solid #047857',
+                color: '#047857',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                fontSize: '11px',
+                fontWeight: '900',
+                textTransform: 'uppercase',
+                transform: 'rotate(-3deg)'
+              }}>
+                ✓ VERIFIED &amp; RESOLVED
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
 
     </div>
   );

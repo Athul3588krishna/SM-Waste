@@ -4,6 +4,7 @@ import { AnimatePresence } from 'framer-motion';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { LanguageProvider } from './context/LanguageContext';
 import Navbar from './components/Navbar';
 import PageTransition from './components/PageTransition';
 import EcoCursor from './components/EcoCursor';
@@ -158,21 +159,23 @@ const AnimatedRoutes = () => {
 
 const App = () => {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <SocketProvider>
-          <BrowserRouter>
-            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-              <Navbar />
-              <div style={{ flex: 1 }}>
-                <AnimatedRoutes />
+    <LanguageProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <SocketProvider>
+            <BrowserRouter>
+              <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+                <Navbar />
+                <div style={{ flex: 1 }}>
+                  <AnimatedRoutes />
+                </div>
+                <EcoCursor />
               </div>
-              <EcoCursor />
-            </div>
-          </BrowserRouter>
-        </SocketProvider>
-      </AuthProvider>
-    </ThemeProvider>
+            </BrowserRouter>
+          </SocketProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </LanguageProvider>
   );
 };
 

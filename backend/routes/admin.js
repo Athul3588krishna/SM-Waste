@@ -717,6 +717,7 @@ router.get('/stats', async (req, res) => {
           count: { $sum: 1 },
         },
       },
+      { $sort: { count: -1, _id: 1 } },
     ]);
 
     const monthlyStats = await Complaint.aggregate([
@@ -755,21 +756,28 @@ router.get('/stats', async (req, res) => {
       workerStats.map(async (stat) => {
         const worker = await User.findById(stat._id).select('name email');
         return {
+          _id: stat._id ? stat._id.toString() : undefined,
           name: worker ? worker.name : 'Unknown Worker',
           completedCount: stat.completedCount,
         };
       })
     );
 
+    const sortedWorkerStats = populatedWorkerStats.sort((a, b) => {
+      if (b.completedCount !== a.completedCount) return b.completedCount - a.completedCount;
+      return a.name.localeCompare(b.name);
+    });
+
     res.json({
       statusCounts,
       totalComplaints,
       wasteTypeDistribution: typeStats.map((stat) => ({
-        name: stat._id,
+        name: stat._id || 'Mixed',
         value: stat.count,
       })),
       monthlyTrends: formattedMonthly,
-      workerPerformance: populatedWorkerStats.sort((a, b) => b.completedCount - a.completedCount),
+      workerPerformance: sortedWorkerStats,
+      workerStats: sortedWorkerStats,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
