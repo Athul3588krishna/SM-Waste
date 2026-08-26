@@ -237,122 +237,6 @@ const CitizenDashboard = () => {
 
   const progress = getBadgeProgress(user?.points || 0);
 
-  const handlePrintCertificate = () => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Eco-Appreciation Certificate - ${user?.name}</title>
-          <style>
-            body {
-              font-family: 'Georgia', serif;
-              background: #fdfdfd;
-              color: #333;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              height: 100vh;
-              margin: 0;
-            }
-            .certificate-container {
-              border: 12px double #b45309;
-              padding: 50px 40px;
-              width: 700px;
-              background: #fff;
-              text-align: center;
-              position: relative;
-              box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            }
-            .title {
-              font-size: 38px;
-              color: #b45309;
-              margin-bottom: 20px;
-              text-transform: uppercase;
-              letter-spacing: 2px;
-              font-weight: bold;
-            }
-            .subtitle {
-              font-size: 16px;
-              font-weight: 600;
-              letter-spacing: 3px;
-              margin-bottom: 30px;
-              color: #777;
-              text-transform: uppercase;
-            }
-            .name {
-              font-size: 32px;
-              font-weight: bold;
-              text-decoration: underline;
-              color: #111;
-              margin-bottom: 25px;
-              font-style: italic;
-            }
-            .text {
-              font-size: 16px;
-              line-height: 1.6;
-              color: #444;
-              margin-bottom: 45px;
-            }
-            .signature-section {
-              display: flex;
-              justify-content: space-around;
-              margin-top: 50px;
-            }
-            .signature {
-              border-top: 1px dashed #999;
-              width: 220px;
-              padding-top: 8px;
-              font-size: 13px;
-              color: #555;
-              font-family: sans-serif;
-            }
-            .stamp {
-              position: absolute;
-              bottom: 40px;
-              right: 40px;
-              width: 90px;
-              height: 90px;
-              border: 3px double #10b981;
-              border-radius: 50%;
-              color: #10b981;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-size: 11px;
-              font-weight: bold;
-              text-transform: uppercase;
-              transform: rotate(-15deg);
-              background: rgba(16, 185, 129, 0.05);
-            }
-          </style>
-        </head>
-        <body>
-          <div class="certificate-container">
-            <div class="title">Certificate of Appreciation</div>
-            <div class="subtitle">PROUDLY PRESENTED TO</div>
-            <div class="name">${user?.name}</div>
-            <div class="text">
-              in recognition of their outstanding citizen partnership, active waste reporting, and dedicated environmental preservation contributions towards achieving a zero-waste clean community in <strong>Perinthalmanna Municipality</strong>.
-            </div>
-            <div class="signature-section">
-              <div class="signature">Municipal Authority</div>
-              <div class="signature">EcoClean Programme Director</div>
-            </div>
-            <div class="stamp">EcoClean<br/>Certified</div>
-          </div>
-          <script>
-            window.onload = function() {
-              window.print();
-              setTimeout(() => { window.close(); }, 500);
-            }
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-  };
-
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
@@ -420,23 +304,7 @@ const CitizenDashboard = () => {
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'md-flex-end' }}>
-            {user?.points >= 100 ? (
-              <button 
-                onClick={handlePrintCertificate}
-                className="btn btn-outline"
-                style={{ width: '100%', padding: '10px 14px', fontSize: '12.5px', borderColor: 'var(--color-primary)', color: 'var(--color-primary)', cursor: 'pointer' }}
-              >
-                📜 Print Certificate
-              </button>
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.65 }}>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'right', width: '100%' }}>
-                  🔒 Earn 100 points to unlock Certificate
-                </span>
-              </div>
-            )}
-          </div>
+
 
         </div>
       </div>

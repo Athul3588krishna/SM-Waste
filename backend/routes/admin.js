@@ -7,6 +7,7 @@ const Announcement = require('../models/Announcement');
 const Notification = require('../models/Notification');
 const { protect, authorize } = require('../middleware/auth');
 const sendEmail = require('../utils/emailService');
+const sendTelegramWorkerAlert = require('../utils/telegramBot');
 
 // Apply protection and Admin role verification to all routes in this file
 router.use(protect);
@@ -388,6 +389,14 @@ router.put('/complaints/:id/assign', async (req, res) => {
         title: 'New Assignment',
         message: `You have been assigned a new cleanup: "${complaint.title}". Deadline: ${days} day(s).`,
       });
+
+      // Instant Telegram Bot Mobile Alert to Worker
+      sendTelegramWorkerAlert({
+        workerName: worker.name,
+        telegramChatId: worker.telegramChatId || worker.phone,
+        complaint: complaint,
+        deadlineDays: days
+      }).catch(err => console.error('Telegram Dispatch Alert Error:', err));
     } else {
       const team = await Team.findById(teamId);
       if (!team) {
@@ -403,6 +412,14 @@ router.put('/complaints/:id/assign', async (req, res) => {
         message: `Your team "${team.name}" has been assigned a cleanup: "${complaint.title}". Deadline: ${days} day(s).`,
       }));
       await Notification.insertMany(notifications);
+
+      // Instant Telegram Bot Mobile Alert to Team
+      sendTelegramWorkerAlert({
+        workerName: `Team ${team.name}`,
+        telegramChatId: null,
+        complaint: complaint,
+        deadlineDays: days
+      }).catch(err => console.error('Telegram Dispatch Alert Error:', err));
     }
 
     await complaint.save();
