@@ -59,7 +59,7 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Extract role: admin is allowed when #admin is in URL hash or /admin path
+  // Determine portal role from URL parameters, hash, or path
   const queryParams = new URLSearchParams(location.search);
   let role = queryParams.get('role') || 'citizen';
   
@@ -72,16 +72,20 @@ const Login = () => {
     role = 'worker';
   } else if (hash === '#citizen' || hash === '#/citizen' || path === '/citizen') {
     role = 'citizen';
-  } else if (role === 'admin') {
-    role = 'citizen';
   }
 
-  // Redirect to dashboard ONLY if user is already logged in with the matching role
+  // Automatically redirect logged-in users to their appropriate dashboard
   useEffect(() => {
-    if (user && user.role === role) {
-      navigate('/dashboard');
+    if (user) {
+      if (user.role === 'admin') {
+        navigate('/admin');
+      } else if (user.role === 'worker') {
+        navigate('/worker');
+      } else {
+        navigate('/dashboard');
+      }
     }
-  }, [user, role, navigate]);
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -103,24 +107,19 @@ const Login = () => {
     setLoadingSubmit(true);
 
     try {
-      // Backend validates credentials and returns the user structure with their role
+      // Backend validates credentials and returns the user object
       const data = await login(email, password);
       
-      // Enforce that admin login is ONLY allowed if the current role/portal is admin (which requires #admin)
-      if (data.role === 'admin' && role !== 'admin') {
-        await logout();
-        throw new Error('Admin login is restricted to the secure portal (#admin) only.');
+      // Navigate seamlessly based on authenticated user's actual role
+      if (data.role === 'admin') {
+        navigate('/admin');
+      } else if (data.role === 'worker') {
+        navigate('/worker');
+      } else {
+        navigate('/dashboard');
       }
-      
-      // Enforce that non-admins cannot log in via the admin portal
-      if (role === 'admin' && data.role !== 'admin') {
-        await logout();
-        throw new Error('This portal is restricted to administrators only.');
-      }
-
-      navigate('/dashboard');
     } catch (err) {
-      setError(err);
+      setError(err.response?.data?.message || err.message || 'Login failed. Please check credentials.');
     } finally {
       setLoadingSubmit(false);
     }

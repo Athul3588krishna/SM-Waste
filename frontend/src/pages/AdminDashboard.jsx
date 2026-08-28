@@ -1065,23 +1065,25 @@ const AdminDashboard = () => {
               <div className="form-group">
                 <label className="form-label">Assign To</label>
                 <select className="form-input" value={assignedToType} onChange={(e) => setAssignedToType(e.target.value)}>
-                  <option value="individual">Sanitation Worker (Online Only)</option>
+                  <option value="individual">Sanitation Worker (Individual)</option>
                   <option value="team">Cleaning Team</option>
                 </select>
               </div>
 
               {assignedToType === 'individual' ? (
                 <div className="form-group">
-                  <label className="form-label">Select Online Worker</label>
+                  <label className="form-label">Select Worker</label>
                   <select className="form-input" value={selectedWorkerId} onChange={(e) => setSelectedWorkerId(e.target.value)} required>
-                    <option value="">Choose Online Worker</option>
-                    {workers.filter(w => w.isOnline).map((w) => (
-                      <option key={w._id} value={w._id}>{w.name} (Online)</option>
+                    <option value="">Choose Worker</option>
+                    {workers.map((w) => (
+                      <option key={w._id} value={w._id}>
+                        {w.name} {w.isOnline ? '🟢 (Online)' : '📱 (Offline - Telegram Alert)'}
+                      </option>
                     ))}
                   </select>
-                  {workers.filter(w => w.isOnline).length === 0 && (
+                  {workers.length === 0 && (
                     <div style={{ fontSize: '11px', color: 'var(--color-danger)', marginTop: '4px' }}>
-                      ⚠️ No workers are currently online. Toggle worker online or assign to a Team.
+                      ⚠️ No sanitation workers registered yet. Click 'Add Worker' first.
                     </div>
                   )}
                 </div>
@@ -1107,8 +1109,8 @@ const AdminDashboard = () => {
 
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '20px' }}>
                 <button type="button" onClick={() => setAssigningComplaint(null)} className="btn btn-secondary">Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={assignedToType === 'individual' && workers.filter(w => w.isOnline).length === 0}>
-                  Confirm Assignment
+                <button type="submit" className="btn btn-primary" disabled={assignedToType === 'individual' && workers.length === 0}>
+                  Confirm & Dispatch Task
                 </button>
               </div>
             </form>

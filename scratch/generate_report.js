@@ -371,34 +371,129 @@ const doc = new Document({
         new Paragraph({ heading: HeadingLevel.HEADING_2, children: [ new TextRun({ text: "6.1 Database Design & Normalization" }) ] }),
         new Paragraph({ alignment: AlignmentType.JUSTIFY, children: [ new TextRun({ text: "Database design is the process of producing a detailed data model of a database. In MongoDB & Mongoose ORM, logical collections reflect domain entities. The schemas conform to Third Normal Form (3NF) principles by eliminating repeating groups and transitive dependencies." }) ] }),
 
-        new Paragraph({ heading: HeadingLevel.HEADING_2, children: [ new TextRun({ text: "6.2 Database Schemas & Data Dictionary" }) ] }),
-        new Paragraph({ children: [ new TextRun({ text: "Table 6.1: Users Collection Schema", bold: true }) ] }),
+        new Paragraph({ heading: HeadingLevel.HEADING_2, children: [ new TextRun({ text: "6.2 Database Schemas & Collection Data Dictionaries" }) ] }),
+        new Paragraph({ alignment: AlignmentType.JUSTIFY, children: [ new TextRun({ text: "The MongoDB database architecture comprises 5 core collections. Below are the field specifications, constraints, and representative JSON dummy document samples for each collection:" }) ] }),
+
+        // 1. Users Collection
+        new Paragraph({ children: [ new TextRun({ text: "Table 6.1: Users Collection Schema Field Dictionary", bold: true }) ] }),
         createStyledTable(
-          ['Field', 'Data Type', 'Constraints', 'Description'],
+          ['Field Name', 'Data Type', 'Constraints', 'Description'],
           [
-            ['_id', 'ObjectId', 'Primary Key', 'Unique user identifier'],
-            ['name', 'String', 'Required', 'User full name'],
-            ['email', 'String', 'Required, Unique', 'User login email'],
-            ['password', 'String', 'Required (Bcrypt)', 'Hashed user password'],
-            ['role', 'String', 'Enum (citizen/worker/admin)', 'Access rights level'],
-            ['points', 'Number', 'Default: 0', 'Earned Eco-Points balance'],
-            ['badge', 'String', 'Default: Novice Reporter', 'Gamification rank badge']
+            ['_id', 'ObjectId', 'Primary Key', 'Auto-generated unique user document ID'],
+            ['name', 'String', 'Required, Trimmed', 'Full name of citizen, worker, or administrator'],
+            ['email', 'String', 'Required, Unique, Lowercase', 'User login email address'],
+            ['password', 'String', 'Required (Bcrypt Hash)', 'Bcrypt salted password hash string'],
+            ['role', 'String', 'Enum (citizen/worker/admin)', 'Role-based access authorization level'],
+            ['points', 'Number', 'Default: 0, Min: 0', 'Earned Eco-Points balance for rewards'],
+            ['badge', 'String', 'Default: Novice Reporter', 'Gamification rank badge title'],
+            ['isOnline', 'Boolean', 'Default: false', 'Real-time WebSocket online connection status'],
+            ['createdAt', 'Date', 'Auto-Timestamp', 'Account creation timestamp']
           ]
         ),
-        new Paragraph({ children: [ new TextRun({ text: "\nTable 6.2: Complaints Collection Schema", bold: true }) ] }),
+        new Paragraph({ children: [ new TextRun({ text: "\nSample Dummy Document: Users Collection (Citizen & Worker Records)", bold: true, italics: true, size: 22 }) ] }),
         createStyledTable(
-          ['Field', 'Data Type', 'Constraints', 'Description'],
+          ['Document ID', 'Name & Email', 'Role & Status', 'Points & Badge', 'Bcrypt Password Hash'],
           [
-            ['_id', 'ObjectId', 'Primary Key', 'Unique complaint ticket ID'],
-            ['title', 'String', 'Required', 'Report title / Landmark'],
-            ['location', 'Object (lat, lng, address)', 'Required', 'Geospatial coordinates'],
-            ['photoBefore', 'String', 'Required', 'Path to before dump photo'],
-            ['photoAfter', 'String', 'Optional', 'Path to after cleanup photo'],
-            ['wasteType', 'String', 'Enum', 'Predicted waste category'],
-            ['severity', 'String', 'Enum (Low/Medium/High)', 'Predicted severity level'],
-            ['status', 'String', 'Enum (pending/assigned/completed)', 'Incident resolution state'],
-            ['citizen', 'ObjectId', 'Ref: User', 'Reporting citizen user ID'],
-            ['worker', 'ObjectId', 'Ref: User', 'Assigned worker user ID']
+            ['6718d9f42a1b9e0012345678', 'Athul Krishna R\n(citizen@clean.com)', 'role: "citizen"\nisOnline: true', 'points: 500\nbadge: "Eco Warrior"', '$2b$10$e8wF9aK... (encrypted)'],
+            ['6718d9e12a1b9e0099887766', 'Raju (Sanitation Worker)\n(worker@clean.com)', 'role: "worker"\nisOnline: false', 'points: 120\nbadge: "Sanitation Hero"', '$2b$10$k9xL2pQ... (encrypted)'],
+            ['6718d9a02a1b9e0011223344', 'Municipal Admin\n(admin@clean.com)', 'role: "admin"\nisOnline: true', 'points: 0\nbadge: "System Overseer"', '$2b$10$z7yM4rT... (encrypted)']
+          ]
+        ),
+
+        // 2. Complaints Collection
+        new Paragraph({ children: [ new TextRun({ text: "\nTable 6.2: Complaints Collection Schema Field Dictionary", bold: true }) ] }),
+        createStyledTable(
+          ['Field Name', 'Data Type', 'Constraints', 'Description'],
+          [
+            ['_id', 'ObjectId', 'Primary Key', 'Auto-generated incident ticket ID'],
+            ['title', 'String', 'Required, Trimmed', 'Incident title or landmark designation'],
+            ['location', 'Object', 'Required', 'Embedded location object (lat, lng, address)'],
+            ['location.address', 'String', 'Required', 'Geocoded street address of dump site'],
+            ['location.latitude', 'Number', 'Required', 'WGS84 GPS latitude coordinate'],
+            ['location.longitude', 'Number', 'Required', 'WGS84 GPS longitude coordinate'],
+            ['photoBefore', 'String', 'Required', 'URL path to reported garbage dump photo'],
+            ['photoAfter', 'String', 'Optional', 'URL path to cleaned site verification photo'],
+            ['wasteType', 'String', 'Enum (Plastic/Organic/Hazardous)', 'AI predicted waste category'],
+            ['severity', 'String', 'Enum (Low/Medium/High)', 'AI predicted incident severity level'],
+            ['status', 'String', 'Enum (pending/verified/assigned/cleaned/completed)', 'Lifecycle resolution status'],
+            ['assignedToType', 'String', 'Enum (individual/team)', 'Assignment target category'],
+            ['citizen', 'ObjectId', 'Ref: User, Required', 'Foreign key linking reporting citizen'],
+            ['worker', 'ObjectId', 'Ref: User, Optional', 'Foreign key linking assigned worker'],
+            ['team', 'ObjectId', 'Ref: Team, Optional', 'Foreign key linking assigned cleaning team'],
+            ['assignedAt', 'Date', 'Optional', 'Timestamp when task was dispatched'],
+            ['deadlineAt', 'Date', 'Optional', 'Mandatory completion deadline date']
+          ]
+        ),
+        new Paragraph({ children: [ new TextRun({ text: "\nSample Dummy Document: Complaints Collection (Incident Ticket)", bold: true, italics: true, size: 22 }) ] }),
+        createStyledTable(
+          ['Ticket ID', 'Title & Geotag Location', 'AI Category & Severity', 'Status & Assignment', 'Timestamps & Proofs'],
+          [
+            ['6718da102a1b9e0087654321', 'Perinthalmanna Market Waste Spot\nAddress: Market Junction, Ward 4\nLat: 10.9752, Lng: 76.2238', 'wasteType: "Plastic"\nseverity: "High"', 'status: "completed"\nassignedToType: "individual"\nworker: "Raju"', 'photoBefore: "/uploads/dump1.jpg"\nphotoAfter: "/uploads/clean1.jpg"\ndeadline: 24 Hours'],
+            ['6718da112a1b9e0087654322', 'Bus Stand Overflow Bin\nAddress: Main Bus Station, Ward 1\nLat: 10.9780, Lng: 76.2250', 'wasteType: "Organic"\nseverity: "Medium"', 'status: "assigned"\nassignedToType: "team"\nteam: "Ward 1 Squad"', 'photoBefore: "/uploads/dump2.jpg"\nphotoAfter: null\ndeadline: 48 Hours']
+          ]
+        ),
+
+        // 3. Teams Collection
+        new Paragraph({ children: [ new TextRun({ text: "\nTable 6.3: Teams Collection Schema Field Dictionary", bold: true }) ] }),
+        createStyledTable(
+          ['Field Name', 'Data Type', 'Constraints', 'Description'],
+          [
+            ['_id', 'ObjectId', 'Primary Key', 'Auto-generated team ID'],
+            ['name', 'String', 'Required, Unique', 'Sanitation team squad designation'],
+            ['leader', 'ObjectId', 'Ref: User, Optional', 'Foreign key linking team lead worker'],
+            ['members', 'Array of ObjectIds', 'Ref: User', 'List of member worker User IDs'],
+            ['createdAt', 'Date', 'Auto-Timestamp', 'Team creation timestamp']
+          ]
+        ),
+        new Paragraph({ children: [ new TextRun({ text: "\nSample Dummy Document: Teams Collection (Sanitation Squads)", bold: true, italics: true, size: 22 }) ] }),
+        createStyledTable(
+          ['Team ID', 'Squad Name', 'Leader ID', 'Member Worker IDs Count'],
+          [
+            ['6718da552a1b9e0055443322', 'Perinthalmanna East Rapid Squad', '6718d9e12a1b9e0099887766', 'members: ["6718d9e1...", "6718d9e2...", "6718d9e3..."] (3 Workers)'],
+            ['6718da562a1b9e0055443323', 'Ward 4 Heavy Sanitation Unit', '6718d9e42a1b9e0099887788', 'members: ["6718d9e4...", "6718d9e5..."] (2 Workers)']
+          ]
+        ),
+
+        // 4. Announcements Collection
+        new Paragraph({ children: [ new TextRun({ text: "\nTable 6.4: Announcements Collection Schema Field Dictionary", bold: true }) ] }),
+        createStyledTable(
+          ['Field Name', 'Data Type', 'Constraints', 'Description'],
+          [
+            ['_id', 'ObjectId', 'Primary Key', 'Auto-generated bulletin ID'],
+            ['title', 'String', 'Required', 'Municipal announcement header'],
+            ['content', 'String', 'Required', 'Full announcement text content'],
+            ['target', 'String', 'Enum (all/citizen/worker)', 'Target user role audience'],
+            ['createdAt', 'Date', 'Auto-Timestamp', 'Bulletin publication date']
+          ]
+        ),
+        new Paragraph({ children: [ new TextRun({ text: "\nSample Dummy Document: Announcements Collection", bold: true, italics: true, size: 22 }) ] }),
+        createStyledTable(
+          ['Bulletin ID', 'Title', 'Target Audience', 'Content Body'],
+          [
+            ['6718da882a1b9e0011223344', 'Special Electronic Waste Collection Drive', 'target: "all"', 'Perinthalmanna Municipality is organizing a free E-Waste collection drive at Municipal Bus Stand this Saturday.'],
+            ['6718da892a1b9e0011223345', 'Ward 4 Monsoon Sanitation Guidelines', 'target: "citizen"', 'Citizens are requested to segregate bio-degradable wet waste from dry plastic waste during rain alerts.']
+          ]
+        ),
+
+        // 5. Notifications Collection
+        new Paragraph({ children: [ new TextRun({ text: "\nTable 6.5: Notifications Collection Schema Field Dictionary", bold: true }) ] }),
+        createStyledTable(
+          ['Field Name', 'Data Type', 'Constraints', 'Description'],
+          [
+            ['_id', 'ObjectId', 'Primary Key', 'Auto-generated notification ID'],
+            ['user', 'ObjectId', 'Ref: User, Required', 'Target recipient user ID'],
+            ['title', 'String', 'Required', 'Notification title header'],
+            ['message', 'String', 'Required', 'Notification message body text'],
+            ['isRead', 'Boolean', 'Default: false', 'Read/unread status flag'],
+            ['createdAt', 'Date', 'Auto-Timestamp', 'Notification timestamp']
+          ]
+        ),
+        new Paragraph({ children: [ new TextRun({ text: "\nSample Dummy Document: Notifications Collection", bold: true, italics: true, size: 22 }) ] }),
+        createStyledTable(
+          ['Notification ID', 'Recipient User ID', 'Title & Header', 'IsRead Status', 'Message Content'],
+          [
+            ['6718daaa2a1b9e0066778899', '6718d9e12a1b9e0099887766 (Raju)', 'New Cleanup Assignment', 'isRead: false', 'You have been assigned a new cleanup: "Perinthalmanna Market Waste Spot". Deadline: 1 day.'],
+            ['6718daab2a1b9e0066778800', '6718d9f42a1b9e0012345678 (Athul)', 'Waste Report Verified', 'isRead: true', 'Your waste report "Perinthalmanna Market Waste Spot" has been verified. +50 Eco-Points awarded!']
           ]
         ),
 

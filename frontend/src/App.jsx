@@ -68,27 +68,6 @@ const AnimatedRoutes = () => {
   const location = useLocation();
   const { user } = useContext(AuthContext);
 
-  // Support hash-based URL navigation (e.g., #admin, #worker, #citizen)
-  const hash = location.hash.toLowerCase();
-  if (hash === '#admin' || hash === '#/admin') {
-    if (user?.role === 'admin') {
-      return <PageTransition><AdminDashboard /></PageTransition>;
-    }
-    return <PageTransition><Login /></PageTransition>;
-  }
-  if (hash === '#worker' || hash === '#/worker') {
-    if (user?.role === 'worker') {
-      return <PageTransition><WorkerDashboard /></PageTransition>;
-    }
-    return <PageTransition><Login /></PageTransition>;
-  }
-  if (hash === '#citizen' || hash === '#/citizen') {
-    if (user?.role === 'citizen') {
-      return <PageTransition><CitizenDashboard /></PageTransition>;
-    }
-    return <PageTransition><Login /></PageTransition>;
-  }
-
   return (
     <AnimatePresence mode="wait">
       <Suspense fallback={<PageFallback />}>
