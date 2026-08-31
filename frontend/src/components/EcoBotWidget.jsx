@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect, useContext } from 'react';
 import API from '../utils/api';
 import { MessageCircle, X, Send, Bot, Loader2 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
-import { motion, AnimatePresence } from 'framer-motion';
 
 const EcoBotWidget = () => {
   const { user } = useContext(AuthContext);
@@ -82,139 +81,131 @@ const EcoBotWidget = () => {
   return (
     <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 1000, fontFamily: 'sans-serif' }}>
       {/* Floating Chat Window */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div 
-            initial={{ opacity: 0, y: 30, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 30, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 22, stiffness: 280 }}
-            className="glass-panel" 
-            style={{
-              position: 'absolute',
-              bottom: '70px',
-              right: '0',
-              width: '340px',
-              height: '440px',
-              display: 'flex',
-              flexDirection: 'column',
-              overflow: 'hidden',
-              boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-              border: '1px solid rgba(139, 92, 246, 0.2)',
-              background: 'rgba(10, 14, 23, 0.9)',
-              padding: '0'
-            }}
-          >
-            {/* Header */}
-            <div style={{
-              padding: '16px',
-              background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',
-              color: '#fff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              borderBottom: '1px solid var(--border-glass)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Bot size={20} />
-                <div>
-                  <div style={{ fontSize: '14px', fontWeight: '700' }}>EcoBot Assistant</div>
-                  <div style={{ fontSize: '10px', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <span style={{ width: '6px', height: '6px', background: '#10b981', borderRadius: '50%' }}></span>
-                    Online
-                  </div>
+      {isOpen && (
+        <div 
+          className="glass-panel" 
+          style={{
+            position: 'absolute',
+            bottom: '70px',
+            right: '0',
+            width: '340px',
+            height: '440px',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+            border: '1px solid rgba(139, 92, 246, 0.2)',
+            background: 'rgba(10, 14, 23, 0.9)',
+            padding: '0'
+          }}
+        >
+          {/* Header */}
+          <div style={{
+            padding: '16px',
+            background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottom: '1px solid var(--border-glass)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Bot size={20} />
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: '700' }}>EcoBot Assistant</div>
+                <div style={{ fontSize: '10px', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ width: '6px', height: '6px', background: '#10b981', borderRadius: '50%' }}></span>
+                  Online
                 </div>
               </div>
-              <button 
-                onClick={() => setIsOpen(false)}
-                style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', opacity: 0.8 }}
-              >
-                <X size={18} />
-              </button>
             </div>
+            <button 
+              onClick={() => setIsOpen(false)}
+              style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', opacity: 0.8 }}
+            >
+              <X size={18} />
+            </button>
+          </div>
 
-            {/* Messages List */}
-            <div style={{
-              flex: 1,
-              padding: '16px',
-              overflowY: 'auto',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px'
-            }}>
-              {messages.map((msg, index) => (
-                <div key={index} style={{
-                  alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
-                  maxWidth: '80%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: msg.sender === 'user' ? 'flex-end' : 'flex-start'
-                }}>
-                  <div style={{
-                    padding: '10px 14px',
-                    borderRadius: msg.sender === 'user' ? '12px 12px 2px 12px' : '12px 12px 12px 2px',
-                    background: msg.sender === 'user' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.05)',
-                    border: msg.sender === 'user' ? 'none' : '1px solid var(--border-glass)',
-                    color: '#fff',
-                    fontSize: '13px',
-                    lineHeight: '1.4'
-                  }}>
-                    {msg.text}
-                  </div>
-                </div>
-              ))}
-              {loading && (
-                <div style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', fontSize: '12px' }}>
-                  <Loader2 size={12} className="animate-spin" />
-                  EcoBot is thinking...
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Footer Input */}
-            <form onSubmit={handleSend} style={{
-              padding: '12px',
-              borderTop: '1px solid var(--border-glass)',
-              display: 'flex',
-              gap: '8px'
-            }}>
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder={
-                  userRole === 'admin' ? "Ask about assignments, analytics, stats..." :
-                  userRole === 'worker' ? "Ask about tasks, photos, safety rules..." :
-                  "Ask anything about waste/points..."
-                }
-                style={{
-                  flex: 1,
-                  padding: '8px 12px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--border-glass)',
-                  background: 'rgba(255, 255, 255, 0.03)',
+          {/* Messages List */}
+          <div style={{
+            flex: 1,
+            padding: '16px',
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px'
+          }}>
+            {messages.map((msg, index) => (
+              <div key={index} style={{
+                alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
+                maxWidth: '80%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: msg.sender === 'user' ? 'flex-end' : 'flex-start'
+              }}>
+                <div style={{
+                  padding: '10px 14px',
+                  borderRadius: msg.sender === 'user' ? '12px 12px 2px 12px' : '12px 12px 12px 2px',
+                  background: msg.sender === 'user' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.05)',
+                  border: msg.sender === 'user' ? 'none' : '1px solid var(--border-glass)',
                   color: '#fff',
                   fontSize: '13px',
-                  outline: 'none'
-                }}
-              />
-              <button 
-                type="submit" 
-                className="btn btn-primary"
-                style={{ padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              >
-                <Send size={14} />
-              </button>
-            </form>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                  lineHeight: '1.4'
+                }}>
+                  {msg.text}
+                </div>
+              </div>
+            ))}
+            {loading && (
+              <div style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', fontSize: '12px' }}>
+                <Loader2 size={12} className="animate-spin" />
+                EcoBot is thinking...
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Footer Input */}
+          <form onSubmit={handleSend} style={{
+            padding: '12px',
+            borderTop: '1px solid var(--border-glass)',
+            display: 'flex',
+            gap: '8px'
+          }}>
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder={
+                userRole === 'admin' ? "Ask about assignments, analytics, stats..." :
+                userRole === 'worker' ? "Ask about tasks, photos, safety rules..." :
+                "Ask anything about waste/points..."
+              }
+              style={{
+                flex: 1,
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: '1px solid var(--border-glass)',
+                background: 'rgba(255, 255, 255, 0.03)',
+                color: '#fff',
+                fontSize: '13px',
+                outline: 'none'
+              }}
+            />
+            <button 
+              type="submit" 
+              className="btn btn-primary"
+              style={{ padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Send size={14} />
+            </button>
+          </form>
+        </div>
+      )}
 
       {/* Toggle Button */}
-      <motion.button 
-        whileHover={{ scale: 1.08 }}
-        whileTap={{ scale: 0.95 }}
+      <button 
         onClick={() => setIsOpen(!isOpen)}
         style={{
           width: '52px',
@@ -232,7 +223,7 @@ const EcoBotWidget = () => {
         }}
       >
         <MessageCircle size={24} />
-      </motion.button>
+      </button>
     </div>
   );
 };

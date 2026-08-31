@@ -2,7 +2,6 @@ import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { Trash2, Hammer, Shield, AlertCircle, ArrowLeft } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import API from '../utils/api';
 
 const Login = () => {
@@ -285,9 +284,7 @@ const Login = () => {
             </span>
           </div>
 
-          <motion.button
-            whileHover={{ scale: 1.02, boxShadow: `0 6px 20px rgba(${role === 'worker' ? '0, 210, 255' : role === 'admin' ? '255, 74, 90' : '16, 185, 129'}, 0.3)` }}
-            whileTap={{ scale: 0.98 }}
+          <button
             type="submit"
             className="btn"
             style={{
@@ -300,7 +297,7 @@ const Login = () => {
             disabled={loadingSubmit}
           >
             {loadingSubmit ? 'Signing In...' : 'Sign In'}
-          </motion.button>
+          </button>
         </form>
 
         {currentPortal.footer}
@@ -413,86 +410,77 @@ const Login = () => {
         )}
       </div>
 
-      <AnimatePresence>
-        {showResetModal && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
+      {showResetModal && (
+        <div 
+          style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
+        >
+          <div 
+            className="glass-panel" 
+            style={{ width: '100%', maxWidth: '400px', borderColor: 'var(--border-glass)' }}
           >
-            <motion.div 
-              initial={{ scale: 0.92, y: 15, opacity: 0 }}
-              animate={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0.92, y: 15, opacity: 0 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-              className="glass-panel" 
-              style={{ width: '100%', maxWidth: '400px', borderColor: 'var(--border-glass)' }}
-            >
-              <h3 style={{ fontSize: '18px', color: 'var(--text-primary)', marginBottom: '8px' }}>Reset Password</h3>
-              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: '1.4' }}>
-                {resetStep === 1 
-                  ? 'Enter your registered email address to receive a 6-digit verification code.'
-                  : 'Enter the 6-digit OTP code sent to your email and set your new password.'
-                }
-              </p>
+            <h3 style={{ fontSize: '18px', color: 'var(--text-primary)', marginBottom: '8px' }}>Reset Password</h3>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: '1.4' }}>
+              {resetStep === 1 
+                ? 'Enter your registered email address to receive a 6-digit verification code.'
+                : 'Enter the 6-digit OTP code sent to your email and set your new password.'
+              }
+            </p>
 
-              {resetError && <div style={{ color: 'var(--color-danger)', background: 'rgba(255,74,90,0.1)', padding: '10px', borderRadius: '6px', fontSize: '13px', marginBottom: '16px' }}>{resetError}</div>}
-              {resetSuccess && <div style={{ color: 'var(--color-primary)', background: 'rgba(16,185,129,0.1)', padding: '10px', borderRadius: '6px', fontSize: '13px', marginBottom: '16px' }}>{resetSuccess}</div>}
+            {resetError && <div style={{ color: 'var(--color-danger)', background: 'rgba(255,74,90,0.1)', padding: '10px', borderRadius: '6px', fontSize: '13px', marginBottom: '16px' }}>{resetError}</div>}
+            {resetSuccess && <div style={{ color: 'var(--color-primary)', background: 'rgba(16,185,129,0.1)', padding: '10px', borderRadius: '6px', fontSize: '13px', marginBottom: '16px' }}>{resetSuccess}</div>}
 
-              {resetStep === 1 ? (
-                <form onSubmit={handleRequestResetOtp}>
-                  <div className="form-group">
-                    <label className="form-label" style={{ color: 'var(--text-secondary)' }}>Email Address</label>
-                    <input 
-                      type="email" 
-                      className="form-input" 
-                      value={resetEmail} 
-                      onChange={(e) => setResetEmail(e.target.value)} 
-                      placeholder="name@example.com"
-                      required 
-                    />
-                  </div>
-                  <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                    <button type="button" className="btn btn-secondary" onClick={() => setShowResetModal(false)} style={{ flex: 1 }}>Cancel</button>
-                    <button type="submit" className="btn btn-primary" disabled={resetLoading} style={{ flex: 1 }}>{resetLoading ? 'Sending...' : 'Send OTP'}</button>
-                  </div>
-                </form>
-              ) : (
-                <form onSubmit={handleResetSubmit}>
-                  <div className="form-group">
-                    <label className="form-label" style={{ color: 'var(--text-secondary)' }}>6-Digit OTP Code</label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      value={resetOtp} 
-                      onChange={(e) => setResetOtp(e.target.value)} 
-                      placeholder="123456"
-                      maxLength={6}
-                      required 
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label" style={{ color: 'var(--text-secondary)' }}>New Password</label>
-                    <input 
-                      type="password" 
-                      className="form-input" 
-                      value={newPassword} 
-                      onChange={(e) => setNewPassword(e.target.value)} 
-                      placeholder="••••••••"
-                      required 
-                    />
-                  </div>
-                  <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                    <button type="button" className="btn btn-secondary" onClick={() => setResetStep(1)} style={{ flex: 1 }}>Back</button>
-                    <button type="submit" className="btn btn-primary" disabled={resetLoading} style={{ flex: 1 }}>{resetLoading ? 'Resetting...' : 'Reset Password'}</button>
-                  </div>
-                </form>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            {resetStep === 1 ? (
+              <form onSubmit={handleRequestResetOtp}>
+                <div className="form-group">
+                  <label className="form-label" style={{ color: 'var(--text-secondary)' }}>Email Address</label>
+                  <input 
+                    type="email" 
+                    className="form-input" 
+                    value={resetEmail} 
+                    onChange={(e) => setResetEmail(e.target.value)} 
+                    placeholder="name@example.com"
+                    required 
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowResetModal(false)} style={{ flex: 1 }}>Cancel</button>
+                  <button type="submit" className="btn btn-primary" disabled={resetLoading} style={{ flex: 1 }}>{resetLoading ? 'Sending...' : 'Send OTP'}</button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleResetSubmit}>
+                <div className="form-group">
+                  <label className="form-label" style={{ color: 'var(--text-secondary)' }}>6-Digit OTP Code</label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    value={resetOtp} 
+                    onChange={(e) => setResetOtp(e.target.value)} 
+                    placeholder="123456"
+                    maxLength={6}
+                    required 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" style={{ color: 'var(--text-secondary)' }}>New Password</label>
+                  <input 
+                    type="password" 
+                    className="form-input" 
+                    value={newPassword} 
+                    onChange={(e) => setNewPassword(e.target.value)} 
+                    placeholder="••••••••"
+                    required 
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                  <button type="button" className="btn btn-secondary" onClick={() => setResetStep(1)} style={{ flex: 1 }}>Back</button>
+                  <button type="submit" className="btn btn-primary" disabled={resetLoading} style={{ flex: 1 }}>{resetLoading ? 'Resetting...' : 'Reset Password'}</button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

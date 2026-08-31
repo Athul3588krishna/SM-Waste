@@ -51,6 +51,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    telegramChatId: {
+      type: String,
+      default: null,
+    },
     team: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Team',

@@ -386,7 +386,7 @@ const assignComplaint = async (req, res) => {
       // Instant Telegram Bot Mobile Alert to Worker
       sendTelegramWorkerAlert({
         workerName: worker.name,
-        telegramChatId: worker.telegramChatId || worker.phone,
+        telegramChatId: worker.telegramChatId || null,
         complaint: complaint,
         deadlineDays: days
       }).catch(err => console.error('Telegram Dispatch Alert Error:', err));
@@ -500,11 +500,19 @@ const reassignComplaint = async (req, res) => {
     if (assignedToType === 'individual') {
       complaint.worker = workerId;
       complaint.team = null;
+      const worker = await User.findById(workerId);
       await Notification.create({
         user: workerId,
         title: 'Overdue Task Reassignment',
         message: `You have been reassigned an overdue cleanup: "${complaint.title}". Deadline: ${days} day(s).`,
       });
+
+      sendTelegramWorkerAlert({
+        workerName: worker ? worker.name : 'Sanitation Worker',
+        telegramChatId: worker ? worker.telegramChatId : null,
+        complaint: complaint,
+        deadlineDays: days
+      }).catch(err => console.error('Telegram Dispatch Alert Error:', err));
     } else {
       complaint.team = teamId;
       complaint.worker = null;
@@ -516,6 +524,13 @@ const reassignComplaint = async (req, res) => {
           message: `Your team "${team.name}" has been reassigned an overdue cleanup: "${complaint.title}". Deadline: ${days} day(s).`,
         }));
         await Notification.insertMany(notifications);
+
+        sendTelegramWorkerAlert({
+          workerName: `Team ${team.name}`,
+          telegramChatId: null,
+          complaint: complaint,
+          deadlineDays: days
+        }).catch(err => console.error('Telegram Dispatch Alert Error:', err));
       }
     }
 

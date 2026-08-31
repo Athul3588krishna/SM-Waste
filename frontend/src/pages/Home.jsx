@@ -17,7 +17,6 @@ import {
   Shield,
   Activity
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
 
 const Home = () => {
@@ -31,19 +30,6 @@ const Home = () => {
     } else {
       navigate('/login');
     }
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1, delayChildren: 0.2 }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
   };
 
   return (
@@ -71,7 +57,7 @@ const Home = () => {
           zIndex: 0
         }} />
 
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ position: 'relative', zIndex: 1 }}>
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -168,7 +154,7 @@ const Home = () => {
               <span>Go to Dashboard</span>
             </button>
           </div>
-        </motion.div>
+        </div>
       </section>
 
       {/* Metrics Banner */}
@@ -209,11 +195,7 @@ const Home = () => {
           <p style={{ color: 'var(--text-secondary, #9ca3af)' }}>Dedicated dashboards designed for citizens, cleanup crews, and municipal administrators.</p>
         </div>
 
-        <motion.div 
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
+        <div 
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
@@ -221,7 +203,7 @@ const Home = () => {
           }}
         >
           {/* Citizen Card */}
-          <motion.div variants={itemVariants} style={{
+          <div style={{
             padding: '2rem',
             borderRadius: '16px',
             background: 'var(--card-bg, rgba(255, 255, 255, 0.03))',
@@ -258,10 +240,10 @@ const Home = () => {
               <span>Access Citizen Portal</span>
               <ArrowRight size={16} />
             </button>
-          </motion.div>
+          </div>
 
           {/* Worker Card */}
-          <motion.div variants={itemVariants} style={{
+          <div style={{
             padding: '2rem',
             borderRadius: '16px',
             background: 'var(--card-bg, rgba(255, 255, 255, 0.03))',
@@ -298,8 +280,8 @@ const Home = () => {
               <span>Access Worker Portal</span>
               <ArrowRight size={16} />
             </button>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       </section>
 
       {/* Key Features Grid */}
