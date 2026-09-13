@@ -388,7 +388,8 @@ const assignComplaint = async (req, res) => {
         workerName: worker.name,
         telegramChatId: worker.telegramChatId || null,
         complaint: complaint,
-        deadlineDays: days
+        deadlineDays: days,
+        isOnline: worker.isOnline === true
       }).catch(err => console.error('Telegram Dispatch Alert Error:', err));
     } else {
       const team = await Team.findById(teamId);
@@ -511,7 +512,8 @@ const reassignComplaint = async (req, res) => {
         workerName: worker ? worker.name : 'Sanitation Worker',
         telegramChatId: worker ? worker.telegramChatId : null,
         complaint: complaint,
-        deadlineDays: days
+        deadlineDays: days,
+        isOnline: worker ? (worker.isOnline === true) : false
       }).catch(err => console.error('Telegram Dispatch Alert Error:', err));
     } else {
       complaint.team = teamId;

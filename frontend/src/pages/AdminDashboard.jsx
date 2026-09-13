@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import API from '../utils/api';
+import { AuthContext } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { useLanguage } from '../context/LanguageContext';
 import EcoCreditCard from '../components/EcoCreditCard';
@@ -10,6 +11,7 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pi
 import { Shield, Users, CheckCircle2, Clock, AlertTriangle, Play, Check, X, Clipboard, ExternalLink, Calendar, Plus, Edit, Trash2, Megaphone, CheckSquare } from 'lucide-react';
 
 const AdminDashboard = () => {
+  const { user } = useContext(AuthContext);
   const { socket } = useSocket();
   const [activeTab, setActiveTab] = useState('complaints'); // 'complaints', 'staff', 'announcements'
   
@@ -438,8 +440,13 @@ const AdminDashboard = () => {
             <Shield size={20} color="#000" />
           </div>
           <div>
-            <h1 style={{ fontSize: '24px', color: 'var(--text-primary)' }}>Administrative Control Dashboard</h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Monitor city cleanliness reports, manage workers/teams, and post announcements.</p>
+            <div style={{ fontSize: '12px', color: 'var(--color-primary)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Admin Control Center
+            </div>
+            <h1 style={{ fontSize: '26px', color: 'var(--text-primary)', marginTop: '2px' }}>
+              Hi, {user?.name || 'Administrator'} 🛡️
+            </h1>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: '2px' }}>Monitor city cleanliness reports, manage workers/teams, and post announcements.</p>
           </div>
         </div>
 
@@ -1077,7 +1084,7 @@ const AdminDashboard = () => {
                     <option value="">Choose Worker</option>
                     {workers.map((w) => (
                       <option key={w._id} value={w._id}>
-                        {w.name} {w.isOnline ? '🟢 (Online)' : '📱 (Offline - Telegram Alert)'}
+                        {w.name} {w.isOnline ? '🟢 (Online)' : '🔴 (Offline)'}
                       </option>
                     ))}
                   </select>

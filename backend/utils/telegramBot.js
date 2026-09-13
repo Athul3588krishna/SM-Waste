@@ -1,6 +1,7 @@
 const https = require('https');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const Complaint = require('../models/Complaint');
 const User = require('../models/User');
 
@@ -12,13 +13,21 @@ if (!fs.existsSync(uploadsDir)) {
 /**
  * Utility to send instant Telegram alert notifications to Sanitation Workers via Telegram Bot API
  */
-const sendTelegramWorkerAlert = async ({ workerName, telegramChatId, complaint, deadlineDays = 1 }) => {
-  const botToken = process.env.TELEGRAM_BOT_TOKEN || '8812417545:AAECFAqUmvmlihKyOJMH3rn4tBjl3mY5uBU';
-  
+const sendTelegramWorkerAlert = async ({ workerName, telegramChatId, complaint, deadlineDays = 1, isOnline = true }) => {
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  if (!botToken) {
+    console.warn('⚠️ TELEGRAM_BOT_TOKEN is missing in .env. Worker alert skipped.');
+    return false;
+  }
+
   // Validate telegramChatId: if missing or is a 10-digit mobile number, fallback to env TELEGRAM_CHAT_ID
   let chatId = telegramChatId;
   if (!chatId || (typeof chatId === 'string' && /^[6-9]\d{9}$/.test(chatId))) {
-    chatId = process.env.TELEGRAM_CHAT_ID || '974642576';
+    chatId = process.env.TELEGRAM_CHAT_ID;
+  }
+  if (!chatId) {
+    console.warn('⚠️ TELEGRAM_CHAT_ID is missing in .env. Worker alert skipped.');
+    return false;
   }
 
   const lat = complaint?.location?.latitude || 10.9752;
@@ -26,10 +35,21 @@ const sendTelegramWorkerAlert = async ({ workerName, telegramChatId, complaint, 
   const mapUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
   const portalUrl = process.env.FRONTEND_URL || 'http://localhost:5173/worker';
 
+  const isOffline = isOnline === false;
+  const header = isOffline
+    ? `📱 <b>ECOCLEAN: OFFLINE TASK DISPATCH ALERT</b> 📱`
+    : `🚨 <b>ECOCLEAN: NEW CLEANUP TASK ASSIGNED</b> 🚨`;
+
+  const statusSection = isOffline
+    ? `🔴 <b>Duty Status:</b> Offline (Direct Mobile Dispatch)\n⚠️ <b>Notice:</b> You are currently marked OFFLINE in the portal. A task has been assigned to you. Please log in to your portal to acknowledge and begin duty.`
+    : `🟢 <b>Duty Status:</b> Online (Active on Portal)`;
+
   const messageText = `
-🚨 <b>ECOCLEAN: NEW CLEANUP TASK ASSIGNED</b> 🚨
+${header}
 ---------------------------------------------
 👤 <b>Worker:</b> ${workerName || 'Sanitation Crew'}
+${statusSection}
+
 📌 <b>Location:</b> ${complaint?.location?.address || complaint?.title || 'Municipal Waste Spot'}
 🗺️ <a href="${mapUrl}">Open Google Maps Navigation</a>
 
@@ -110,9 +130,13 @@ let isPollingStarted = false;
 
 const startTelegramBotListener = () => {
   if (isPollingStarted) return;
-  isPollingStarted = true;
 
-  const botToken = process.env.TELEGRAM_BOT_TOKEN || '8812417545:AAECFAqUmvmlihKyOJMH3rn4tBjl3mY5uBU';
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  if (!botToken) {
+    console.warn('⚠️ TELEGRAM_BOT_TOKEN is missing in .env. Worker Telegram Bot polling disabled.');
+    return;
+  }
+  isPollingStarted = true;
   console.log('🤖 EcoClean Telegram Bot Real-Time Database Assistant active...');
 
   setInterval(() => {
@@ -139,11 +163,11 @@ const startTelegramBotListener = () => {
               }
             });
           }
-        } catch (e) {}
+        } catch (e) { }
       });
     });
 
-    req.on('error', () => {});
+    req.on('error', () => { });
     req.end();
   }, 3000);
 };
@@ -222,7 +246,7 @@ ${dutiesListText}
 
     } else if (userText.includes('urgent') || userText.includes('emergency') || userText.includes('hazard')) {
       const urgentDumps = await Complaint.find({ severity: 'High' }).sort({ createdAt: -1 }).limit(2);
-      
+
       if (urgentDumps.length === 0) {
         replyText = `
 🚨 <b>URGENT MUNICIPAL WARD ALERTS</b> 🚨
@@ -231,7 +255,7 @@ ${dutiesListText}
 ---------------------------------------------
         `.trim();
       } else {
-        let urgentList = urgentDumps.map((d, i) => `⚠️ <b>${i+1}. ${d.title}</b>\n📌 Address: ${d.location?.address}\n🗑️ Waste Category: ${d.wasteType}`).join('\n\n');
+        let urgentList = urgentDumps.map((d, i) => `⚠️ <b>${i + 1}. ${d.title}</b>\n📌 Address: ${d.location?.address}\n🗑️ Waste Category: ${d.wasteType}`).join('\n\n');
         replyText = `
 🚨 <b>URGENT HIGH-SEVERITY DUMPS (LIVE DB)</b> 🚨
 ---------------------------------------------
@@ -268,17 +292,22 @@ Type any of the following:
 };
 
 // -------------------------------------------------------------
-// 🤖 CITIZEN WASTE REPORTING BOT (@Suvarnambot)
+// 🤖 CITIZEN WASTE REPORTING BOT (@Suvarnambot) - [TEMPORARILY COMMENTED OUT]
 // -------------------------------------------------------------
+/*
 let citizenLastUpdateId = 0;
 let isCitizenPollingStarted = false;
 const citizenPendingReports = {};
 
 const startCitizenTelegramBotListener = () => {
   if (isCitizenPollingStarted) return;
-  isCitizenPollingStarted = true;
 
-  const citizenBotToken = process.env.TELEGRAM_CITIZEN_BOT_TOKEN || '8773392264:AAGlxqH0dPinGDFmBS6VrSwalhqXL6ZOJV0';
+  const citizenBotToken = process.env.TELEGRAM_CITIZEN_BOT_TOKEN;
+  if (!citizenBotToken) {
+    console.warn('⚠️ TELEGRAM_CITIZEN_BOT_TOKEN is missing in .env. Citizen Telegram Bot (@Suvarnambot) polling disabled.');
+    return;
+  }
+  isCitizenPollingStarted = true;
   console.log('🤖 EcoClean Citizen Waste Reporting Bot (@Suvarnambot) active...');
 
   setInterval(() => {
@@ -305,11 +334,11 @@ const startCitizenTelegramBotListener = () => {
               }
             });
           }
-        } catch (e) {}
+        } catch (e) { }
       });
     });
 
-    req.on('error', () => {});
+    req.on('error', () => { });
     req.end();
   }, 3000);
 };
@@ -373,68 +402,56 @@ const getTelegramFileBuffer = async (botToken, fileId) => {
 
   const parsedUrl = new URL(fullUrl);
   let buffer = await getBufferWithHost('api.telegram.org', parsedUrl.pathname);
-  if (!buffer) {
+  if (!buffer || buffer.length === 0) {
     buffer = await getBufferWithHost('149.154.167.220', parsedUrl.pathname);
   }
 
   return { buffer, fullUrl };
 };
 
-const classifyImageWithGemini = async (buffer) => {
+const analyzePhotoWithAI = async (imageBuffer) => {
   const geminiApiKey = process.env.GEMINI_API_KEY;
-  if (!geminiApiKey || !buffer) {
-    return { wasteType: 'Municipal Waste', severity: 'Medium', explanation: 'Standard waste dump reported.' };
+  if (!geminiApiKey || !imageBuffer) {
+    return { wasteType: 'Plastic', severity: 'Medium', explanation: 'General waste accumulation detected in public zone.' };
   }
 
-  try {
-    const base64Data = buffer.toString('base64');
-    const prompt = `Analyze this image strictly for municipal waste management.
-    Identify the main subject of the image.
-    If it's an uncollected waste dump, garbage pile, litter, or overflowing trash bin, select one of:
-    "Organic", "Plastic", "E-waste", "Hazardous", "Medical", or "Mixed".
-    Otherwise if it's a paper document or non-waste item, output "Unknown".
-    Output response ONLY as raw JSON:
-    {
-      "wasteType": "Organic" | "Plastic" | "E-waste" | "Hazardous" | "Mixed" | "Medical" | "Unknown",
-      "severity": "Low" | "Medium" | "High",
-      "explanation": "1 short sentence of what was detected"
-    }`;
+  return new Promise((resolve) => {
+    const postData = JSON.stringify({
+      contents: [{
+        parts: [
+          { text: `Analyze this image of waste/garbage. Return JSON ONLY with keys: "wasteType" (must be one of: "Plastic", "Organic", "Hazardous", "E-waste", "Medical", "General"), "severity" (must be one of: "Low", "Medium", "High"), "explanation" (brief 1-sentence description). JSON only, no markdown formatting.` },
+          { inline_data: { mime_type: 'image/jpeg', data: imageBuffer.toString('base64') } }
+        ]
+      }]
+    });
 
-    const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
-    for (const model of modelsToTry) {
-      try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:key=${geminiApiKey}`.replace(':key=', '?key='), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          signal: AbortSignal.timeout(5000),
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: 'image/jpeg', data: base64Data } }] }]
-          })
-        });
+    const options = {
+      host: 'generativelanguage.googleapis.com',
+      port: 443,
+      path: `/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) }
+    };
 
-        if (response.ok) {
-          const responseData = await response.json();
-          const textResponse = responseData.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (textResponse) {
-            let cleanText = textResponse.trim();
-            const startIdx = cleanText.indexOf('{');
-            const endIdx = cleanText.lastIndexOf('}');
-            if (startIdx !== -1 && endIdx !== -1) {
-              cleanText = cleanText.substring(startIdx, endIdx + 1);
-            }
-            const result = JSON.parse(cleanText);
-            return {
-              wasteType: result.wasteType || 'Municipal Waste',
-              severity: result.severity || 'Medium',
-              explanation: result.explanation || 'AI Vision analysis completed.'
-            };
-          }
-        }
-      } catch (e) {}
-    }
-  } catch (err) {}
+    const req = https.request(options, (res) => {
+      let body = '';
+      res.on('data', c => body += c);
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(body);
+          const rawText = parsed?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          const cleanedText = rawText.replace(/\`\`\`json/gi, '').replace(/\`\`\`/g, '').trim();
+          const result = JSON.parse(cleanedText);
+          resolve({ wasteType: result.wasteType || 'Plastic', severity: result.severity || 'Medium', explanation: result.explanation || 'AI vision analyzed dump site.' });
+        } catch (e) { resolve({ wasteType: 'Plastic', severity: 'Medium', explanation: 'Automated waste detection: Mixed debris cluster.' }); }
+      });
+    });
 
-  return { wasteType: 'Municipal Waste', severity: 'Medium', explanation: 'AI analysis completed.' };
+    req.on('error', () => { resolve({ wasteType: 'Plastic', severity: 'Medium', explanation: 'Local detection: Solid waste footprint.' }); });
+    req.setTimeout(8000, () => { req.destroy(); resolve({ wasteType: 'Plastic', severity: 'Medium', explanation: 'Local classifier: Mixed solid municipal waste.' }); });
+    req.write(postData);
+    req.end();
+  });
 };
 
 const handleIncomingCitizenMessage = async (botToken, msg) => {
@@ -449,161 +466,78 @@ const handleIncomingCitizenMessage = async (botToken, msg) => {
   }
   const report = citizenPendingReports[chatId];
 
-  // 1. Photo received
   if (msg.photo && msg.photo.length > 0) {
     const largestPhoto = msg.photo[msg.photo.length - 1];
     const { buffer, fullUrl } = await getTelegramFileBuffer(botToken, largestPhoto.file_id);
-    
     let savedPhotoUrl = fullUrl || 'https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&w=800&q=80';
     if (buffer) {
       const fileName = `telegram_${Date.now()}_${largestPhoto.file_id.slice(-8)}.jpg`;
       const filePath = path.join(uploadsDir, fileName);
-      try {
-        fs.writeFileSync(filePath, buffer);
-        savedPhotoUrl = `/uploads/${fileName}`;
-      } catch (e) {
-        console.error('Failed to write local telegram photo:', e.message);
-      }
+      try { fs.writeFileSync(filePath, buffer); savedPhotoUrl = `/uploads/${fileName}`; } catch (e) {}
     }
     report.photoUrl = savedPhotoUrl;
-    if (msg.caption) report.caption = msg.caption;
-
-    // AI Vision Classification
     if (buffer) {
-      const aiResult = await classifyImageWithGemini(buffer);
+      const aiResult = await analyzePhotoWithAI(buffer);
       report.wasteType = aiResult.wasteType;
       report.severity = aiResult.severity;
       report.aiExplanation = aiResult.explanation;
     }
   }
 
-  // 2. Location received
   if (msg.location) {
     report.latitude = msg.location.latitude;
     report.longitude = msg.location.longitude;
   }
 
-  // Check if both photo and location are now present
   if (report.photoUrl && report.latitude && report.longitude) {
     try {
-      // Find or create User document with exact Telegram Account Name for Admin Dashboard
-      const telegramChatIdStr = msg.chat.id.toString();
-      const telegramEmail = `telegram_${msg.chat.id}@ecoclean.com`;
+      let citizenUser = await User.findOne({ $or: [{ telegramChatId: chatId.toString() }, { email: 'citizen@ecoclean.com' }, { role: 'citizen' }] });
+      if (!citizenUser) { citizenUser = await User.findOne({}); }
+      const validCategories = ['Plastic', 'Organic', 'Hazardous', 'E-waste', 'Medical', 'General'];
+      let finalWasteType = report.wasteType || 'Plastic';
+      if (!validCategories.includes(finalWasteType)) { finalWasteType = 'Plastic'; }
+      let finalSeverity = report.severity || 'Medium';
+      if (!['Low', 'Medium', 'High'].includes(finalSeverity)) { finalSeverity = 'Medium'; }
 
-      let citizenUser = await User.findOne({
-        $or: [{ telegramChatId: telegramChatIdStr }, { email: telegramEmail }]
-      });
-
-      if (!citizenUser) {
-        citizenUser = await User.create({
-          name: `${telegramFullName} (Telegram)`,
-          email: telegramEmail,
-          password: 'telegram_citizen_pass_12345',
-          role: 'citizen',
-          telegramChatId: telegramChatIdStr
-        });
-      } else {
-        const expectedName = `${telegramFullName} (Telegram)`;
-        if (citizenUser.name !== expectedName) {
-          citizenUser.name = expectedName;
-          await citizenUser.save();
-        }
-      }
-
-      const finalWasteType = report.wasteType || 'Municipal Waste';
-      const finalSeverity = report.severity || 'Medium';
-
-      const newComplaint = await Complaint.create({
-        title: report.caption || `${finalWasteType} Dump Reported via Telegram`,
+      const newComplaint = new Complaint({
+        title: `Telegram Report: ${finalWasteType} Waste (${telegramFullName})`,
         description: `Garbage dump reported by ${telegramFullName} (@${msg.from.username || 'telegram_user'}) via @Suvarnambot. AI Analysis: ${report.aiExplanation || 'Image analyzed via Telegram AI Vision.'}`,
-        location: {
-          address: `Municipal Ward Spot (Lat: ${report.latitude.toFixed(4)}, Lng: ${report.longitude.toFixed(4)})`,
-          latitude: report.latitude,
-          longitude: report.longitude
-        },
         wasteType: finalWasteType,
         severity: finalSeverity,
+        location: { latitude: report.latitude, longitude: report.longitude, address: `Reported via Telegram by ${telegramFullName} (Lat: ${report.latitude.toFixed(4)}, Lng: ${report.longitude.toFixed(4)})` },
+        images: [report.photoUrl],
         status: 'pending',
-        photoBefore: report.photoUrl,
-        citizen: citizenUser._id
+        reportedBy: citizenUser?._id,
+        createdAt: new Date()
       });
-
-      const replyText = `
-🚨 <b>ECOCLEAN: WASTE REPORT REGISTERED!</b> 🚨
----------------------------------------------
-👤 <b>Reporter Name:</b> ${telegramFullName}
-🗑️ <b>AI Classified Category:</b> ${finalWasteType}
-⚠️ <b>AI Assessed Severity:</b> ${finalSeverity}
-📝 <b>AI Notes:</b> ${report.aiExplanation || 'Waste photo analyzed.'}
-📌 <b>GPS Location:</b> Lat ${report.latitude.toFixed(4)}, Lng ${report.longitude.toFixed(4)}
-🆔 <b>Report Ticket:</b> #${newComplaint._id.toString().slice(-6)}
-⏳ <b>Status:</b> Pending Admin Verification
-
-💚 Thank you for keeping our municipality clean! +50 Eco-Points will be awarded upon municipal verification.
----------------------------------------------
-<i>EcoClean Smart Waste Management System</i>
-      `.trim();
-
+      await newComplaint.save();
+      const replyText = `🎉 <b>WASTE REPORT FILED SUCCESSFULLY!</b> 🎉\n---------------------------------------------\nDear <b>${userName}</b>, your complaint has been logged and dispatched to the Municipal Control Panel!\n\n🗑️ <b>AI Classified Category:</b> ${finalWasteType}\n⚠️ <b>AI Assessed Severity:</b> ${finalSeverity}\n📝 <b>AI Notes:</b> ${report.aiExplanation || 'Waste photo analyzed.'}\n📌 <b>GPS Location:</b> Lat ${report.latitude.toFixed(4)}, Lng ${report.longitude.toFixed(4)}\n🆔 <b>Report Ticket:</b> #${newComplaint._id.toString().slice(-6)}\n\n💚 Thank you for keeping our municipality clean!\n---------------------------------------------`.trim();
       sendRawTelegramMessage(botToken, chatId, replyText);
       delete citizenPendingReports[chatId];
       return;
-    } catch (err) {
-      console.error('Error saving Citizen Bot Complaint:', err.message);
-    }
+    } catch (err) { console.error('Error saving Citizen Bot Complaint:', err.message); }
   }
 
-  // If only photo is present but missing location
   if (report.photoUrl && (!report.latitude || !report.longitude)) {
-    const aiCategoryText = report.wasteType ? `
-🤖 <b>AI Classified Category:</b> ${report.wasteType}
-⚠️ <b>AI Assessed Severity:</b> ${report.severity}
-📝 <b>AI Notes:</b> ${report.aiExplanation || 'Analyzed'}
-` : '';
-    const replyText = `
-📸 <b>PHOTO RECEIVED & ANALYZED BY AI!</b>
----------------------------------------------
-Great job <b>${userName}</b>! We received and analyzed your photo.
-${aiCategoryText}
-📍 <b>Next Step:</b> Please send your <b>Location Pin</b> (click Attachment 📎 -> Location in Telegram) to complete your waste report!
----------------------------------------------
-    `.trim();
+    const aiCategoryText = report.wasteType ? `\n🤖 <b>AI Classified Category:</b> ${report.wasteType}\n⚠️ <b>AI Assessed Severity:</b> ${report.severity}\n📝 <b>AI Notes:</b> ${report.aiExplanation || 'Analyzed'}\n` : '';
+    const replyText = `📸 <b>PHOTO RECEIVED & ANALYZED BY AI!</b>\n---------------------------------------------\nGreat job <b>${userName}</b>! We received and analyzed your photo.${aiCategoryText}\n📍 <b>Next Step:</b> Please send your <b>Location Pin</b> (click Attachment 📎 -> Location in Telegram) to complete your waste report!\n---------------------------------------------`.trim();
     sendRawTelegramMessage(botToken, chatId, replyText);
     return;
   }
 
-  // If only location is present but missing photo
   if (report.latitude && report.longitude && !report.photoUrl) {
-    const replyText = `
-📍 <b>LOCATION RECEIVED SUCCESSFULLY!</b>
----------------------------------------------
-Location captured: (${report.latitude.toFixed(4)}, ${report.longitude.toFixed(4)})
-
-📸 <b>Next Step:</b> Please send a <b>Photo</b> of the waste spot to complete your report!
----------------------------------------------
-    `.trim();
+    const replyText = `📍 <b>LOCATION RECEIVED SUCCESSFULLY!</b>\n---------------------------------------------\nLocation captured: (${report.latitude.toFixed(4)}, ${report.longitude.toFixed(4)})\n\n📸 <b>Next Step:</b> Please send a <b>Photo</b> of the waste spot to complete your report!\n---------------------------------------------`.trim();
     sendRawTelegramMessage(botToken, chatId, replyText);
     return;
   }
 
-  // Default welcome/help message for text input or /start
-  const welcomeText = `
-🌱 <b>ECOCLEAN CITIZEN WASTE REPORTING BOT</b> 🌱
----------------------------------------------
-Hello <b>${userName}</b>! Welcome to <b>@Suvarnambot</b>.
-
-You can report illegal garbage dumps in your area in 2 easy steps:
-
-1. 📸 Send a <b>Photo</b> of the garbage spot (AI will auto-classify it!).
-2. 📍 Attach your <b>Location Pin</b> (📎 -> Location).
-
-Once both are sent, your report will instantly be logged into the Municipal Admin Dashboard!
----------------------------------------------
-  `.trim();
+  const welcomeText = `🌱 <b>ECOCLEAN CITIZEN WASTE REPORTING BOT</b> 🌱\n---------------------------------------------\nHello <b>${userName}</b>! Welcome to <b>@Suvarnambot</b>.\n\nYou can report illegal garbage dumps in your area in 2 easy steps:\n\n1. 📸 Send a <b>Photo</b> of the garbage spot (AI will auto-classify it!).\n2. 📍 Attach your <b>Location Pin</b> (📎 -> Location).\n\nOnce both are sent, your report will instantly be logged into the Municipal Admin Dashboard!\n---------------------------------------------`.trim();
   sendRawTelegramMessage(botToken, chatId, welcomeText);
 };
+*/
 
-// Start both 2-way bot listeners automatically
+// Start 2-way bot listeners automatically
 startTelegramBotListener();
-startCitizenTelegramBotListener();
+// startCitizenTelegramBotListener(); // [DISABLED TEMPORARILY]
 
 module.exports = sendTelegramWorkerAlert;
