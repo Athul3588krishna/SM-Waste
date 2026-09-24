@@ -114,6 +114,7 @@ const AdminDashboard = () => {
     socket.on('task_cleaned', handleRealtimeUpdate);
     socket.on('complaint_completed', handleRealtimeUpdate);
     socket.on('complaint_status_updated', handleRealtimeUpdate);
+    socket.on('worker_status_updated', handleRealtimeUpdate);
 
     return () => {
       socket.off('complaint_updated', handleRealtimeUpdate);
@@ -122,6 +123,7 @@ const AdminDashboard = () => {
       socket.off('task_cleaned', handleRealtimeUpdate);
       socket.off('complaint_completed', handleRealtimeUpdate);
       socket.off('complaint_status_updated', handleRealtimeUpdate);
+      socket.off('worker_status_updated', handleRealtimeUpdate);
     };
   }, [socket, fetchAdminData]);
 
@@ -182,20 +184,36 @@ const AdminDashboard = () => {
     setShowPaymentModal(true);
   };
 
-  // Perform actual API verification after transaction succeeds
-  const executeCleanupVerification = async () => {
+  // Perform actual API verification during OTP confirmation
+  const handleConfirmOtpPayout = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (otpCode.trim() !== generatedOtp) {
+      setPaymentError('Invalid authentication code. Please check the notification banner.');
+      return;
+    }
+
+    setPaymentStep('processing');
+    setPaymentError('');
     try {
       await API.put(`/admin/complaints/${verifyingComplaint._id}/verify-cleanup`, {
         bonusAmount: Number(bonusAmount),
       });
-      setVerifyingComplaint(null);
-      setBonusAmount('50');
-      setShowPaymentModal(false);
       fetchAdminData();
+      setPaymentStep('success');
     } catch (error) {
-      console.error(error);
-      alert(error.response?.data?.message || 'Verification database update failed');
+      console.error('Cleanup verification failed:', error);
+      setPaymentStep('otp');
+      setPaymentError(error.response?.data?.message || 'Verification database update failed');
     }
+  };
+
+  const handleClosePaymentModal = () => {
+    setShowPaymentModal(false);
+    setVerifyingComplaint(null);
+    setBonusAmount('50');
+    setPaymentStep('card');
+    setOtpCode('');
+    setPaymentError('');
   };
 
   // Create or Update Worker account
@@ -378,7 +396,7 @@ const AdminDashboard = () => {
 
   // Export filtered complaints list to CSV file (Real Report Generation)
   const exportToCSV = () => {
-    const headers = 'Title,Location Address,Latitude,Longitude,Citizen Reporter,Waste Type,Severity,Assigned To Type,Worker/Team,Status,Deadline Date,Bonus Paid ($)\n';
+    const headers = 'Title,Location Address,Latitude,Longitude,Citizen Reporter,Waste Type,Severity,Assigned To Type,Worker/Team,Status,Deadline Date,Bonus Paid (INR)\n';
     const rows = filteredComplaints.map((c) => {
       const assigneeName = c.assignedToType === 'individual' ? c.worker?.name : c.assignedToType === 'team' ? c.team?.name : 'Unassigned';
       const deadline = c.deadlineAt ? new Date(c.deadlineAt).toLocaleDateString() : 'N/A';
@@ -762,17 +780,35 @@ const AdminDashboard = () => {
                         <td style={{ padding: '10px', color: 'var(--text-secondary)' }}>{w.email}</td>
                         <td style={{ padding: '10px', color: 'var(--text-muted)' }}>{w.team ? w.team.name : 'None'}</td>
                         <td style={{ padding: '10px' }}>
-                          <span style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            fontSize: '11px',
-                            fontWeight: 'bold',
-                            color: w.isOnline ? 'var(--color-primary)' : 'var(--text-muted)'
-                          }}>
-                            <span style={{ width: '6px', height: '6px', background: w.isOnline ? 'var(--color-primary)' : 'var(--text-muted)', borderRadius: '50%' }}></span>
-                            {w.isOnline ? 'Online' : 'Offline'}
-                          </span>
+                          {w.workStatus === 'onwork' ? (
+                            <span style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              padding: '3px 8px',
+                              borderRadius: '12px',
+                              fontSize: '11px',
+                              fontWeight: '600',
+                              background: 'rgba(245, 158, 11, 0.15)',
+                              border: '1px solid rgba(245, 158, 11, 0.4)',
+                              color: '#f59e0b',
+                            }} title={w.activeTask ? `Active Task: ${w.activeTask.title}` : 'Currently working on an assigned task'}>
+                              <span style={{ width: '6px', height: '6px', background: '#f59e0b', borderRadius: '50%', boxShadow: '0 0 6px #f59e0b' }}></span>
+                              On Work
+                            </span>
+                          ) : (
+                            <span style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              fontSize: '11px',
+                              fontWeight: 'bold',
+                              color: w.isOnline ? 'var(--color-primary)' : 'var(--text-muted)'
+                            }}>
+                              <span style={{ width: '6px', height: '6px', background: w.isOnline ? 'var(--color-primary)' : 'var(--text-muted)', borderRadius: '50%' }}></span>
+                              {w.isOnline ? 'Online' : 'Offline'}
+                            </span>
+                          )}
                         </td>
                         <td style={{ padding: '10px', textAlign: 'right' }}>
                           <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
@@ -1082,12 +1118,41 @@ const AdminDashboard = () => {
                   <label className="form-label">Select Worker</label>
                   <select className="form-input" value={selectedWorkerId} onChange={(e) => setSelectedWorkerId(e.target.value)} required>
                     <option value="">Choose Worker</option>
-                    {workers.map((w) => (
-                      <option key={w._id} value={w._id}>
-                        {w.name} {w.isOnline ? '🟢 (Online)' : '🔴 (Offline)'}
-                      </option>
-                    ))}
+                    {workers.map((w) => {
+                      const isOnWork = w.workStatus === 'onwork';
+                      return (
+                        <option key={w._id} value={w._id}>
+                          {w.name} {isOnWork ? '🟠 (On Work)' : (w.isOnline ? '🟢 (Online)' : '🔴 (Offline)')}
+                        </option>
+                      );
+                    })}
                   </select>
+                  {selectedWorkerId && (() => {
+                    const selWorker = workers.find((w) => w._id === selectedWorkerId);
+                    if (selWorker && selWorker.workStatus === 'onwork') {
+                      return (
+                        <div style={{
+                          marginTop: '8px',
+                          padding: '8px 12px',
+                          borderRadius: '8px',
+                          background: 'rgba(245, 158, 11, 0.12)',
+                          border: '1px solid rgba(245, 158, 11, 0.35)',
+                          color: '#f59e0b',
+                          fontSize: '12px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}>
+                          <AlertTriangle size={15} style={{ flexShrink: 0 }} />
+                          <span>
+                            <strong>Notice:</strong> {selWorker.name} is currently <strong>On Work</strong>
+                            {selWorker.activeTask?.title ? ` (Active: "${selWorker.activeTask.title}")` : ''}.
+                          </span>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                   {workers.length === 0 && (
                     <div style={{ fontSize: '11px', color: 'var(--color-danger)', marginTop: '4px' }}>
                       ⚠️ No sanitation workers registered yet. Click 'Add Worker' first.
@@ -1142,9 +1207,32 @@ const AdminDashboard = () => {
               </div>
             </div>
 
+            {verifyingComplaint.cleanupLocation && (
+              <div style={{
+                padding: '8px 12px',
+                borderRadius: '6px',
+                background: verifyingComplaint.cleanupLocation.verified ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                border: `1px solid ${verifyingComplaint.cleanupLocation.verified ? 'rgba(16, 185, 129, 0.3)' : 'var(--border-glass)'}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '16px'
+              }}>
+                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  📍 <strong>GPS Geofence:</strong>{' '}
+                  {verifyingComplaint.cleanupLocation.distanceMeters != null
+                    ? `${verifyingComplaint.cleanupLocation.distanceMeters}m from reported spot`
+                    : 'Location logged'}
+                </span>
+                <span style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--color-primary)' }}>
+                  ✓ VERIFIED ON-SITE
+                </span>
+              </div>
+            )}
+
             <form onSubmit={handleVerifyCleanup}>
               <div className="form-group">
-                <label className="form-label">Award Performance Bonus (Dummy $)</label>
+                <label className="form-label">Award Performance Bonus (₹ INR)</label>
                 <input
                   type="number"
                   min="0"
@@ -1205,6 +1293,32 @@ const AdminDashboard = () => {
 
           <div className="glass-panel" style={{ width: '100%', maxWidth: '420px', padding: '30px', position: 'relative', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
             
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={handleClosePaymentModal}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid var(--border-glass)',
+                borderRadius: '50%',
+                width: '28px',
+                height: '28px',
+                color: 'var(--text-secondary)',
+                fontSize: '14px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s'
+              }}
+              title="Close Gateway"
+            >
+              ✕
+            </button>
+
             {/* Header */}
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <div style={{
@@ -1237,8 +1351,7 @@ const AdminDashboard = () => {
                     holderName={cardHolder || 'CITY COUNCIL ADMIN'}
                     cardNumber={cardNumber || '4582 9104 3381 2049'}
                     expiryDate={cardExpiry || '12/28'}
-                    balanceText={`$${bonusAmount}.00`}
-                    cardType="MUNICIPAL PAYOUT VISA"
+                    cardType="MUNICIPAL PAYMENT SYSTEM"
                     rankBadge={verifyingComplaint?.assignedToType === 'team' ? 'TEAM PAYROLL' : 'WORKER PAYOUT'}
                     theme="gold"
                   />
@@ -1248,7 +1361,7 @@ const AdminDashboard = () => {
                 <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-glass)', borderRadius: '10px', padding: '12px 16px', marginBottom: '20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Total Bonus Payout:</span>
-                    <span style={{ fontSize: '18px', fontWeight: '800', color: 'var(--color-secondary)' }}>${bonusAmount}.00 USD</span>
+                    <span style={{ fontSize: '18px', fontWeight: '800', color: 'var(--color-secondary)' }}>₹{bonusAmount}.00 INR</span>
                   </div>
                   {verifyingComplaint?.assignedToType === 'team' && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '6px' }}>
@@ -1256,7 +1369,7 @@ const AdminDashboard = () => {
                         Split per Worker ({verifyingComplaint?.team?.members?.length || 0} members):
                       </span>
                       <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-primary)' }}>
-                        ${(Number(bonusAmount) / (verifyingComplaint?.team?.members?.length || 1)).toFixed(2)} USD
+                        ₹{(Number(bonusAmount) / (verifyingComplaint?.team?.members?.length || 1)).toFixed(2)} INR
                       </span>
                     </div>
                   )}
@@ -1349,23 +1462,16 @@ const AdminDashboard = () => {
               <div>
                 <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-glass)', borderRadius: '10px', padding: '12px 16px', marginBottom: '20px', textAlign: 'center' }}>
                   <div style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Transaction Payout</div>
-                  <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)', marginTop: '4px' }}>${bonusAmount}.00 USD</div>
+                  <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)', marginTop: '4px' }}>₹{bonusAmount}.00 INR</div>
                   {verifyingComplaint?.assignedToType === 'team' && (
                     <div style={{ fontSize: '12px', color: 'var(--color-primary)', fontWeight: 'bold', marginTop: '4px' }}>
-                      Split: ${(Number(bonusAmount) / (verifyingComplaint?.team?.members?.length || 1)).toFixed(2)} USD per member ({verifyingComplaint?.team?.members?.length || 0} workers)
+                      Split: ₹{(Number(bonusAmount) / (verifyingComplaint?.team?.members?.length || 1)).toFixed(2)} INR per member ({verifyingComplaint?.team?.members?.length || 0} workers)
                     </div>
                   )}
                   <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '6px' }}>TxID: {transactionId}</div>
                 </div>
 
-                <form onSubmit={(e) => {
-                  e.preventDefault();
-                  if (otpCode.trim() === generatedOtp) {
-                    setPaymentStep('success');
-                  } else {
-                    setPaymentError('Invalid authentication code. Please check the notification banner.');
-                  }
-                }}>
+                <form onSubmit={handleConfirmOtpPayout}>
                   <div className="form-group" style={{ marginBottom: '16px' }}>
                     <label className="form-label" style={{ textAlign: 'center', display: 'block', fontSize: '13px' }}>
                       Enter 6-Digit Verification Code (OTP)
@@ -1408,7 +1514,7 @@ const AdminDashboard = () => {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '8px 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
                     <span>Total Payout:</span>
-                    <span style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>${bonusAmount}.00 USD</span>
+                    <span style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>₹{bonusAmount}.00 INR</span>
                   </div>
                   {verifyingComplaint?.assignedToType === 'team' && (
                     <>
@@ -1421,7 +1527,7 @@ const AdminDashboard = () => {
                       <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '8px 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
                         <span>Split per Worker:</span>
                         <span style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>
-                          ${(Number(bonusAmount) / (verifyingComplaint?.team?.members?.length || 1)).toFixed(2)} USD
+                          ₹{(Number(bonusAmount) / (verifyingComplaint?.team?.members?.length || 1)).toFixed(2)} INR
                         </span>
                       </div>
                     </>
@@ -1436,12 +1542,12 @@ const AdminDashboard = () => {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
                     <span>Status:</span>
-                    <span style={{ fontWeight: 'bold', color: 'var(--color-primary)', textTransform: 'uppercase' }}>Cleared (Success)</span>
+                    <span style={{ fontWeight: 'bold', color: 'var(--color-primary)', textTransform: 'uppercase' }}>Cleared & Credited to Worker</span>
                   </div>
                 </div>
 
-                <button onClick={executeCleanupVerification} className="btn btn-primary" style={{ width: '100%', padding: '12px' }}>
-                  Complete Cleanup Verification
+                <button onClick={handleClosePaymentModal} className="btn btn-primary" style={{ width: '100%', padding: '12px' }}>
+                  Done & Close Payout Gateway
                 </button>
               </div>
             )}
@@ -1593,7 +1699,15 @@ const AdminDashboard = () => {
                           onChange={() => handleMemberToggle(w._id)}
                           style={{ cursor: 'pointer' }}
                         />
-                        <span style={{ color: 'var(--text-primary)' }}>{w.name} ({w.email})</span>
+                        <span style={{ color: 'var(--text-primary)' }}>{w.name}</span>
+                        <span style={{
+                          fontSize: '11px',
+                          color: w.workStatus === 'onwork' ? '#f59e0b' : (w.isOnline ? 'var(--color-primary)' : 'var(--text-muted)'),
+                          marginLeft: 'auto',
+                          fontWeight: '600'
+                        }}>
+                          {w.workStatus === 'onwork' ? '🟠 On Work' : (w.isOnline ? '🟢 Online' : '🔴 Offline')}
+                        </span>
                       </label>
                     ))
                   )}

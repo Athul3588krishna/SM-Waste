@@ -134,35 +134,21 @@ const ReportWaste = () => {
           'Content-Type': 'multipart/form-data',
         },
       });
-      const explanation = data.explanation || '';
-      const expLower = (explanation + ' ' + (file.name || '')).toLowerCase();
-      const nonWasteTerms = [
-        'document', 'paper', 'text', 'printed', 'written', 'a4', 'sheet', 'page',
-        'peripheral', 'headset', 'desk', 'office', 'table', 'keyboard', 'no waste',
-        'not waste', 'component', 'wire', 'cable', 'headphone', 'earphone', 'device',
-        'object', 'indoor', 'surface', 'white paper', 'bullet', 'font', 'list', 'note',
-        'recyclable plastic'
-      ];
 
-      if (nonWasteTerms.some(term => expLower.includes(term))) {
-        finalWasteType = 'Unknown';
-        finalSeverity = 'Low';
-        setAiAnalysis('No municipal waste dump detected in the image. Categorized as Unknown (Non-Waste).');
-      } else {
-        finalWasteType = data.wasteType || 'Unknown';
-        finalSeverity = data.severity || 'Low';
-        setAiAnalysis(explanation);
-      }
+      const finalWasteType = data.wasteType || 'Mixed';
+      const finalSeverity = data.severity || 'Medium';
+      const explanation = data.explanation || 'AI Vision analysis complete.';
 
       setWasteType(finalWasteType);
       setSeverity(finalSeverity);
+      setAiAnalysis(explanation);
       setScanStatus(`AI Scan Complete (${finalWasteType})`);
     } catch (err) {
       console.error('AI Scan failed, using local fallback:', err);
-      setWasteType('Unknown');
-      setSeverity('Low');
-      setAiAnalysis('No clear waste dump markers identified in uploaded image. Categorized as Unknown.');
-      setScanStatus('AI Scan Complete (Category: Unknown)');
+      setWasteType('Mixed');
+      setSeverity('Medium');
+      setAiAnalysis('Image uploaded for municipal waste inspection.');
+      setScanStatus('AI Scan Complete (Category: Mixed Waste)');
     } finally {
       clearInterval(interval);
       setScanning(false);
@@ -462,7 +448,7 @@ const ReportWaste = () => {
                 <div style={{ marginTop: '12px' }}>
                   <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '6px' }}>Quick Category Presets:</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                    {['Organic', 'Plastic', 'E-waste', 'Hazardous', 'Medical', 'Paper Document (Non-Waste)', 'Mixed Waste'].map((preset) => (
+                    {['Plastic', 'Organic', 'E-waste', 'Hazardous', 'Medical', 'Paper', 'Mixed'].map((preset) => (
                       <button
                         key={preset}
                         type="button"

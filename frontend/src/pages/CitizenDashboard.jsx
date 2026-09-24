@@ -256,7 +256,7 @@ const CitizenDashboard = () => {
               Citizen Portal Workspace
             </span>
             <h1 style={{ fontSize: '30px', color: 'var(--text-primary)', marginTop: '4px' }}>
-              Welcome back, {user?.name}
+              Hi, {user?.name || 'Citizen'} 👋
             </h1>
           </div>
           <Link to="/report" className="btn btn-primary" style={{ padding: '10px 20px' }}>

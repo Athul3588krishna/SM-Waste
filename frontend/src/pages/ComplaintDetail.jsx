@@ -108,7 +108,7 @@ const ComplaintDetail = () => {
     },
     {
       title: 'Resolved',
-      desc: complaint.status === 'completed' ? `Cleanup verified. ${complaint.bonusAmount > 0 ? `Bonus payment of $${complaint.bonusAmount} paid to worker.` : ''}` : 'Awaiting final verification.',
+      desc: complaint.status === 'completed' ? `Cleanup verified. ${complaint.bonusAmount > 0 ? `Bonus payment of ₹${complaint.bonusAmount} paid to worker.` : ''}` : 'Awaiting final verification.',
       date: complaint.completedAt,
       active: complaint.status === 'completed',
       completed: complaint.status === 'completed',
@@ -235,7 +235,14 @@ const ComplaintDetail = () => {
 
               {['cleaned', 'completed'].includes(complaint.status) && complaint.photoAfter && (
                 <div>
-                  <div style={{ fontSize: '11px', color: 'var(--color-primary)', marginBottom: '6px', fontWeight: 'bold' }}>AFTER CLEANUP (RESOLVED)</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--color-primary)', fontWeight: 'bold' }}>AFTER CLEANUP (RESOLVED)</div>
+                    {complaint.cleanupLocation?.verified && (
+                      <span style={{ fontSize: '10px', color: 'var(--color-primary)', background: 'rgba(16, 185, 129, 0.1)', padding: '2px 8px', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                        📍 GPS Verified ({complaint.cleanupLocation.distanceMeters ?? 0}m from site)
+                      </span>
+                    )}
+                  </div>
                   <img
                     src={complaint.photoAfter.startsWith('http') ? complaint.photoAfter : `http://localhost:5002${complaint.photoAfter}`}
                     alt="After cleanup"
