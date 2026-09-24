@@ -8,7 +8,7 @@ import { compressImage } from '../utils/imageCompressor';
 import EcoCreditCard from '../components/EcoCreditCard';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
-import { Hammer, MapPin, CheckSquare, Upload, AlertCircle, Calendar, Clock, Clipboard, Sparkles, Megaphone, DollarSign, ExternalLink } from 'lucide-react';
+import { Hammer, MapPin, CheckSquare, Upload, AlertCircle, Calendar, Clock, Clipboard, Sparkles, Megaphone, IndianRupee, ExternalLink, Navigation, RefreshCw, ShieldCheck, Camera } from 'lucide-react';
 
 const customIcon = new L.Icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -19,6 +19,7 @@ const customIcon = new L.Icon({
 
 const WorkerDashboard = () => {
   const { user, setUser } = useContext(AuthContext);
+  const [workerProfile, setWorkerProfile] = useState(user);
   const { socket } = useSocket();
   const [complaints, setComplaints] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
@@ -33,23 +34,49 @@ const WorkerDashboard = () => {
   const [error, setError] = useState('');
 
   const [workerCoords, setWorkerCoords] = useState(null);
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [gpsError, setGpsError] = useState('');
 
-  // Automatically fetch worker's current GPS location for distance calculation
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setWorkerCoords({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude
-          });
-        },
-        (error) => {
-          console.warn('Worker location access denied/failed for distance tracking:', error.message);
-        }
-      );
+  // Fetch worker's high-accuracy GPS location
+  const fetchLiveLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      setGpsError('Geolocation is not supported by your browser.');
+      return;
     }
+    setGpsLoading(true);
+    setGpsError('');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setWorkerCoords({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+        });
+        setGpsLoading(false);
+      },
+      (error) => {
+        console.warn('Worker location access error:', error.message);
+        setGpsError(
+          error.code === 1
+            ? 'Location permission denied. Please allow location access in browser settings.'
+            : 'Unable to acquire GPS fix. Please click Refresh GPS.'
+        );
+        setGpsLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+    );
   }, []);
+
+  useEffect(() => {
+    fetchLiveLocation();
+  }, [fetchLiveLocation]);
+
+  // Refresh GPS whenever cleanup modal opens
+  useEffect(() => {
+    if (showModal) {
+      fetchLiveLocation();
+    }
+  }, [showModal, fetchLiveLocation]);
 
   // Haversine formula to compute distance in kilometers between coordinates
   const getDistance = (lat1, lon1, lat2, lon2) => {
@@ -70,6 +97,7 @@ const WorkerDashboard = () => {
       if (showLoading) setLoading(true);
       // Refresh worker details to fetch latest bonuses and online state
       const userRes = await API.get('/auth/me');
+      setWorkerProfile(userRes.data);
       setUser(userRes.data);
 
       const tasksRes = await API.get('/worker/complaints');
@@ -162,7 +190,7 @@ const WorkerDashboard = () => {
     }
   };
 
-  // Submit Cleanup photo
+  // Submit Cleanup photo with Geofence verification
   const handleCompleteTaskSubmit = async (e) => {
     e.preventDefault();
     if (!photo) {
@@ -170,19 +198,39 @@ const WorkerDashboard = () => {
       return;
     }
 
+    if (!workerCoords || workerCoords.latitude == null || workerCoords.longitude == null) {
+      setError('Live GPS location is required to verify cleanup. Please click "Refresh GPS" below.');
+      return;
+    }
+
+    const taskLat = selectedTask?.location?.latitude;
+    const taskLon = selectedTask?.location?.longitude;
+    if (taskLat != null && taskLon != null) {
+      const distKm = getDistance(workerCoords.latitude, workerCoords.longitude, taskLat, taskLon);
+      const distMeters = Math.round(distKm * 1000);
+
+      // Client geofence threshold: 100 meters
+      if (distMeters > 100) {
+        setError(`Location Verification Failed: You are ${distMeters}m away from the reported waste location. You must be within 100m of the site to submit.`);
+        return;
+      }
+    }
+
     setSubmitting(true);
     setError('');
 
     const formData = new FormData();
     formData.append('photo', photo);
+    formData.append('latitude', workerCoords.latitude);
+    formData.append('longitude', workerCoords.longitude);
 
     try {
-      await API.put(`/worker/complaints/${selectedTask._id}/clean`, formData, {
+      const res = await API.put(`/worker/complaints/${selectedTask._id}/clean`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      alert('Task marked as Cleaned! Awaiting municipal Admin verification.');
+      alert(res.data?.message || 'Task marked as Cleaned! Location verified.');
       setShowModal(false);
       setPhoto(null);
       setPhotoPreview(null);
@@ -210,8 +258,10 @@ const WorkerDashboard = () => {
     return new Date(task.deadlineAt) < new Date();
   };
 
-  // Tally total bonuses
-  const totalBonuses = user?.bonusHistory?.reduce((sum, item) => sum + item.amount, 0) || 0;
+  // Tally total bonuses safely with Number conversion
+  const currentWorker = workerProfile || user;
+  const totalBonuses = (currentWorker?.bonusHistory || []).reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const formattedTotalBonuses = totalBonuses.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   if (loading) {
     return (
@@ -232,17 +282,34 @@ const WorkerDashboard = () => {
               Worker Operations Portal
             </span>
             <h1 style={{ fontSize: '30px', color: 'var(--text-primary)', marginTop: '4px' }}>
-              Welcome back, {user?.name}
+              Hi, {currentWorker?.name || 'Worker'} 👷
             </h1>
-            {user?.team && (
+            {currentWorker?.team && (
               <p style={{ color: 'var(--color-secondary)', fontSize: '14px', marginTop: '2px', fontWeight: '500' }}>
-                👥 Cleaning Team: <strong>{user.team?.name}</strong>
+                👥 Cleaning Team: <strong>{currentWorker.team?.name}</strong>
               </p>
             )}
           </div>
 
           {/* Availability switch toggler */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            {complaints.some((c) => c.status === 'in_progress') && (
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '7px 14px',
+                borderRadius: '8px',
+                background: 'rgba(245, 158, 11, 0.15)',
+                border: '1px solid rgba(245, 158, 11, 0.4)',
+                color: '#f59e0b',
+                fontSize: '12px',
+                fontWeight: '700',
+              }}>
+                <span style={{ width: '8px', height: '8px', background: '#f59e0b', borderRadius: '50%', boxShadow: '0 0 8px #f59e0b' }}></span>
+                ON WORK
+              </span>
+            )}
             <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-secondary)' }}>
               Availability status:
             </span>
@@ -250,17 +317,17 @@ const WorkerDashboard = () => {
               onClick={handleAvailabilityToggle}
               className="btn"
               style={{
-                background: user.isOnline ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-                border: `1px solid ${user.isOnline ? 'var(--color-primary)' : 'var(--border-glass)'}`,
-                color: user.isOnline ? 'var(--color-primary)' : 'var(--text-secondary)',
-                boxShadow: user.isOnline ? 'var(--shadow-neon)' : 'none',
+                background: currentWorker?.isOnline ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                border: `1px solid ${currentWorker?.isOnline ? 'var(--color-primary)' : 'var(--border-glass)'}`,
+                color: currentWorker?.isOnline ? 'var(--color-primary)' : 'var(--text-secondary)',
+                boxShadow: currentWorker?.isOnline ? 'var(--shadow-neon)' : 'none',
                 padding: '8px 16px',
                 fontSize: '13px',
                 borderRadius: '8px',
                 fontWeight: '700'
               }}
             >
-              ● {user.isOnline ? 'ONLINE (ACTIVE)' : 'OFFLINE'}
+              ● {currentWorker?.isOnline ? 'ONLINE (ACTIVE)' : 'OFFLINE'}
             </button>
           </div>
         </div>
@@ -278,18 +345,18 @@ const WorkerDashboard = () => {
           justifyContent: 'space-between'
         }}>
           <EcoCreditCard
-            holderName={user?.name || 'SANITATION WORKER'}
-            cardNumber={`5412 ${user?._id ? user._id.slice(-4).padStart(4, '0') : '9104'} 8820 ${totalBonuses}`}
+            holderName={currentWorker?.name || 'SANITATION WORKER'}
+            cardNumber={`5412 ${currentWorker?._id ? currentWorker._id.slice(-4).padStart(4, '0') : '9104'} 8820 ${Math.round(totalBonuses)}`}
             expiryDate="12/28"
-            balanceText={`$${totalBonuses}`}
+            balanceText={`₹${formattedTotalBonuses}`}
             cardType="WORKER PAYOUT CARD"
-            rankBadge={user?.team ? 'TEAM CREW' : 'FIELD WORKER'}
+            rankBadge={currentWorker?.team ? 'TEAM CREW' : 'FIELD WORKER'}
             theme="cyan"
           />
 
           <div style={{ flex: 1, minWidth: '240px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(0, 210, 255, 0.1)', border: '1px solid var(--color-secondary)', borderRadius: '20px', padding: '4px 12px', width: 'fit-content' }}>
-              <DollarSign size={14} color="var(--color-secondary)" />
+              <IndianRupee size={14} color="var(--color-secondary)" />
               <span style={{ fontSize: '11px', color: 'var(--color-secondary)', fontWeight: 'bold', textTransform: 'uppercase' }}>
                 Municipal Worker Payroll Wallet
               </span>
@@ -304,7 +371,7 @@ const WorkerDashboard = () => {
             </p>
 
             <div style={{ marginTop: '6px', fontSize: '22px', fontWeight: '800', color: 'var(--color-secondary)' }}>
-              Total Earnings: ${totalBonuses}
+              Total Earnings: ₹{formattedTotalBonuses}
             </div>
           </div>
         </div>
@@ -602,10 +669,10 @@ const WorkerDashboard = () => {
           <h3 style={{ fontSize: '16px', color: 'var(--text-primary)', marginBottom: '20px' }}>Dummy Bonus Payout History</h3>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '300px', overflowY: 'auto' }}>
-            {!user.bonusHistory || user.bonusHistory.length === 0 ? (
+            {!currentWorker?.bonusHistory || currentWorker.bonusHistory.length === 0 ? (
               <span style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>No bonus payouts recorded yet.</span>
             ) : (
-              user.bonusHistory.map((b, idx) => (
+              currentWorker.bonusHistory.map((b, idx) => (
                 <div key={idx} className="flex-between" style={{ padding: '12px', background: 'rgba(16, 185, 129, 0.02)', border: '1px solid rgba(16, 185, 129, 0.1)', borderRadius: '8px' }}>
                   <div>
                     <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Cleanup Bonus Awarded</span>
@@ -613,7 +680,7 @@ const WorkerDashboard = () => {
                       Date: {new Date(b.date).toLocaleDateString()}
                     </div>
                   </div>
-                  <span style={{ fontSize: '16px', fontWeight: '800', color: 'var(--color-primary)' }}>+${b.amount}</span>
+                  <span style={{ fontSize: '16px', fontWeight: '800', color: 'var(--color-primary)' }}>+₹{b.amount}</span>
                 </div>
               ))
             )}
@@ -624,8 +691,118 @@ const WorkerDashboard = () => {
       {/* MODAL: SUBMIT CLEANUP */}
       {showModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '20px' }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '380px' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '420px' }}>
             <h3 style={{ fontSize: '18px', color: 'var(--text-primary)', marginBottom: '16px' }}>Submit Cleanup Verification</h3>
+
+            {/* Real-time GPS Geofence Status Card */}
+            {(() => {
+              const taskLat = selectedTask?.location?.latitude;
+              const taskLon = selectedTask?.location?.longitude;
+              const distKm =
+                workerCoords && taskLat != null && taskLon != null
+                  ? getDistance(workerCoords.latitude, workerCoords.longitude, taskLat, taskLon)
+                  : null;
+              const distMeters = distKm != null ? Math.round(distKm * 1000) : null;
+              const isWithinGeofence = distMeters != null && distMeters <= 100;
+
+              return (
+                <div
+                  style={{
+                    marginBottom: '16px',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    background: isWithinGeofence
+                      ? 'rgba(16, 185, 129, 0.1)'
+                      : distMeters != null
+                      ? 'rgba(239, 68, 68, 0.1)'
+                      : 'rgba(255, 255, 255, 0.05)',
+                    border: `1px solid ${
+                      isWithinGeofence
+                        ? 'var(--color-primary)'
+                        : distMeters != null
+                        ? '#ef4444'
+                        : 'var(--border-glass)'
+                    }`,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Navigation
+                        size={15}
+                        color={isWithinGeofence ? 'var(--color-primary)' : distMeters != null ? '#ef4444' : 'var(--text-muted)'}
+                      />
+                      <span style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-primary)' }}>
+                        GPS Geofence Check
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={fetchLiveLocation}
+                      disabled={gpsLoading}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'var(--color-secondary)',
+                        fontSize: '11px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '2px 6px',
+                      }}
+                      title="Re-fetch GPS coordinates"
+                    >
+                      <RefreshCw size={12} className={gpsLoading ? 'spin' : ''} />
+                      {gpsLoading ? 'Locating...' : 'Refresh GPS'}
+                    </button>
+                  </div>
+
+                  {gpsLoading ? (
+                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                      📡 Acquiring high-accuracy GPS fix...
+                    </div>
+                  ) : gpsError ? (
+                    <div style={{ fontSize: '11px', color: '#ef4444' }}>
+                      ⚠️ {gpsError}
+                    </div>
+                  ) : distMeters != null ? (
+                    <div>
+                      <div
+                        style={{
+                          fontSize: '13px',
+                          fontWeight: '700',
+                          color: isWithinGeofence ? 'var(--color-primary)' : '#ef4444',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                        }}
+                      >
+                        {isWithinGeofence ? (
+                          <>
+                            <ShieldCheck size={16} color="var(--color-primary)" />
+                            Location Verified ({distMeters}m from site)
+                          </>
+                        ) : (
+                          <>
+                            <AlertCircle size={16} color="#ef4444" />
+                            Outside 100m Zone ({distMeters}m away)
+                          </>
+                        )}
+                      </div>
+                      <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                        {isWithinGeofence
+                          ? '✅ You are within the allowable 100m geofence radius. You may submit cleanup.'
+                          : '❌ You must be physically at the site (within 100m) to submit. Please move closer.'}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                      Click "Refresh GPS" to verify your physical presence at the site.
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {error && (
               <div style={{ background: 'rgba(255,74,90,0.1)', border: '1px solid rgba(255,74,90,0.2)', padding: '10px', color: 'var(--color-danger)', fontSize: '13px', borderRadius: '6px', marginBottom: '14px' }}>
@@ -635,19 +812,21 @@ const WorkerDashboard = () => {
 
             <form onSubmit={handleCompleteTaskSubmit}>
               <div className="form-group">
-                <label className="form-label">Upload street after-cleaning photo</label>
+                <label className="form-label">Upload street after-cleaning photo (Live Camera)</label>
                 <input
                   type="file"
                   id="cleanup-file"
                   accept="image/*"
+                  capture="environment"
                   style={{ display: 'none' }}
                   onChange={handleFileChange}
                   required
                 />
                 {!photoPreview ? (
-                  <label htmlFor="cleanup-file" className="scanner-container" style={{ padding: '30px 10px' }}>
-                    <Upload size={24} color="var(--color-primary)" style={{ marginBottom: '6px' }} />
-                    <span style={{ fontSize: '12px', fontWeight: '600' }}>Choose Photo</span>
+                  <label htmlFor="cleanup-file" className="scanner-container" style={{ padding: '24px 10px', cursor: 'pointer' }}>
+                    <Camera size={26} color="var(--color-primary)" style={{ marginBottom: '6px' }} />
+                    <span style={{ fontSize: '12px', fontWeight: '600' }}>Take Photo (Live Camera)</span>
+                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>Opens rear camera on mobile</span>
                   </label>
                 ) : (
                   <div style={{ position: 'relative', borderRadius: '6px', overflow: 'hidden' }}>
@@ -659,7 +838,24 @@ const WorkerDashboard = () => {
 
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
                 <button type="button" onClick={() => setShowModal(false)} className="btn btn-secondary" disabled={submitting}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={submitting}>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={
+                    submitting ||
+                    gpsLoading ||
+                    !photoPreview ||
+                    (workerCoords &&
+                      selectedTask?.location?.latitude != null &&
+                      selectedTask?.location?.longitude != null &&
+                      getDistance(
+                        workerCoords.latitude,
+                        workerCoords.longitude,
+                        selectedTask.location.latitude,
+                        selectedTask.location.longitude
+                      ) * 1000 > 100)
+                  }
+                >
                   {submitting ? 'Uploading...' : 'Submit Cleanup'}
                 </button>
               </div>
