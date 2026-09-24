@@ -66,6 +66,24 @@ const complaintSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    cleanupLocation: {
+      latitude: {
+        type: Number,
+        default: null,
+      },
+      longitude: {
+        type: Number,
+        default: null,
+      },
+      distanceMeters: {
+        type: Number,
+        default: null,
+      },
+      verified: {
+        type: Boolean,
+        default: false,
+      },
+    },
     status: {
       type: String,
       enum: ['pending', 'verified', 'assigned', 'in_progress', 'cleaned', 'completed', 'rejected'],

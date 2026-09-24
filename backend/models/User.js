@@ -51,6 +51,11 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    workStatus: {
+      type: String,
+      enum: ['available', 'onwork'],
+      default: 'available',
+    },
     telegramChatId: {
       type: String,
       default: null,
