@@ -330,6 +330,11 @@ const Home = () => {
             <span>EcoClean Smart Waste Management</span>
           </div>
           <p>© {new Date().getFullYear()} EcoClean Platform. All rights reserved.</p>
+          <div>
+            <Link to="/login?role=admin" style={{ color: 'var(--text-muted, #6b7280)', textDecoration: 'none', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+              <Shield size={13} color="#FF4A5A" /> Municipal Admin Portal
+            </Link>
+          </div>
         </div>
       </footer>
 

@@ -26,7 +26,9 @@ const Login = () => {
     setResetError('');
     setResetSuccess('');
     try {
-      await API.post('/auth/forgot-password', { email: resetEmail });
+      const cleanEmail = resetEmail.trim().toLowerCase();
+      await API.post('/auth/forgot-password', { email: cleanEmail });
+      setResetEmail(cleanEmail);
       setResetSuccess('OTP code sent successfully! Please check your email inbox.');
       setResetStep(2);
     } catch (err) {
@@ -42,7 +44,9 @@ const Login = () => {
     setResetError('');
     setResetSuccess('');
     try {
-      await API.post('/auth/reset-password', { email: resetEmail, otp: resetOtp, newPassword });
+      const cleanEmail = resetEmail.trim().toLowerCase();
+      const cleanOtp = resetOtp.trim();
+      await API.post('/auth/reset-password', { email: cleanEmail, otp: cleanOtp, newPassword });
       setResetSuccess('Password reset successful! Closing...');
       setTimeout(() => {
         setShowResetModal(false);
@@ -60,22 +64,21 @@ const Login = () => {
 
   // Determine portal role from URL parameters, hash, or path
   const queryParams = new URLSearchParams(location.search);
-  let role = queryParams.get('role') || 'citizen';
-  
-  const hash = location.hash.toLowerCase();
+  const hash = (window.location.hash || location.hash || '').toLowerCase();
   const path = location.pathname.toLowerCase();
 
-  if (hash === '#admin' || hash === '#/admin' || path === '/admin') {
+  let role = queryParams.get('role') || 'citizen';
+  if (hash === '#admin' || hash === '#/admin' || path === '/admin' || queryParams.get('role') === 'admin') {
     role = 'admin';
-  } else if (hash === '#worker' || hash === '#/worker' || path === '/worker') {
+  } else if (hash === '#worker' || hash === '#/worker' || path === '/worker' || queryParams.get('role') === 'worker') {
     role = 'worker';
-  } else if (hash === '#citizen' || hash === '#/citizen' || path === '/citizen') {
+  } else if (hash === '#citizen' || hash === '#/citizen' || path === '/citizen' || queryParams.get('role') === 'citizen') {
     role = 'citizen';
   }
 
-  // Automatically redirect logged-in users to their appropriate dashboard
+  // Automatically redirect logged-in users to their appropriate dashboard ONLY if the portal matches their active role
   useEffect(() => {
-    if (user) {
+    if (user && user.role === role) {
       if (user.role === 'admin') {
         navigate('/admin');
       } else if (user.role === 'worker') {
@@ -84,7 +87,7 @@ const Login = () => {
         navigate('/dashboard');
       }
     }
-  }, [user, navigate]);
+  }, [user, role, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -107,7 +110,8 @@ const Login = () => {
 
     try {
       // Backend validates credentials and returns the user object
-      const data = await login(email, password);
+      const cleanEmail = email.trim().toLowerCase();
+      const data = await login(cleanEmail, password);
       
       // Navigate seamlessly based on authenticated user's actual role
       if (data.role === 'admin') {
@@ -237,6 +241,38 @@ const Login = () => {
           }}>
             <AlertCircle size={16} />
             <span>{error}</span>
+          </div>
+        )}
+
+        {user && user.role !== role && (
+          <div style={{
+            background: 'rgba(255, 170, 0, 0.1)',
+            border: '1px solid rgba(255, 170, 0, 0.3)',
+            borderRadius: '8px',
+            padding: '10px 12px',
+            marginBottom: '16px',
+            fontSize: '12px',
+            color: '#ffa500',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <span>Logged in as <b>{user.name}</b> ({user.role})</span>
+            <button
+              type="button"
+              onClick={() => logout()}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#ff4a5a',
+                fontSize: '12px',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                padding: 0
+              }}
+            >
+              Sign Out
+            </button>
           </div>
         )}
 
@@ -386,28 +422,39 @@ const Login = () => {
           </div>
         </div>
 
-        {/* Portal Quick Switcher (If not Admin) */}
-        {role !== 'admin' && (
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: '15px',
-            marginTop: '20px',
-            paddingTop: '14px',
-            borderTop: '1px solid var(--border-glass)',
-            fontSize: '12px'
-          }}>
-            {role === 'citizen' ? (
-              <Link to="/login?role=worker" style={{ color: 'var(--color-secondary)', textDecoration: 'none', fontWeight: '500' }}>
-                Switch to Worker Portal
+        {/* Portal Quick Switcher */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: '12px',
+          marginTop: '20px',
+          paddingTop: '14px',
+          borderTop: '1px solid var(--border-glass)',
+          fontSize: '12px'
+        }}>
+          {role !== 'citizen' && (
+            <Link to="/login?role=citizen" style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: '500' }}>
+              Citizen Portal
+            </Link>
+          )}
+          {role !== 'citizen' && role !== 'worker' && (
+            <span style={{ color: 'var(--text-muted)' }}>•</span>
+          )}
+          {role !== 'worker' && (
+            <Link to="/login?role=worker" style={{ color: 'var(--color-secondary)', textDecoration: 'none', fontWeight: '500' }}>
+              Worker Portal
+            </Link>
+          )}
+          {role !== 'admin' && (
+            <>
+              <span style={{ color: 'var(--text-muted)' }}>•</span>
+              <Link to="/login?role=admin" style={{ color: 'var(--color-danger)', textDecoration: 'none', fontWeight: '500' }}>
+                Admin Portal
               </Link>
-            ) : (
-              <Link to="/login?role=citizen" style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: '500' }}>
-                Switch to Citizen Portal
-              </Link>
-            )}
-          </div>
-        )}
+            </>
+          )}
+        </div>
       </div>
 
       {showResetModal && (

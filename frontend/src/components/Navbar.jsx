@@ -111,14 +111,18 @@ const Navbar = () => {
         </div>
 
         {/* Guest Action Buttons */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <LanguageToggle />
           <ThemeToggle />
-          <Link to="/login?role=citizen" className="btn btn-outline" style={{ padding: '8px 16px', fontSize: '13px' }}>
+          <Link to="/login?role=citizen" className="btn btn-outline" style={{ padding: '8px 14px', fontSize: '13px' }}>
             {t('citizenPortal', 'Citizen Portal')}
           </Link>
-          <Link to="/login?role=worker" className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '13px' }}>
+          <Link to="/login?role=worker" className="btn btn-primary" style={{ padding: '8px 14px', fontSize: '13px' }}>
             {t('workerAccess', 'Worker Access')}
+          </Link>
+          <Link to="/login?role=admin" className="btn" style={{ padding: '8px 12px', fontSize: '13px', background: 'rgba(255, 74, 90, 0.12)', color: 'var(--color-danger)', border: '1px solid rgba(255, 74, 90, 0.3)' }} title="Admin Command Center">
+            <Shield size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} />
+            Admin
           </Link>
         </div>
       </nav>

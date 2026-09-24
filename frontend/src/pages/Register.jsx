@@ -16,6 +16,7 @@ const Register = () => {
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [resendingOtp, setResendingOtp] = useState(false);
 
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -57,7 +58,14 @@ const Register = () => {
     setLoadingSubmit(true);
 
     try {
-      await API.post('/auth/register', { name, email, phone, password });
+      const cleanEmail = email.trim().toLowerCase();
+      await API.post('/auth/register', { 
+        name: name.trim(), 
+        email: cleanEmail, 
+        phone: phone ? phone.trim() : undefined, 
+        password 
+      });
+      setEmail(cleanEmail);
       setOtpSent(true);
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
@@ -72,13 +80,34 @@ const Register = () => {
     setVerifyingOtp(true);
 
     try {
-      await API.post('/auth/verify-otp', { email, otp: otpCode });
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanOtp = otpCode.trim();
+      await API.post('/auth/verify-otp', { email: cleanEmail, otp: cleanOtp });
       alert('Verification successful! Your account has been activated. Please log in.');
       navigate('/login?role=citizen');
     } catch (err) {
       setError(err.response?.data?.message || 'OTP Verification failed');
     } finally {
       setVerifyingOtp(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setError('');
+    setResendingOtp(true);
+    try {
+      const cleanEmail = email.trim().toLowerCase();
+      await API.post('/auth/register', { 
+        name: name.trim(), 
+        email: cleanEmail, 
+        phone: phone ? phone.trim() : undefined, 
+        password 
+      });
+      alert(`A new verification OTP has been sent to ${cleanEmail}`);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to resend OTP');
+    } finally {
+      setResendingOtp(false);
     }
   };
 
@@ -226,14 +255,25 @@ const Register = () => {
               {verifyingOtp ? 'Verifying...' : 'Verify & Create Account'}
             </button>
 
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => setOtpSent(false)}
-              style={{ width: '100%', marginTop: '10px' }}
-            >
-              Back to Edit Details
-            </button>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={handleResendOtp}
+                style={{ flex: 1 }}
+                disabled={resendingOtp || verifyingOtp}
+              >
+                {resendingOtp ? 'Resending...' : 'Resend OTP'}
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setOtpSent(false)}
+                style={{ flex: 1 }}
+              >
+                Back to Edit
+              </button>
+            </div>
           </form>
         )}
 

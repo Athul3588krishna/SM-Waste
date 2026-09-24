@@ -1,5 +1,5 @@
-import React, { useContext, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import React, { useContext, useEffect, lazy, Suspense } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -22,6 +22,7 @@ const Profile = lazy(() => import('./pages/Profile'));
 // Protected Route wrapper component
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useContext(AuthContext);
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -32,14 +33,51 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    const roleMatch = location.pathname.match(/\/(admin|worker)/);
+    const target = roleMatch ? `/login?role=${roleMatch[1]}` : '/login';
+    return <Navigate to={target} replace />;
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
+    const roleMatch = location.pathname.match(/\/(admin|worker)/);
+    if (roleMatch) {
+      return <Navigate to={`/login?role=${roleMatch[1]}`} replace />;
+    }
     return <Navigate to="/dashboard" replace />;
   }
 
   return children;
+};
+
+// Global Hash Route Handler to intercept #admin, #worker, etc. anywhere across the site
+const HashRouteHandler = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleHash = () => {
+      const hash = (window.location.hash || location.hash || '').toLowerCase();
+      if (hash === '#admin' || hash === '#/admin' || hash === '#adminlogin') {
+        if (location.pathname !== '/login' || !location.search.includes('role=admin')) {
+          navigate('/login?role=admin');
+        }
+      } else if (hash === '#worker' || hash === '#/worker' || hash === '#workerlogin') {
+        if (location.pathname !== '/login' || !location.search.includes('role=worker')) {
+          navigate('/login?role=worker');
+        }
+      } else if (hash === '#citizen' || hash === '#/citizen') {
+        if (location.pathname !== '/login' || !location.search.includes('role=citizen')) {
+          navigate('/login?role=citizen');
+        }
+      }
+    };
+
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, [location.pathname, location.search, location.hash, navigate]);
+
+  return null;
 };
 
 // Home Route dispatcher component
@@ -69,23 +107,62 @@ const AnimatedRoutes = () => {
   return (
     <Suspense fallback={<PageFallback />}>
       <Routes location={location} key={location.pathname}>
-        {/* Public Routes */}
-        <Route path="/" element={<PageTransition><Home /></PageTransition>} />
-        <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
-        <Route path="/register" element={<PageTransition><Register /></PageTransition>} />
+        {/* Public Routes - Auto-redirect logged-in users to their respective dashboard unless explicitly accessing a different portal */}
+        <Route 
+          path="/" 
+          element={
+            user ? (
+              <Navigate to={user.role === 'admin' ? '/admin' : user.role === 'worker' ? '/worker' : '/dashboard'} replace />
+            ) : (
+              <PageTransition><Home /></PageTransition>
+            )
+          } 
+        />
+        <Route 
+          path="/login" 
+          element={
+            user && (!location.search.includes('role=') || location.search.includes(`role=${user.role}`)) ? (
+              <Navigate to={user.role === 'admin' ? '/admin' : user.role === 'worker' ? '/worker' : '/dashboard'} replace />
+            ) : (
+              <PageTransition><Login /></PageTransition>
+            )
+          } 
+        />
+        <Route 
+          path="/register" 
+          element={
+            user ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <PageTransition><Register /></PageTransition>
+            )
+          } 
+        />
 
         {/* Direct Role Routes */}
         <Route 
           path="/admin" 
-          element={user?.role === 'admin' ? <PageTransition><AdminDashboard /></PageTransition> : <PageTransition><Login /></PageTransition>} 
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <PageTransition><AdminDashboard /></PageTransition>
+            </ProtectedRoute>
+          } 
         />
         <Route 
           path="/worker" 
-          element={user?.role === 'worker' ? <PageTransition><WorkerDashboard /></PageTransition> : <PageTransition><Login /></PageTransition>} 
+          element={
+            <ProtectedRoute allowedRoles={['worker']}>
+              <PageTransition><WorkerDashboard /></PageTransition>
+            </ProtectedRoute>
+          } 
         />
         <Route 
           path="/citizen" 
-          element={user?.role === 'citizen' ? <PageTransition><CitizenDashboard /></PageTransition> : <PageTransition><Login /></PageTransition>} 
+          element={
+            <ProtectedRoute allowedRoles={['citizen']}>
+              <PageTransition><CitizenDashboard /></PageTransition>
+            </ProtectedRoute>
+          } 
         />
 
         {/* Protected Workspace Dashboard */}
@@ -150,6 +227,7 @@ const App = () => {
         <AuthProvider>
           <SocketProvider>
             <BrowserRouter>
+              <HashRouteHandler />
               <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
                 <Navbar />
                 <div style={{ flex: 1 }}>

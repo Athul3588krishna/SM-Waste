@@ -98,26 +98,47 @@ const EcoCreditCard = ({
         </span>
       </div>
 
-      {/* EMV Microchip & Contactless Waves */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', margin: '8px 0', zIndex: 1 }}>
-        {/* Golden Metallic EMV Chip */}
-        <div style={{
-          width: '42px',
-          height: '30px',
-          borderRadius: '6px',
-          background: 'linear-gradient(135deg, #fcd34d 0%, #fbbf24 50%, #d97706 100%)',
-          border: '1px solid #b45309',
-          position: 'relative',
-          boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.3)'
-        }}>
-          {/* Inner Chip Lines */}
-          <div style={{ position: 'absolute', top: '50%', left: 0, width: '100%', height: '1px', background: 'rgba(0,0,0,0.3)' }} />
-          <div style={{ position: 'absolute', top: 0, left: '33%', width: '1px', height: '100%', background: 'rgba(0,0,0,0.3)' }} />
-          <div style={{ position: 'absolute', top: 0, left: '66%', width: '1px', height: '100%', background: 'rgba(0,0,0,0.3)' }} />
+      {/* EMV Microchip, Contactless Waves & Balance Pill */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '8px 0', zIndex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          {/* Golden Metallic EMV Chip */}
+          <div style={{
+            width: '42px',
+            height: '30px',
+            borderRadius: '6px',
+            background: 'linear-gradient(135deg, #fcd34d 0%, #fbbf24 50%, #d97706 100%)',
+            border: '1px solid #b45309',
+            position: 'relative',
+            boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.3)'
+          }}>
+            {/* Inner Chip Lines */}
+            <div style={{ position: 'absolute', top: '50%', left: 0, width: '100%', height: '1px', background: 'rgba(0,0,0,0.3)' }} />
+            <div style={{ position: 'absolute', top: 0, left: '33%', width: '1px', height: '100%', background: 'rgba(0,0,0,0.3)' }} />
+            <div style={{ position: 'absolute', top: 0, left: '66%', width: '1px', height: '100%', background: 'rgba(0,0,0,0.3)' }} />
+          </div>
+
+          {/* Contactless Wifi Icon */}
+          <Wifi size={20} color="rgba(255,255,255,0.7)" style={{ transform: 'rotate(90deg)' }} />
         </div>
 
-        {/* Contactless Wifi Icon */}
-        <Wifi size={20} color="rgba(255,255,255,0.7)" style={{ transform: 'rotate(90deg)' }} />
+        {/* Balance Display Pill */}
+        {balanceText && (
+          <div style={{
+            background: 'rgba(0, 0, 0, 0.45)',
+            border: `1px solid ${activeTheme.accent}`,
+            borderRadius: '8px',
+            padding: '4px 10px',
+            textAlign: 'right',
+            backdropFilter: 'blur(4px)'
+          }}>
+            <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.6)', letterSpacing: '0.8px', fontFamily: 'sans-serif', textTransform: 'uppercase' }}>
+              Balance
+            </div>
+            <div style={{ fontSize: '13px', fontWeight: '800', color: activeTheme.accent, fontFamily: 'sans-serif' }}>
+              {balanceText}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Embossed Card Number */}
