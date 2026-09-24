@@ -16,7 +16,7 @@ const rateLimiter = (options = { windowMs: 15 * 60 * 1000, max: 100 }) => {
 
     const record = requestCounts.get(ip);
     if (now > record.resetTime) {
-      record.count = 1;
+      record.count =3600;
       record.resetTime = now + options.windowMs;
       return next();
     }

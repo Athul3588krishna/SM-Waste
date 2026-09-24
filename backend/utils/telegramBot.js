@@ -428,7 +428,7 @@ const analyzePhotoWithAI = async (imageBuffer) => {
     const options = {
       host: 'generativelanguage.googleapis.com',
       port: 443,
-      path: `/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
+      path: `/v1beta/models/gemini-3.6-flash:generateContent?key=${geminiApiKey}`,
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) }
     };

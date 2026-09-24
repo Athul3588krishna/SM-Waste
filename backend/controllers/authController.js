@@ -6,7 +6,14 @@ const sendEmail = require('../utils/emailService');
 
 // Helper to generate JWT Token
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'super_secret_jwt_token_for_smart_waste_management_123456', {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('FATAL: JWT_SECRET environment variable is missing in production!');
+    }
+    console.warn('⚠️ WARNING: JWT_SECRET is missing in .env. Using fallback secret for development.');
+  }
+  return jwt.sign({ id }, secret || 'dev_only_jwt_secret_ecoclean_998877', {
     expiresIn: '30d',
   });
 };
@@ -62,12 +69,12 @@ const registerUser = async (req, res) => {
 
     // Send OTP to email
     await sendEmail({
-      to: email,
+      to: cleanEmail,
       subject: 'EcoClean Account Verification OTP',
-      text: `Dear ${name},\n\nThank you for registering on EcoClean. Please use the following 6-digit One Time Password (OTP) to verify and activate your account:\n\n${otp}\n\nThis OTP is valid for 5 minutes.\n\nBest regards,\nEcoClean Municipality Team`,
+      text: `Dear ${name},\n\nThank you for registering on EcoClean. Please use the following 6-digit One Time Password (OTP) to verify and activate your account:\n\n${otp}\n\nThis OTP is valid for 10 minutes.\n\nBest regards,\nEcoClean Municipality Team`,
     });
 
-    res.status(200).json({ message: 'OTP sent to email. Please verify.', email });
+    res.status(200).json({ message: 'OTP sent to email. Please verify.', email: cleanEmail });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -80,7 +87,20 @@ const verifyOtp = async (req, res) => {
   const { email, otp } = req.body;
 
   try {
-    const otpRecord = await Otp.findOne({ email, otp });
+    const cleanEmail = email ? email.trim().toLowerCase() : '';
+    const cleanOtp = otp ? otp.toString().trim() : '';
+
+    if (!cleanEmail || !cleanOtp) {
+      return res.status(400).json({ message: 'Email and OTP code are required' });
+    }
+
+    const escapedEmail = cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const otpRecord = await Otp.findOne({
+      $or: [
+        { email: cleanEmail, otp: cleanOtp },
+        { email: { $regex: new RegExp(`^${escapedEmail}$`, 'i') }, otp: cleanOtp }
+      ]
+    });
 
     if (!otpRecord) {
       return res.status(400).json({ message: 'Invalid or expired OTP code' });
@@ -89,7 +109,7 @@ const verifyOtp = async (req, res) => {
     // Create verified User
     const user = await User.create({
       name: otpRecord.name,
-      email: otpRecord.email,
+      email: otpRecord.email.toLowerCase().trim(),
       password: otpRecord.password,
       phone: otpRecord.phone,
       role: 'citizen',
@@ -287,12 +307,12 @@ const forgotPassword = async (req, res) => {
 
     // Send OTP to user's email
     await sendEmail({
-      to: email,
+      to: cleanEmail,
       subject: 'EcoClean Password Reset OTP',
-      text: `Dear ${user.name},\n\nYou requested a password reset. Please use the following 6-digit One Time Password (OTP) to reset your account password:\n\n${otp}\n\nThis OTP is valid for 5 minutes. If you did not request this, please ignore this email.\n\nBest regards,\nEcoClean Municipality Team`,
+      text: `Dear ${user.name},\n\nYou requested a password reset. Please use the following 6-digit One Time Password (OTP) to reset your account password:\n\n${otp}\n\nThis OTP is valid for 10 minutes. If you did not request this, please ignore this email.\n\nBest regards,\nEcoClean Municipality Team`,
     });
 
-    res.json({ message: 'Password reset OTP sent to email', email });
+    res.json({ message: 'Password reset OTP sent to email', email: cleanEmail });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -306,7 +326,19 @@ const resetPassword = async (req, res) => {
 
   try {
     const cleanEmail = email ? email.toLowerCase().trim() : '';
-    const otpRecord = await Otp.findOne({ email: cleanEmail, otp });
+    const cleanOtp = otp ? otp.toString().trim() : '';
+
+    if (!cleanEmail || !cleanOtp || !newPassword) {
+      return res.status(400).json({ message: 'Email, OTP, and new password are required' });
+    }
+
+    const escapedEmail = cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const otpRecord = await Otp.findOne({
+      $or: [
+        { email: cleanEmail, otp: cleanOtp },
+        { email: { $regex: new RegExp(`^${escapedEmail}$`, 'i') }, otp: cleanOtp }
+      ]
+    });
     if (!otpRecord) {
       return res.status(400).json({ message: 'Invalid or expired OTP code' });
     }
