@@ -31,16 +31,17 @@ const createWorker = async (req, res) => {
       }
     }
 
-    const userExists = await User.findOne({ email });
+    const cleanEmail = email ? email.trim().toLowerCase() : '';
+    const userExists = await User.findOne({ email: cleanEmail });
     if (userExists) {
       return res.status(400).json({ message: 'User with this email already exists' });
     }
 
     const worker = await User.create({
-      name,
-      email,
+      name: name ? name.trim() : '',
+      email: cleanEmail,
       password,
-      phone,
+      phone: phone ? phone.trim() : undefined,
       role: 'worker',
       isOnline: false,
     });
@@ -63,8 +64,39 @@ const getWorkers = async (req, res) => {
   try {
     const workers = await User.find({ role: 'worker' })
       .populate('team', 'name')
-      .select('-password');
-    res.json(workers);
+      .select('-password')
+      .lean();
+
+    const workerIds = workers.map((w) => w._id);
+
+    // Find any tasks currently in progress for these workers
+    const activeTasks = await Complaint.find({
+      status: 'in_progress',
+      worker: { $in: workerIds },
+    }).select('title status worker deadlineAt location');
+
+    const activeMap = {};
+    activeTasks.forEach((t) => {
+      if (t.worker) {
+        activeMap[t.worker.toString()] = {
+          _id: t._id,
+          title: t.title,
+          status: t.status,
+          deadlineAt: t.deadlineAt,
+        };
+      }
+    });
+
+    const workersWithStatus = workers.map((w) => {
+      const activeTask = activeMap[w._id.toString()] || null;
+      return {
+        ...w,
+        workStatus: activeTask ? 'onwork' : (w.workStatus || 'available'),
+        activeTask,
+      };
+    });
+
+    res.json(workersWithStatus);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -493,6 +525,8 @@ const reassignComplaint = async (req, res) => {
       }
     }
     
+    const previousWorkerId = complaint.worker;
+
     complaint.assignedToType = assignedToType;
     complaint.status = 'assigned';
     complaint.assignedAt = Date.now();
@@ -537,6 +571,18 @@ const reassignComplaint = async (req, res) => {
     }
 
     await complaint.save();
+
+    // Reset previous worker's workStatus if they have no other in_progress tasks
+    if (previousWorkerId && (!workerId || previousWorkerId.toString() !== workerId.toString())) {
+      const remainingTasks = await Complaint.countDocuments({
+        worker: previousWorkerId,
+        status: 'in_progress',
+        _id: { $ne: complaint._id },
+      });
+      if (remainingTasks === 0) {
+        await User.findByIdAndUpdate(previousWorkerId, { workStatus: 'available' });
+      }
+    }
 
     // Socket emission for reassignment
     const io = req.app.get('io');
@@ -598,6 +644,8 @@ const verifyCleanup = async (req, res) => {
     }
 
     // Award bonus/points to worker(s)
+    const awardedWorkerIds = new Set();
+
     if (complaint.assignedToType === 'team' && complaint.team) {
       const team = await Team.findById(complaint.team);
       if (team && team.members && team.members.length > 0) {
@@ -605,7 +653,7 @@ const verifyCleanup = async (req, res) => {
         for (const memberId of team.members) {
           const memberUser = await User.findById(memberId);
           if (memberUser) {
-            memberUser.points += 10;
+            memberUser.points = (memberUser.points || 0) + 10;
             if (splitBonus > 0) {
               memberUser.bonusHistory.push({
                 amount: splitBonus,
@@ -614,20 +662,24 @@ const verifyCleanup = async (req, res) => {
               });
             }
             await memberUser.save();
+            awardedWorkerIds.add(memberUser._id.toString());
 
             // Notification to member
             await Notification.create({
               user: memberUser._id,
               title: 'Team Task Verified',
-              message: `Your team cleaning for "${complaint.title}" was verified! Split bonus of $${splitBonus} awarded.`,
+              message: `Your team cleaning for "${complaint.title}" was verified! Split bonus of ₹${splitBonus} awarded.`,
             });
           }
         }
       }
-    } else if (complaint.worker) {
+    }
+
+    // Award to individual worker if assigned or if not covered by team
+    if (complaint.worker && !awardedWorkerIds.has(complaint.worker.toString())) {
       const worker = await User.findById(complaint.worker);
       if (worker) {
-        worker.points += 10; // 10 points
+        worker.points = (worker.points || 0) + 10;
         if (bonus > 0) {
           worker.bonusHistory.push({
             amount: bonus,
@@ -636,63 +688,62 @@ const verifyCleanup = async (req, res) => {
           });
         }
         await worker.save();
+        awardedWorkerIds.add(worker._id.toString());
 
         // Notification to worker
         await Notification.create({
           user: worker._id,
           title: 'Task Verified',
-          message: `Your cleaning for "${complaint.title}" was verified! ${bonus > 0 ? `Dummy bonus of $${bonus} awarded.` : ''}`,
+          message: `Your cleaning for "${complaint.title}" was verified! ${bonus > 0 ? `Bonus payout of ₹${bonus} awarded.` : ''}`,
         });
       }
     }
 
     // In-app Notification to Citizen
-    await Notification.create({
-      user: complaint.citizen._id,
-      title: 'Cleanup Resolved & Verified',
-      message: `Great news! The garbage dump you reported "${complaint.title}" has been cleaned and verified. +50 Eco-Points awarded!`,
-    });
+    if (complaint.citizen && complaint.citizen._id) {
+      await Notification.create({
+        user: complaint.citizen._id,
+        title: 'Cleanup Resolved & Verified',
+        message: `Great news! The garbage dump you reported "${complaint.title}" has been cleaned and verified. +50 Eco-Points awarded!`,
+      });
 
-    // Email Notification to Citizen (using Nodemailer)
-    const emailSubject = `EcoClean Resolution: Waste Report Resolved!`;
-    const emailText = `Dear ${complaint.citizen.name},\n\nThis is to confirm that the garbage dump you reported ("${complaint.title}") located at "${complaint.location.address}" has been successfully cleaned by our sanitation crew and verified by municipal administrators.\n\nThank you for contributing to keeping our community clean! You have been awarded 50 Eco-Points.\n\nBest regards,\nEcoClean Municipality Team`;
-    
-    await sendEmail({
-      to: complaint.citizen.email,
-      subject: emailSubject,
-      text: emailText,
-    });
+      // Email Notification to Citizen (using Nodemailer)
+      const emailSubject = `EcoClean Resolution: Waste Report Resolved!`;
+      const emailText = `Dear ${complaint.citizen.name || 'Citizen'},\n\nThis is to confirm that the garbage dump you reported ("${complaint.title}") located at "${complaint.location?.address || 'Reported Location'}" has been successfully cleaned by our sanitation crew and verified by municipal administrators.\n\nThank you for contributing to keeping our community clean! You have been awarded 50 Eco-Points.\n\nBest regards,\nEcoClean Municipality Team`;
+      
+      await sendEmail({
+        to: complaint.citizen.email,
+        subject: emailSubject,
+        text: emailText,
+      });
+    }
 
     // Socket emission to citizen & worker/team & global broadcast
     const io = req.app.get('io');
     if (io) {
-      const citizenIdStr = (complaint.citizen._id || complaint.citizen).toString();
-
-      // Notify citizen
-      io.to(`user_${citizenIdStr}`).emit('complaint_completed', {
-        title: 'Cleanup Resolved & Verified',
-        message: `Great news! The garbage dump you reported "${complaint.title}" has been cleaned and verified. +50 Eco-Points awarded!`,
-        points: 50,
-        complaintId: complaint._id,
-      });
-
-      // Notify worker
-      if (complaint.assignedToType === 'individual' && complaint.worker) {
-        io.to(`user_${complaint.worker.toString()}`).emit('points_updated', {
-          title: 'Task Verified',
-          message: `Your cleaning for "${complaint.title}" was verified!`,
+      if (complaint.citizen) {
+        const citizenIdStr = (complaint.citizen._id || complaint.citizen).toString();
+        io.to(`user_${citizenIdStr}`).emit('complaint_completed', {
+          title: 'Cleanup Resolved & Verified',
+          message: `Great news! The garbage dump you reported "${complaint.title}" has been cleaned and verified. +50 Eco-Points awarded!`,
+          points: 50,
+          complaintId: complaint._id,
         });
-      } else if (complaint.assignedToType === 'team' && complaint.team) {
-        const team = await Team.findById(complaint.team);
-        if (team && team.members) {
-          team.members.forEach(memberId => {
-            io.to(`user_${memberId.toString()}`).emit('points_updated', {
-              title: 'Team Task Verified',
-              message: `Your team cleaning for "${complaint.title}" was verified!`,
-            });
-          });
-        }
       }
+
+      // Notify all recipient workers
+      awardedWorkerIds.forEach((workerId) => {
+        io.to(`user_${workerId}`).emit('points_updated', {
+          title: 'Task Verified & Bonus Credited',
+          message: `Your cleaning for "${complaint.title}" was verified! Total bonus credited.`,
+          complaintId: complaint._id,
+          bonusAmount: bonus,
+        });
+        io.to(`user_${workerId}`).emit('complaint_completed', {
+          complaintId: complaint._id,
+          bonusAmount: bonus,
+        });
+      });
 
       io.emit('complaint_updated', { complaintId: complaint._id, status: 'completed' });
     }

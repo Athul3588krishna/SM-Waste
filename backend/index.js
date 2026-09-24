@@ -10,6 +10,14 @@ dotenv.config();
 // Connect to Database
 connectDB();
 
+// Ensure all Mongoose models are registered
+require('./models/User');
+require('./models/Team');
+require('./models/Complaint');
+require('./models/Announcement');
+require('./models/Notification');
+require('./models/Otp');
+
 const app = express();
 
 // Middleware

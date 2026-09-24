@@ -7,7 +7,6 @@ const {
   createComplaint,
   getCitizenComplaints,
   getComplaintById,
-  chatWithEcoBot,
 } = require('../controllers/complaintController');
 
 // @desc    Analyze uploaded image for waste classification using Gemini API
@@ -29,10 +28,5 @@ router.get('/citizen', protect, getCitizenComplaints);
 // @route   GET /api/complaints/detail/:id
 // @access  Private
 router.get('/detail/:id', protect, getComplaintById);
-
-// @desc    Chat with EcoBot AI helper
-// @route   POST /api/complaints/chat
-// @access  Public
-router.post('/chat', chatWithEcoBot);
 
 module.exports = router;
