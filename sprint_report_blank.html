@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoClean - Blank Scrum Book Sprint Record</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      color: #000;
+      background-color: #f4f6f9;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 50px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+    }
+    .print-btn-container {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .print-btn {
+      background-color: #10b981;
+      color: white;
+      border: none;
+      padding: 14px 35px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+      transition: background 0.2s, transform 0.1s;
+    }
+    .print-btn:hover {
+      background-color: #059669;
+      transform: translateY(-1px);
+    }
+    h1, h2, h3, h4 {
+      text-align: center;
+      margin-top: 0;
+      color: #111111;
+    }
+    .page-title {
+      font-size: 26px;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .page-subtitle {
+      font-size: 18px;
+      margin-bottom: 30px;
+      color: #555555;
+    }
+    .profile-info {
+      margin: 40px 0;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    .profile-info table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .profile-info td {
+      padding: 8px 12px;
+      border: none;
+    }
+    .profile-info td.label {
+      font-weight: bold;
+      width: 30%;
+    }
+    .table-container {
+      margin-top: 25px;
+      margin-bottom: 25px;
+    }
+    table.report-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin-top: 15px;
+    }
+    table.report-table th, table.report-table td {
+      border: 1px solid #000000;
+      padding: 12px 10px;
+      text-align: center;
+      height: 24px;
+    }
+    table.report-table th {
+      background-color: #f2f2f2;
+      font-weight: bold;
+    }
+    table.report-table td.left {
+      text-align: left;
+    }
+    .sprint-meta {
+      font-size: 15px;
+      margin-bottom: 15px;
+      line-height: 1.5;
+    }
+    .sprint-meta span {
+      font-weight: bold;
+    }
+    .signature-area {
+      margin-top: 60px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 15px;
+    }
+    .signature-line {
+      border-top: 1px solid #000;
+      width: 45%;
+      text-align: center;
+      padding-top: 5px;
+      margin-top: 50px;
+    }
+    
+    /* Page break rule */
+    .page-break {
+      page-break-after: always;
+    }
+
+    @media print {
+      body {
+        margin: 0;
+        background-color: #ffffff;
+      }
+      .container {
+        box-shadow: none;
+        padding: 20px;
+        max-width: 100%;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .page-break {
+        page-break-after: always;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Printable Controls -->
+  <div class="print-btn-container no-print">
+    <button class="print-btn" onclick="window.print()">Print to PDF / Save PDF</button>
+    <p style="color: #666; font-size: 14px; margin-top: 10px;">Click the button above to print or save the document as a 6-page PDF. Make sure "Headers and Footers" is turned OFF in print settings.</p>
+  </div>
+
+  <div class="container">
+    
+    <!-- PAGE 1: TITLE & COVER PROFILE -->
+    <div class="page-break">
+      <h1 class="page-title">ECOUNIT / ECOCLEAN</h1>
+      <h2 class="page-subtitle">SMART WASTE REPORTING AND MANAGEMENT SYSTEM</h2>
+      <h3 style="text-decoration: underline; margin-top: 40px; margin-bottom: 20px;">SCRUM BOOK: SPRINT-WISE RECORD OF DEVELOPMENT</h3>
+      
+      <div class="profile-info" style="border: 1px solid #000; padding: 25px; border-radius: 4px; background-color: #fafafa;">
+        <h4 style="border-bottom: 1px dashed #000; padding-bottom: 10px; text-align: left; margin-bottom: 15px;">STUDENT PROFILE</h4>
+        <table>
+          <tr>
+            <td class="label">Name of Student:</td>
+            <td>ATHUL KRISHNA R</td>
+          </tr>
+          <tr>
+            <td class="label">Register Number:</td>
+            <td>MEA24MCA-XXXX</td>
+          </tr>
+          <tr>
+            <td class="label">Course & Batch:</td>
+            <td>Master of Computer Applications (MCA)</td>
+          </tr>
+          <tr>
+            <td class="label">Semester:</td>
+            <td>S3</td>
+          </tr>
+          <tr>
+            <td class="label">Department:</td>
+            <td>Department of Computer Applications</td>
+          </tr>
+          <tr>
+            <td class="label">College:</td>
+            <td>MEA Engineering College, Perinthalmanna</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="table-container">
+        <h4 style="text-align: left; margin-bottom: 10px;">Sprint-wise Guide Verification Log (Handwritten Field Version)</h4>
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th style="width: 12%;">Sprint ID</th>
+              <th style="width: 25%;">Duration & Dates</th>
+              <th style="width: 38%;">Main Focus Area</th>
+              <th style="width: 12%;">Est. SP</th>
+              <th style="width: 13%;">Actual SP</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>Sprint 1</b></td>
+              <td>01/04/2026 - 14/04/2026</td>
+              <td class="left">MVC setup, Worker Credentials Scheme & OTP/JWT Auth</td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td><b>Sprint 2</b></td>
+              <td>15/04/2026 - 28/04/2026</td>
+              <td class="left">Citizen Dashboard Map & Geolocation coordinates UI</td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td><b>Sprint 3</b></td>
+              <td>29/04/2026 - 12/05/2026</td>
+              <td class="left">Multer Ingestion & Simulated AI scanner animation</td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td><b>Sprint 4</b></td>
+              <td>13/05/2026 - 26/05/2026</td>
+              <td class="left">Admin Dashboard, Worker Credentials Creation UI & Aggregations</td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td><b>Sprint 5</b></td>
+              <td>27/05/2026 - 09/06/2026</td>
+              <td class="left">Recharts Analytics, Worker Dashboard & Cleanup Verification</td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td><b>Sprint 6</b></td>
+              <td>10/06/2026 - 23/06/2026</td>
+              <td class="left">Gamification, EcoBot widget, Voucher store & Testing</td>
+              <td></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="signature-area">
+        <div class="signature-line">Signature of Project Guide</div>
+        <div class="signature-line">Signature of Project Co-ordinator (HOD)</div>
+      </div>
+    </div>
+
+    <!-- PAGE 2: SPRINT 1 -->
+    <div class="page-break">
+      <h2 style="border-bottom: 2px solid #000; padding-bottom: 10px; text-transform: uppercase;">2.4 Sprint</h2>
+      <h3 style="text-align: left; color: #111;">Sprint 1 Record</h3>
+      <div class="sprint-meta">
+        <p><span>Duration & Dates:</span> 2 Weeks (01/04/2026 to 14/04/2026)</p>
+        <p><span>Sprint Goal:</span> Establish MongoDB database connectivity, server MVC setup, role-based database schemas (Citizen/Worker credentials framework), user registration with email OTP dispatch, login routes returning JWT, and unified Login/Register UI forms.</p>
+      </div>
+
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th style="width: 15%;">Module</th>
+            <th style="width: 35%;">Task</th>
+            <th style="width: 12%;">Pending task if any</th>
+            <th style="width: 10%;">Hour of completion</th>
+            <th style="width: 14%;">Expected date of completion</th>
+            <th style="width: 14%;">Actual date of completion</th>
+            <th style="width: 10%;">Reason for delay</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="2" style="font-weight: bold; vertical-align: middle;">Core</td>
+            <td class="left">MongoDB Atlas config & Server Setup</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="left">Express Router & MVC folder structure Setup</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td style="font-weight: bold; vertical-align: middle;">Database</td>
+            <td class="left">Creating Mongoose Schemas (User Credentials & Role Attributes, Complaint, Otp, Team)</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td rowspan="2" style="font-weight: bold; vertical-align: middle;">Auth</td>
+            <td class="left">User Registration, Role Assigning & Mail OTP API</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="left">JWT Secure Login, Password Hash & Token API</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td style="font-weight: bold; vertical-align: middle;">Citizen / Portal</td>
+            <td class="left">Register & Login Glassmorphic UI pages (Unified login interface)</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PAGE 3: SPRINT 2 -->
+    <div class="page-break">
+      <h3 style="text-align: left; color: #111;">Sprint 2 Record</h3>
+      <div class="sprint-meta">
+        <p><span>Duration & Dates:</span> 2 Weeks (15/04/2026 to 28/04/2026)</p>
+        <p><span>Sprint Goal:</span> Develop Leaflet Map component integration in Citizen Dashboard, coordinate pinpointing capability, current location tracker, and responsive client maps layout.</p>
+      </div>
+
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th style="width: 15%;">Module</th>
+            <th style="width: 35%;">Task</th>
+            <th style="width: 12%;">Pending task if any</th>
+            <th style="width: 10%;">Hour of completion</th>
+            <th style="width: 14%;">Expected date of completion</th>
+            <th style="width: 14%;">Actual date of completion</th>
+            <th style="width: 10%;">Reason for delay</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="3" style="font-weight: bold; vertical-align: middle;">Citizen Dashboard</td>
+            <td class="left">Leaflet Map integration with Citizen Dashboard UI</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="left">Interactive pointer coordinates (Lat/Lng) capture</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="left">Current GPS location tracker button widget</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PAGE 4: SPRINT 3 -->
+    <div class="page-break">
+      <h3 style="text-align: left; color: #111;">Sprint 3 Record</h3>
+      <div class="sprint-meta">
+        <p><span>Duration & Dates:</span> 2 Weeks (29/04/2026 to 12/05/2026)</p>
+        <p><span>Sprint Goal:</span> Configure Multer file storage backend, build complaint reporting forms in Citizen Dashboard, implement local scanner category fallbacks, and write green scanner line animations.</p>
+      </div>
+
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th style="width: 15%;">Module</th>
+            <th style="width: 35%;">Task</th>
+            <th style="width: 12%;">Pending task if any</th>
+            <th style="width: 10%;">Hour of completion</th>
+            <th style="width: 14%;">Expected date of completion</th>
+            <th style="width: 14%;">Actual date of completion</th>
+            <th style="width: 10%;">Reason for delay</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="font-weight: bold; vertical-align: middle;">Core</td>
+            <td class="left">Multer file upload setup for server-side images</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td rowspan="2" style="font-weight: bold; vertical-align: middle;">Citizen Dashboard</td>
+            <td class="left">Waste Reporting form submission & local keyword checker</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="left">Simulated AI green line scanning visual animation</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PAGE 5: SPRINT 4 -->
+    <div class="page-break">
+      <h3 style="text-align: left; color: #111;">Sprint 4 Record</h3>
+      <div class="sprint-meta">
+        <p><span>Duration & Dates:</span> 2 Weeks (13/05/2026 to 26/05/2026)</p>
+        <p><span>Sprint Goal:</span> Build Admin Dashboard live map display with color status coding, implement worker credentials creation UI, worker allocation dropdowns, and Mongoose database aggregations.</p>
+      </div>
+
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th style="width: 15%;">Module</th>
+            <th style="width: 35%;">Task</th>
+            <th style="width: 12%;">Pending task if any</th>
+            <th style="width: 10%;">Hour of completion</th>
+            <th style="width: 14%;">Expected date of completion</th>
+            <th style="width: 14%;">Actual date of completion</th>
+            <th style="width: 10%;">Reason for delay</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="3" style="font-weight: bold; vertical-align: middle;">Admin Dashboard</td>
+            <td class="left">Live status-colored incident map dashboard (Admin Dashboard UI)</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="left">Ticket details panel & Worker assignment API</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="left">Admin Sanitation Worker Credentials Creation & Team UI (Credentials generation)</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PAGE 6: SPRINT 5 -->
+    <div class="page-break">
+      <h3 style="text-align: left; color: #111;">Sprint 5 Record</h3>
+      <div class="sprint-meta">
+        <p><span>Duration & Dates:</span> 2 Weeks (27/05/2026 to 09/06/2026)</p>
+        <p><span>Sprint Goal:</span> Integrate Recharts graph models inside Admin Dashboard, build mobile Worker Dashboard workspace, after-cleaning upload routes, and configure Admin verification actions.</p>
+      </div>
+
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th style="width: 15%;">Module</th>
+            <th style="width: 35%;">Task</th>
+            <th style="width: 12%;">Pending task if any</th>
+            <th style="width: 10%;">Hour of completion</th>
+            <th style="width: 14%;">Expected date of completion</th>
+            <th style="width: 14%;">Actual date of completion</th>
+            <th style="width: 10%;">Reason for delay</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="font-weight: bold; vertical-align: middle;">Admin Dashboard</td>
+            <td class="left">Recharts bar & pie diagrams for waste category and trends</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td rowspan="2" style="font-weight: bold; vertical-align: middle;">Worker Dashboard</td>
+            <td class="left">Worker Dashboard Workspace Layout & mobile-responsive Job Sheet</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="left">Cleaned spot validation image upload & API (Proof of Work)</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td style="font-weight: bold; vertical-align: middle;">Admin Dashboard</td>
+            <td class="left">Ticket verification approval & points trigger</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PAGE 7: SPRINT 6 -->
+    <div class="page-break">
+      <h3 style="text-align: left; color: #111;">Sprint 6 Record</h3>
+      <div class="sprint-meta">
+        <p><span>Duration & Dates:</span> 2 Weeks (10/06/2026 to 23/06/2026)</p>
+        <p><span>Sprint Goal:</span> Implement Eco-Points and badge tiers UI, floating EcoBot AI Chatbot inside Citizen Dashboard, Voucher redemption shop, announcements, seed scripts, and final testing.</p>
+      </div>
+
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th style="width: 15%;">Module</th>
+            <th style="width: 35%;">Task</th>
+            <th style="width: 12%;">Pending task if any</th>
+            <th style="width: 10%;">Hour of completion</th>
+            <th style="width: 14%;">Expected date of completion</th>
+            <th style="width: 14%;">Actual date of completion</th>
+            <th style="width: 10%;">Reason for delay</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="3" style="font-weight: bold; vertical-align: middle;">Citizen Dashboard</td>
+            <td class="left">Eco-Points, Leaderboard & Badge Tiers UI (Citizen Dashboard)</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="left">Floating EcoBot AI Chatbot assistant widget</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="left">Voucher Redemption dashboard & Coupon generation</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td style="font-weight: bold; vertical-align: middle;">Admin Dashboard</td>
+            <td class="left">Announcement broadcasting dashboard API</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td style="font-weight: bold; vertical-align: middle;">Core</td>
+            <td class="left">Database seeding script (`seed.js`) & E2E testing</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PAGE 8: METRICS & BURNDOWN CHART (BLANK VERSION) -->
+    <div>
+      <h3 style="border-bottom: 2px solid #000; padding-bottom: 10px; text-transform: uppercase;">2.5 AGILE SCRUM METRICS</h3>
+      
+      <div class="table-container">
+        <h4 style="text-align: left; margin-bottom: 10px;">Planned vs. Actual Burndown Log (Handwritten Field Version)</h4>
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th style="width: 14%;">Day of Sprint</th>
+              <th style="width: 12%;">Sprint 1</th>
+              <th style="width: 12%;">Sprint 2</th>
+              <th style="width: 12%;">Sprint 3</th>
+              <th style="width: 12%;">Sprint 4</th>
+              <th style="width: 12%;">Sprint 5</th>
+              <th style="width: 12%;">Sprint 6</th>
+              <th style="width: 14%;">Ideal Line</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>Day 1</b></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td>100%</td>
+            </tr>
+            <tr>
+              <td><b>Day 3</b></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td>80%</td>
+            </tr>
+            <tr>
+              <td><b>Day 5</b></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td>65%</td>
+            </tr>
+            <tr>
+              <td><b>Day 7</b></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td>50%</td>
+            </tr>
+            <tr>
+              <td><b>Day 9</b></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td>35%</td>
+            </tr>
+            <tr>
+              <td><b>Day 12</b></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td>15%</td>
+            </tr>
+            <tr>
+              <td><b>Day 14</b></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td>0%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top: 30px; border: 1px solid #000; padding: 20px; background-color: #fafafa; border-radius: 4px;">
+        <h4 style="text-align: left; margin-top: 0; border-bottom: 1px dashed #000; padding-bottom: 8px;">TEAM VELOCITY PERFORMANCE</h4>
+        <ul style="line-height: 1.6; font-size: 15px; padding-left: 20px; margin-bottom: 0;">
+          <li>Average Velocity achieved: ____________________</li>
+          <li>Steady velocity rates across all 6 iterations: ____________________</li>
+          <li>Notes / Guide Comments: ____________________</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

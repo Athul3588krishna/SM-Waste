@@ -40,10 +40,11 @@ const AdminDashboard = () => {
   // Payment Gateway Modal State
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentStep, setPaymentStep] = useState('card'); // 'card' | 'processing' | 'otp' | 'success'
-  const [cardHolder, setCardHolder] = useState('EcoClean Admin');
-  const [cardNumber, setCardNumber] = useState('4111 2222 3333 4444');
-  const [cardExpiry, setCardExpiry] = useState('12/29');
-  const [cardCvv, setCardCvv] = useState('123');
+  const [cardHolder, setCardHolder] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvv, setCardCvv] = useState('');
+  const [isCardFlipped, setIsCardFlipped] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [generatedOtp, setGeneratedOtp] = useState('');
   const [transactionId, setTransactionId] = useState('');
@@ -178,6 +179,11 @@ const AdminDashboard = () => {
     
     setTransactionId(randomTxId);
     setGeneratedOtp(mockOtp);
+    setCardHolder('');
+    setCardNumber('');
+    setCardExpiry('');
+    setCardCvv('');
+    setIsCardFlipped(false);
     setOtpCode('');
     setPaymentError('');
     setPaymentStep('card');
@@ -212,6 +218,11 @@ const AdminDashboard = () => {
     setVerifyingComplaint(null);
     setBonusAmount('50');
     setPaymentStep('card');
+    setCardHolder('');
+    setCardNumber('');
+    setCardExpiry('');
+    setCardCvv('');
+    setIsCardFlipped(false);
     setOtpCode('');
     setPaymentError('');
   };
@@ -1348,9 +1359,14 @@ const AdminDashboard = () => {
                 {/* Modern 3D Glassmorphic Payout Credit Card Preview */}
                 <div style={{ marginBottom: '20px' }}>
                   <EcoCreditCard
-                    holderName={cardHolder || 'CITY COUNCIL ADMIN'}
-                    cardNumber={cardNumber || '4582 9104 3381 2049'}
-                    expiryDate={cardExpiry || '12/28'}
+                    holderName={cardHolder || 'CARD HOLDER NAME'}
+                    cardNumber={cardNumber || '•••• •••• •••• ••••'}
+                    expiryDate={cardExpiry || 'MM/YY'}
+                    cvv={cardCvv}
+                    isFlipped={isCardFlipped}
+                    onFlip={setIsCardFlipped}
+                    balanceText={null}
+                    showBalance={false}
                     cardType="MUNICIPAL PAYMENT SYSTEM"
                     rankBadge={verifyingComplaint?.assignedToType === 'team' ? 'TEAM PAYROLL' : 'WORKER PAYOUT'}
                     theme="gold"
@@ -1375,20 +1391,26 @@ const AdminDashboard = () => {
                   )}
                 </div>
 
-                <form onSubmit={(e) => {
-                  e.preventDefault();
-                  setPaymentStep('processing');
-                  setTimeout(() => {
-                    setPaymentStep('otp');
-                  }, 2000);
-                }}>
+                <form
+                  autoComplete="off"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    setPaymentStep('processing');
+                    setTimeout(() => {
+                      setPaymentStep('otp');
+                    }, 2000);
+                  }}
+                >
                   <div className="form-group" style={{ marginBottom: '12px' }}>
                     <label className="form-label">Card Holder Name</label>
                     <input
                       type="text"
                       className="form-input"
+                      placeholder="e.g. EcoClean Admin"
                       value={cardHolder}
+                      onFocus={() => setIsCardFlipped(false)}
                       onChange={(e) => setCardHolder(e.target.value)}
+                      autoComplete="off"
                       required
                     />
                   </div>
@@ -1398,8 +1420,16 @@ const AdminDashboard = () => {
                     <input
                       type="text"
                       className="form-input"
+                      placeholder="•••• •••• •••• ••••"
+                      maxLength={19}
                       value={cardNumber}
-                      onChange={(e) => setCardNumber(e.target.value)}
+                      onFocus={() => setIsCardFlipped(false)}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/\D/g, '').slice(0, 16);
+                        const formatted = raw.replace(/(\d{4})(?=\d)/g, '$1 ');
+                        setCardNumber(formatted);
+                      }}
+                      autoComplete="off"
                       required
                     />
                   </div>
@@ -1410,9 +1440,18 @@ const AdminDashboard = () => {
                       <input
                         type="text"
                         placeholder="MM/YY"
+                        maxLength={5}
                         className="form-input"
                         value={cardExpiry}
-                        onChange={(e) => setCardExpiry(e.target.value)}
+                        onFocus={() => setIsCardFlipped(false)}
+                        onChange={(e) => {
+                          let raw = e.target.value.replace(/\D/g, '').slice(0, 4);
+                          if (raw.length > 2) {
+                            raw = `${raw.slice(0, 2)}/${raw.slice(2)}`;
+                          }
+                          setCardExpiry(raw);
+                        }}
+                        autoComplete="off"
                         required
                       />
                     </div>
@@ -1420,18 +1459,24 @@ const AdminDashboard = () => {
                       <label className="form-label">CVV Code</label>
                       <input
                         type="password"
-                        placeholder="123"
-                        maxLength="3"
+                        placeholder="•••"
+                        maxLength={4}
                         className="form-input"
                         value={cardCvv}
-                        onChange={(e) => setCardCvv(e.target.value)}
+                        onFocus={() => setIsCardFlipped(true)}
+                        onBlur={() => setIsCardFlipped(false)}
+                        onChange={(e) => {
+                          setCardCvv(e.target.value.replace(/\D/g, ''));
+                          if (!isCardFlipped) setIsCardFlipped(true);
+                        }}
+                        autoComplete="new-password"
                         required
                       />
                     </div>
                   </div>
 
                   <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                    <button type="button" onClick={() => setShowPaymentModal(false)} className="btn btn-secondary">Cancel</button>
+                    <button type="button" onClick={handleClosePaymentModal} className="btn btn-secondary">Cancel</button>
                     <button type="submit" className="btn btn-primary">Authorize Payout</button>
                   </div>
                 </form>
